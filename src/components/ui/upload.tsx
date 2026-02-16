@@ -59,9 +59,9 @@ const Upload = React.forwardRef<HTMLInputElement, UploadProps>(
       <div className={cn("grid gap-4 w-full", className)}>
         <div
           className={cn(
-            "relative group cursor-pointer flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25 p-12 text-center transition-colors hover:bg-muted/50",
-            dragActive && "border-primary bg-muted/50",
-            selectedFiles.length > 0 && "border-primary/50"
+            "relative group cursor-pointer flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/20 p-12 text-center transition-all hover:bg-muted/30 hover:border-primary/30 active:scale-[0.99]",
+            dragActive && "border-primary bg-muted/50 scale-[1.01 shadow-md]",
+            selectedFiles.length > 0 && "border-primary/40 bg-primary/5"
           )}
           onDragEnter={handleDrag}
           onDragLeave={handleDrag}

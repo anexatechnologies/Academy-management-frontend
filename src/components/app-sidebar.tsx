@@ -1,3 +1,4 @@
+import { Link, useLocation } from "react-router-dom"
 import {
   LayoutDashboard,
   Users,
@@ -6,6 +7,7 @@ import {
   Calendar,
   Search,
   Plus,
+  Palette,
 } from "lucide-react"
 
 import {
@@ -25,32 +27,39 @@ import {
 const items = [
   {
     title: "Dashboard",
-    url: "#",
+    url: "/",
     icon: LayoutDashboard,
   },
   {
     title: "Students",
-    url: "#",
+    url: "/students",
     icon: Users,
   },
   {
     title: "Classes",
-    url: "#",
+    url: "/classes",
     icon: BookOpen,
   },
   {
     title: "Schedule",
-    url: "#",
+    url: "/schedule",
     icon: Calendar,
   },
   {
+    title: "Components",
+    url: "/components",
+    icon: Palette,
+  },
+  {
     title: "Settings",
-    url: "#",
+    url: "/settings",
     icon: Settings,
   },
 ]
 
 export function AppSidebar() {
+  const location = useLocation()
+
   return (
     <Sidebar variant="sidebar" collapsible="icon">
       <SidebarHeader className="flex items-center px-4 py-6 border-b">
@@ -66,11 +75,15 @@ export function AppSidebar() {
             <SidebarMenu>
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild tooltip={item.title}>
-                    <a href={item.url}>
+                  <SidebarMenuButton 
+                    asChild 
+                    tooltip={item.title}
+                    isActive={location.pathname === item.url}
+                  >
+                    <Link to={item.url}>
                       <item.icon />
                       <span>{item.title}</span>
-                    </a>
+                    </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
