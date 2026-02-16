@@ -8,7 +8,7 @@ function App() {
   return (
     <BrowserRouter>
       <SidebarProvider>
-        <div className="flex min-h-screen w-full font-inter">
+        <div className="flex min-h-screen w-full">
           <AppSidebar />
           <main className="flex-1 overflow-hidden bg-slate-50/50 dark:bg-slate-950/50 flex flex-col h-screen">
             <header className="flex h-[73px] items-center gap-4 border-b px-4 md:px-6 bg-white dark:bg-slate-900 sticky top-0 z-10 shrink-0">

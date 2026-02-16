@@ -60,12 +60,12 @@ export function AppSidebar() {
 
   return (
     <Sidebar variant="sidebar" collapsible="icon">
-      <SidebarHeader className="h-[73px] flex-row items-center justify-between px-4 border-b">
+      <SidebarHeader className="h-[73px] flex-row items-center justify-between px-4 border-b group-data-[collapsible=icon]:justify-center">
         <div className="flex items-center gap-2 font-bold text-xl text-primary transition-all group-data-[collapsible=icon]:hidden">
           <BookOpen className="h-6 w-6" />
           <span>Academy OS</span>
         </div>
-        <SidebarTrigger className="h-8 w-8 text-muted-foreground hover:text-primary transition-colors" />
+        <SidebarTrigger className="h-8 w-8 text-muted-foreground hover:text-primary transition-colors shrink-0" />
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
