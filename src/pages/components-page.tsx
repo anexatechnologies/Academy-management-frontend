@@ -39,7 +39,7 @@ export default function ComponentsPage() {
   }
 
   return (
-    <div className="container mx-auto py-10 px-4 space-y-16">
+    <div className="w-full py-10 px-4 md:px-6 space-y-16">
       <header className="space-y-4">
         <h1 className="text-4xl font-bold tracking-tight">Component Gallery</h1>
         <p className="text-muted-foreground text-lg">

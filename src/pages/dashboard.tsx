@@ -30,7 +30,7 @@ export default function Dashboard() {
   ]
 
   return (
-    <div className="container mx-auto py-10 px-6 space-y-8">
+    <div className="w-full py-10 px-4 md:px-6 space-y-8">
       <header className="space-y-2">
         <h1 className="text-3xl font-bold tracking-tight">Dashboard Overview</h1>
         <p className="text-muted-foreground">
