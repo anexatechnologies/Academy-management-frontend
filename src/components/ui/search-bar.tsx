@@ -24,7 +24,7 @@ const SearchBar = React.forwardRef<HTMLInputElement, SearchBarProps>(
         <Search className="absolute left-3 h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-primary" />
         <Input
           type="search"
-          className={cn("pl-9 h-11 shadow-sm", className)}
+          className={cn("pl-9 h-11 shadow-sm rounded-full", className)}
           ref={ref}
           onKeyDown={handleKeyDown}
           {...props}
