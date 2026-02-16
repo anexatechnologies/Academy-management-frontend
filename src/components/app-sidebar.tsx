@@ -5,8 +5,6 @@ import {
   Settings,
   BookOpen,
   Calendar,
-  Search,
-  Plus,
   Palette,
 } from "lucide-react"
 
@@ -20,7 +18,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuAction,
+  SidebarTrigger,
 } from "@/components/ui/sidebar"
 
 // Menu items.
@@ -62,11 +60,12 @@ export function AppSidebar() {
 
   return (
     <Sidebar variant="sidebar" collapsible="icon">
-      <SidebarHeader className="flex items-center px-4 py-6 border-b">
-        <div className="flex items-center gap-2 font-bold text-xl text-primary">
+      <SidebarHeader className="h-[73px] flex-row items-center justify-between px-4 border-b">
+        <div className="flex items-center gap-2 font-bold text-xl text-primary transition-all group-data-[collapsible=icon]:hidden">
           <BookOpen className="h-6 w-6" />
-          <span className="group-data-[collapsible=icon]:hidden">Academy OS</span>
+          <span>Academy OS</span>
         </div>
+        <SidebarTrigger className="h-8 w-8 text-muted-foreground hover:text-primary transition-colors" />
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
@@ -87,23 +86,6 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-        
-        <SidebarGroup>
-          <SidebarGroupLabel>Management</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Quick Search">
-                  <Search />
-                  <span>Search</span>
-                </SidebarMenuButton>
-                <SidebarMenuAction>
-                    <Plus className="h-4 w-4" />
-                </SidebarMenuAction>
-              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
