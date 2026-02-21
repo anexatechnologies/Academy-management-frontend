@@ -1,18 +1,55 @@
 import * as React from "react"
 import { Skeleton } from "@/components/ui/skeleton"
+import { TablePagination } from "@/components/ui/table-pagination"
 import { cn } from "@/lib/utils"
 
-function Table({ className, ...props }: React.ComponentProps<"table">) {
+interface TableProps extends React.ComponentProps<"table"> {
+  paginationRequired?: boolean
+  page?: number
+  pageSize?: number
+  totalPages?: number
+  onPageChange?: (page: number) => void
+  onPageSizeChange?: (pageSize: number) => void
+  containerClassName?: string
+}
+
+function Table({ 
+  className, 
+  paginationRequired = true,
+  page = 1,
+  pageSize = 10,
+  totalPages = 1,
+  onPageChange = () => {},
+  onPageSizeChange = () => {},
+  containerClassName,
+  ...props 
+}: TableProps) {
   return (
-    <div
-      data-slot="table-container"
-      className="relative w-full overflow-x-auto border rounded-xl"
-    >
-      <table
-        data-slot="table"
-        className={cn("w-full caption-bottom text-sm border-collapse", className)}
-        {...props}
-      />
+    <div className="flex flex-col space-y-4 w-full">
+      <div className={cn(
+        "relative flex flex-col w-full border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-white dark:bg-slate-900/50 shadow-sm",
+        containerClassName
+      )}>
+        <div
+          data-slot="table-container"
+          className="relative w-full overflow-auto"
+        >
+          <table
+            data-slot="table"
+            className={cn("w-full caption-bottom text-sm border-collapse", className)}
+            {...props}
+          />
+        </div>
+      </div>
+      {paginationRequired && (
+        <TablePagination 
+          page={page}
+          pageSize={pageSize}
+          totalPages={totalPages}
+          onPageChange={onPageChange}
+          onPageSizeChange={onPageSizeChange}
+        />
+      )}
     </div>
   )
 }
@@ -21,7 +58,7 @@ function TableHeader({ className, ...props }: React.ComponentProps<"thead">) {
   return (
     <thead
       data-slot="table-header"
-      className={cn("[&_tr]:border-b bg-slate-50/50 dark:bg-slate-900/20", className)}
+      className={cn("[&_tr]:border-b bg-slate-100/50 dark:bg-slate-800/50 sticky top-0 z-10 backdrop-blur-sm", className)}
       {...props}
     />
   )
@@ -48,7 +85,7 @@ function TableBody({
           <TableRow key={i}>
             {Array.from({ length: columnCount }).map((_, j) => (
               <TableCell key={j}>
-                <Skeleton className="h-4 w-full max-w-[120px]" />
+                <Skeleton className="h-5 w-full min-w-[100px] max-w-[150px]" />
               </TableCell>
             ))}
           </TableRow>
@@ -86,7 +123,7 @@ function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
     <tr
       data-slot="table-row"
       className={cn(
-        "hover:bg-slate-50/80 dark:hover:bg-slate-800/20 data-[state=selected]:bg-muted border-b transition-colors",
+        "hover:bg-slate-50/80 dark:hover:bg-slate-800/20 data-[state=selected]:bg-muted border-b transition-colors group animate-in fade-in duration-300",
         className
       )}
       {...props}
@@ -99,7 +136,7 @@ function TableHead({ className, ...props }: React.ComponentProps<"th">) {
     <th
       data-slot="table-head"
       className={cn(
-        "text-slate-600 dark:text-slate-400 h-11 px-4 text-left align-middle font-semibold whitespace-nowrap border-r border-slate-200 dark:border-slate-800 last:border-r-0 [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
+        "text-slate-600 dark:text-slate-400 h-10 px-4 text-left align-middle font-semibold whitespace-nowrap border-r border-slate-200 dark:border-slate-800 last:border-r-0 [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
         className
       )}
       {...props}
@@ -112,7 +149,7 @@ function TableCell({ className, ...props }: React.ComponentProps<"td">) {
     <td
       data-slot="table-cell"
       className={cn(
-        "p-4 align-middle whitespace-nowrap text-left border-r border-slate-200 dark:border-slate-800 last:border-r-0 [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
+        "p-2 px-4 align-middle whitespace-nowrap text-left border-r border-slate-200 dark:border-slate-800 last:border-r-0 [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
         className
       )}
       {...props}

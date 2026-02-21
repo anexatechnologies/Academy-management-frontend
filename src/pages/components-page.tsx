@@ -6,6 +6,7 @@ import { SearchBar } from "@/components/ui/search-bar"
 import { Upload } from "@/components/ui/upload"
 import { EditButton } from "@/components/ui/edit-button"
 import { DeleteButton } from "@/components/ui/delete-button"
+import { usePagination } from "@/hooks/use-pagination"
 import {
   Dialog,
   DialogContent,
@@ -23,7 +24,6 @@ import {
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
@@ -31,9 +31,29 @@ import {
 } from "@/components/ui/table"
 import { Label } from "@/components/ui/label"
 import { Loader2 } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 export default function ComponentsPage() {
   const [isLoading, setIsLoading] = React.useState(false)
+  const [inputValue, setInputValue] = React.useState("")
+  const [errorValue, setErrorValue] = React.useState("This field is required")
+  const [searchQuery, setSearchQuery] = React.useState("")
+
+  const pagination = usePagination({
+    totalItems: 100,
+    initialPageSize: 10,
+  })
+
+  const students = [
+    { id: "STD001", name: "John Doe", course: "Web Development", status: "Paid" },
+    { id: "STD002", name: "Jane Smith", course: "UI/UX Design", status: "Pending" },
+    { id: "STD003", name: "Robert Brown", course: "Data Science", status: "Overdue" },
+    { id: "STD004", name: "Alice Green", course: "Cyber Security", status: "Paid" },
+    { id: "STD005", name: "Michael White", course: "Mobile App Dev", status: "Pending" },
+    { id: "STD006", name: "Emma Black", course: "Digital Marketing", status: "Paid" },
+    { id: "STD007", name: "David Blue", course: "Cloud Computing", status: "Overdue" },
+    { id: "STD008", name: "Sophia Grey", course: "AI & Machine Learning", status: "Paid" },
+  ]
 
   const handleSearch = (value: string) => {
     console.log("Searching for:", value)
@@ -49,6 +69,84 @@ export default function ComponentsPage() {
           A collection of reusable components built for Academy Management System.
         </p>
       </header>
+
+      {/* Tables Section */}
+      <section className="space-y-6">
+        <div className="space-y-2">
+          <h2 className="text-2xl font-bold">Data Tables</h2>
+          <p className="text-muted-foreground">A premium, structured table with sticky headers and simplified pagination.</p>
+        </div>
+        
+        <div className="space-y-12">
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-500">Standard Table with Sticky Header</h3>
+            <Table
+              page={pagination.page}
+              pageSize={pagination.pageSize}
+              totalPages={pagination.totalPages}
+              onPageChange={pagination.setPage}
+              onPageSizeChange={pagination.setPageSize}
+              containerClassName="max-h-[300px]"
+            >
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[120px]">ID</TableHead>
+                  <TableHead>Student Name</TableHead>
+                  <TableHead>Course</TableHead>
+                  <TableHead className="w-[150px]">Fees Status</TableHead>
+                  <TableHead className="w-[120px] text-center">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {students.map((student) => (
+                  <TableRow key={student.id}>
+                    <TableCell className="font-semibold text-slate-900">{student.id}</TableCell>
+                    <TableCell>{student.name}</TableCell>
+                    <TableCell>{student.course}</TableCell>
+                    <TableCell>
+                      <span className={cn(
+                        "font-medium",
+                        student.status === "Paid" ? "text-green-600" : 
+                        student.status === "Pending" ? "text-yellow-600" : "text-rose-600"
+                      )}>
+                        {student.status}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <div className="flex justify-center gap-1">
+                        <EditButton title="Student" />
+                        <DeleteButton title="Student" />
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            <p className="text-xs text-muted-foreground italic text-center">
+              The header remains sticky while scrolling through data rows.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-500">Loading State (Matched Widths)</h3>
+            <Table paginationRequired={false}>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[120px]">ID</TableHead>
+                  <TableHead>Student Name</TableHead>
+                  <TableHead>Course</TableHead>
+                  <TableHead className="w-[150px]">Fees Status</TableHead>
+                  <TableHead className="w-[120px] text-center">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody loading columnCount={5} rowCount={3} />
+            </Table>
+            <p className="text-xs text-muted-foreground text-center italic">
+              Column widths are strictly maintained between loading and data states to prevent layout shift.
+            </p>
+          </div>
+        </div>
+      </section>
 
       {/* Buttons Section */}
       <section className="space-y-6">
@@ -96,22 +194,24 @@ export default function ComponentsPage() {
         </div>
       </section>
 
-      {/* Inputs Section */}
+      {/* Forms Section */}
       <section className="space-y-6">
         <div className="space-y-2">
-          <h2 className="text-2xl font-bold">Inputs & Forms</h2>
-          <p className="text-muted-foreground">Standard and custom input components.</p>
+          <h2 className="text-2xl font-bold">Forms & Inputs</h2>
+          <p className="text-muted-foreground">Standard and custom input components with validation states.</p>
         </div>
         <div className="grid gap-8 max-w-xl">
           <Input 
             label="Standard Input" 
             placeholder="Enter your name..." 
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
           />
           <Input 
             label="Input with Error" 
             placeholder="Enter your email..." 
-            error="Please enter a valid email address."
-            defaultValue="invalid-email"
+            error={errorValue}
+            onChange={(e) => setErrorValue(e.target.value)}
           />
           <Textarea 
             label="Description" 
@@ -120,10 +220,12 @@ export default function ComponentsPage() {
           <div className="space-y-2">
             <Label className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 ml-0.5">Search Bar</Label>
             <SearchBar 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search students, classes..." 
               onSearch={handleSearch}
             />
-            {isLoading && <p className="text-xs text-primary animate-pulse">Searching...</p>}
+            {isLoading && <p className="text-xs text-primary animate-pulse">Searching for "{searchQuery}"...</p>}
           </div>
         </div>
       </section>
@@ -143,7 +245,7 @@ export default function ComponentsPage() {
         </div>
       </section>
 
-      {/* Modals & Popovers */}
+      {/* Overlays Section */}
       <section className="space-y-6">
         <div className="space-y-2">
           <h2 className="text-2xl font-bold">Overlays</h2>
@@ -162,8 +264,8 @@ export default function ComponentsPage() {
                 </DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
-                <Input placeholder="Full Name" />
-                <Input placeholder="Email Address" type="email" />
+                <Input label="Full Name" placeholder="Student name" />
+                <Input label="Email Address" placeholder="email@example.com" type="email" />
               </div>
               <DialogFooter>
                 <Button type="submit">Save Student</Button>
@@ -186,78 +288,6 @@ export default function ComponentsPage() {
               </div>
             </PopoverContent>
           </Popover>
-        </div>
-      </section>
-
-      {/* Tables Section */}
-      <section className="space-y-6">
-        <div className="space-y-2">
-          <h2 className="text-2xl font-bold">Data Tables</h2>
-          <p className="text-muted-foreground">A clean, structured table with vertical borders and integrated loading states.</p>
-        </div>
-        
-        <div className="space-y-8">
-          <div className="space-y-4">
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-500">Standard Table</h3>
-            <Table>
-              <TableCaption>A list of recently enrolled students.</TableCaption>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[100px]">ID</TableHead>
-                  <TableHead>Student Name</TableHead>
-                  <TableHead>Course</TableHead>
-                  <TableHead>Fees Status</TableHead>
-                  <TableHead className="w-[100px] text-center">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                <TableRow>
-                  <TableCell className="font-medium">STD001</TableCell>
-                  <TableCell>John Doe</TableCell>
-                  <TableCell>Web Development</TableCell>
-                  <TableCell>
-                    <span className="text-green-600 font-medium">Paid</span>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <div className="flex justify-center gap-1">
-                      <EditButton title="Student" />
-                      <DeleteButton title="Student" />
-                    </div>
-                  </TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className="font-medium">STD002</TableCell>
-                  <TableCell>Jane Smith</TableCell>
-                  <TableCell>UI/UX Design</TableCell>
-                  <TableCell>
-                    <span className="text-yellow-600 font-medium">Pending</span>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <div className="flex justify-center gap-1">
-                      <EditButton title="Student" />
-                      <DeleteButton title="Student" />
-                    </div>
-                  </TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
-          </div>
-
-          <div className="space-y-4">
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-500">Loading State</h3>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[100px]">ID</TableHead>
-                  <TableHead>Student Name</TableHead>
-                  <TableHead>Course</TableHead>
-                  <TableHead>Fees Status</TableHead>
-                  <TableHead className="w-[100px] text-center">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody loading columnCount={5} rowCount={3} />
-            </Table>
-          </div>
         </div>
       </section>
     </div>
