@@ -193,40 +193,71 @@ export default function ComponentsPage() {
       <section className="space-y-6">
         <div className="space-y-2">
           <h2 className="text-2xl font-bold">Data Tables</h2>
-          <p className="text-muted-foreground">A clean table for displaying structured data.</p>
+          <p className="text-muted-foreground">A clean, structured table with vertical borders and integrated loading states.</p>
         </div>
-        <div className="rounded-md border">
-          <Table>
-            <TableCaption>A list of recently enrolled students.</TableCaption>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[100px]">ID</TableHead>
-                <TableHead>Student Name</TableHead>
-                <TableHead>Course</TableHead>
-                <TableHead className="text-right">Fees Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <TableRow>
-                <TableCell className="font-medium">STD001</TableCell>
-                <TableCell>John Doe</TableCell>
-                <TableCell>Web Development</TableCell>
-                <TableCell className="text-right text-green-600 font-medium">Paid</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell className="font-medium">STD002</TableCell>
-                <TableCell>Jane Smith</TableCell>
-                <TableCell>UI/UX Design</TableCell>
-                <TableCell className="text-right text-yellow-600 font-medium">Pending</TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell className="font-medium">STD003</TableCell>
-                <TableCell>Robert Brown</TableCell>
-                <TableCell>Data Science</TableCell>
-                <TableCell className="text-right text-red-600 font-medium">Overdue</TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
+        
+        <div className="space-y-8">
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-500">Standard Table</h3>
+            <Table>
+              <TableCaption>A list of recently enrolled students.</TableCaption>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[100px]">ID</TableHead>
+                  <TableHead>Student Name</TableHead>
+                  <TableHead>Course</TableHead>
+                  <TableHead>Fees Status</TableHead>
+                  <TableHead className="w-[100px] text-center">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <TableRow>
+                  <TableCell className="font-medium">STD001</TableCell>
+                  <TableCell>John Doe</TableCell>
+                  <TableCell>Web Development</TableCell>
+                  <TableCell>
+                    <span className="text-green-600 font-medium">Paid</span>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <div className="flex justify-center gap-1">
+                      <EditButton title="Student" />
+                      <DeleteButton title="Student" />
+                    </div>
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="font-medium">STD002</TableCell>
+                  <TableCell>Jane Smith</TableCell>
+                  <TableCell>UI/UX Design</TableCell>
+                  <TableCell>
+                    <span className="text-yellow-600 font-medium">Pending</span>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <div className="flex justify-center gap-1">
+                      <EditButton title="Student" />
+                      <DeleteButton title="Student" />
+                    </div>
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </div>
+
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-500">Loading State</h3>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[100px]">ID</TableHead>
+                  <TableHead>Student Name</TableHead>
+                  <TableHead>Course</TableHead>
+                  <TableHead>Fees Status</TableHead>
+                  <TableHead className="w-[100px] text-center">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody loading columnCount={5} rowCount={3} />
+            </Table>
+          </div>
         </div>
       </section>
     </div>

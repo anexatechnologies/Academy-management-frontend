@@ -1,16 +1,16 @@
 import * as React from "react"
-
+import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 
 function Table({ className, ...props }: React.ComponentProps<"table">) {
   return (
     <div
       data-slot="table-container"
-      className="relative w-full overflow-x-auto"
+      className="relative w-full overflow-x-auto border rounded-xl"
     >
       <table
         data-slot="table"
-        className={cn("w-full caption-bottom text-sm", className)}
+        className={cn("w-full caption-bottom text-sm border-collapse", className)}
         {...props}
       />
     </div>
@@ -21,19 +21,50 @@ function TableHeader({ className, ...props }: React.ComponentProps<"thead">) {
   return (
     <thead
       data-slot="table-header"
-      className={cn("[&_tr]:border-b", className)}
+      className={cn("[&_tr]:border-b bg-slate-50/50 dark:bg-slate-900/20", className)}
       {...props}
     />
   )
 }
 
-function TableBody({ className, ...props }: React.ComponentProps<"tbody">) {
+interface TableBodyProps extends React.ComponentProps<"tbody"> {
+  loading?: boolean
+  columnCount?: number
+  rowCount?: number
+}
+
+function TableBody({ 
+  className, 
+  loading, 
+  columnCount, 
+  rowCount = 5, 
+  children, 
+  ...props 
+}: TableBodyProps) {
+  if (loading && columnCount) {
+    return (
+      <tbody data-slot="table-body" className={cn("[&_tr:last-child]:border-0", className)} {...props}>
+        {Array.from({ length: rowCount }).map((_, i) => (
+          <TableRow key={i}>
+            {Array.from({ length: columnCount }).map((_, j) => (
+              <TableCell key={j}>
+                <Skeleton className="h-4 w-full max-w-[120px]" />
+              </TableCell>
+            ))}
+          </TableRow>
+        ))}
+      </tbody>
+    )
+  }
+
   return (
     <tbody
       data-slot="table-body"
       className={cn("[&_tr:last-child]:border-0", className)}
       {...props}
-    />
+    >
+      {children}
+    </tbody>
   )
 }
 
@@ -55,7 +86,7 @@ function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
     <tr
       data-slot="table-row"
       className={cn(
-        "hover:bg-muted/50 data-[state=selected]:bg-muted border-b transition-colors",
+        "hover:bg-slate-50/80 dark:hover:bg-slate-800/20 data-[state=selected]:bg-muted border-b transition-colors",
         className
       )}
       {...props}
@@ -68,7 +99,7 @@ function TableHead({ className, ...props }: React.ComponentProps<"th">) {
     <th
       data-slot="table-head"
       className={cn(
-        "text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
+        "text-slate-600 dark:text-slate-400 h-11 px-4 text-left align-middle font-semibold whitespace-nowrap border-r border-slate-200 dark:border-slate-800 last:border-r-0 [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
         className
       )}
       {...props}
@@ -81,7 +112,7 @@ function TableCell({ className, ...props }: React.ComponentProps<"td">) {
     <td
       data-slot="table-cell"
       className={cn(
-        "p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
+        "p-4 align-middle whitespace-nowrap text-left border-r border-slate-200 dark:border-slate-800 last:border-r-0 [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]",
         className
       )}
       {...props}
