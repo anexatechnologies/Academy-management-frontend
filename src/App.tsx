@@ -1,33 +1,32 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/app-sidebar"
+import ProtectedRoute from "@/components/auth/ProtectedRoute"
+import MainLayout from "@/components/layout/MainLayout"
+import LoginPage from "@/pages/auth/LoginPage"
+import ForgotPasswordPage from "@/pages/auth/ForgotPasswordPage"
+import ResetPasswordPage from "@/pages/auth/ResetPasswordPage"
 import ComponentsPage from "@/pages/components-page"
 import Dashboard from "@/pages/dashboard"
 
 function App() {
   return (
     <BrowserRouter>
-      <SidebarProvider>
-        <div className="flex min-h-screen w-full">
-          <AppSidebar />
-          <main className="flex-1 overflow-hidden bg-slate-50/50 dark:bg-slate-950/50 flex flex-col h-screen">
-            <header className="flex h-[73px] items-center gap-4 border-b px-4 md:px-6 bg-white dark:bg-slate-900 sticky top-0 z-10 shrink-0">
-              <SidebarTrigger className="md:hidden" />
-              <div className="h-4 w-px bg-slate-200 dark:bg-slate-800 md:hidden" />
-              <h2 className="text-sm font-medium text-slate-500 uppercase tracking-wider">
-                 Academy Management 
-              </h2>
-            </header>
-            <div className="flex-1 overflow-auto">
-              <Routes>
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/components" element={<ComponentsPage />} />
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
-            </div>
-          </main>
-        </div>
-      </SidebarProvider>
+      <Routes>
+        {/* Public Routes */}
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
+
+        {/* Protected Routes */}
+        <Route element={<ProtectedRoute />}>
+          <Route element={<MainLayout />}>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/components" element={<ComponentsPage />} />
+          </Route>
+        </Route>
+
+        {/* Fallback */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
     </BrowserRouter>
   )
 }
