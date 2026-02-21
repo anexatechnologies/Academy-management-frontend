@@ -1,7 +1,9 @@
-import { useState } from "react"
+import { toast } from "sonner"
+import { useMutation } from "@tanstack/react-query"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
+import { useEffect } from "react"
 import {
   Dialog,
   DialogContent,
@@ -37,39 +39,52 @@ interface ChangePasswordModalProps {
 }
 
 export function ChangePasswordModal({ open, onOpenChange }: ChangePasswordModalProps) {
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState(false)
   const axiosPrivate = useAxiosPrivate()
 
   const {
     register,
     handleSubmit,
     formState: { errors },
-    reset,
+    reset: resetForm,
   } = useForm<ChangePasswordValues>({
     resolver: zodResolver(changePasswordSchema),
   })
 
-  const onSubmit = async (data: ChangePasswordValues) => {
-    setIsLoading(true)
-    setError(null)
-    try {
+  const { 
+    mutate: changePassword, 
+    isPending, 
+    isSuccess,
+    reset: resetMutation 
+  } = useMutation({
+    mutationFn: async (data: any) => {
       await axiosPrivate.put("/auth/change-password", {
         current_password: data.current_password,
         new_password: data.new_password,
       })
-      setSuccess(true)
-      reset()
+    },
+    onSuccess: () => {
+      toast.success("Password successfully updated!")
+      resetForm()
       setTimeout(() => {
-        setSuccess(false)
         onOpenChange(false)
-      }, 2000)
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Failed to change password. Check your current password.")
-    } finally {
-      setIsLoading(false)
+      }, 1500)
+    },
+    onError: (error: any) => {
+      const message = error.response?.data?.message || "Failed to change password. Check your current password."
+      toast.error(message)
     }
+  })
+
+  // Reset states when modal closes
+  useEffect(() => {
+    if (!open) {
+      resetForm()
+      resetMutation()
+    }
+  }, [open, resetForm, resetMutation])
+
+  const onSubmit = (data: ChangePasswordValues) => {
+    changePassword(data)
   }
 
   return (
@@ -92,7 +107,7 @@ export function ChangePasswordModal({ open, onOpenChange }: ChangePasswordModalP
             label="Current Password"
             placeholder="••••••••"
             leftIcon={<KeyRound className="h-5 w-5" />}
-            disabled={isLoading}
+            disabled={isPending}
             error={errors.current_password?.message}
           />
           <Input
@@ -101,7 +116,7 @@ export function ChangePasswordModal({ open, onOpenChange }: ChangePasswordModalP
             label="New Password"
             placeholder="••••••••"
             leftIcon={<ShieldCheck className="h-5 w-5" />}
-            disabled={isLoading}
+            disabled={isPending}
             error={errors.new_password?.message}
           />
           <Input
@@ -110,34 +125,22 @@ export function ChangePasswordModal({ open, onOpenChange }: ChangePasswordModalP
             label="Confirm New Password"
             placeholder="••••••••"
             leftIcon={<ShieldCheck className="h-5 w-5" />}
-            disabled={isLoading}
+            disabled={isPending}
             error={errors.confirm_password?.message}
           />
-
-          {error && (
-            <div className="p-3 rounded-lg bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 text-sm font-medium animate-in fade-in slide-in-from-top-1">
-              {error}
-            </div>
-          )}
-
-          {success && (
-            <div className="p-3 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 text-sm font-medium animate-in fade-in slide-in-from-top-1">
-              Password successfully updated!
-            </div>
-          )}
 
           <div className="flex flex-col gap-2 pt-2">
             <Button
               type="submit"
               className="w-full h-11 rounded-lg text-base font-semibold transition-all shadow-md shadow-primary/20"
-              disabled={isLoading || success}
+              disabled={isPending || isSuccess}
             >
-              {isLoading ? (
+              {isPending ? (
                 <>
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                   Updating...
                 </>
-              ) : success ? (
+              ) : isSuccess ? (
                 "Success!"
               ) : (
                 "Update Password"
@@ -148,7 +151,7 @@ export function ChangePasswordModal({ open, onOpenChange }: ChangePasswordModalP
               variant="ghost"
               className="w-full"
               onClick={() => onOpenChange(false)}
-              disabled={isLoading}
+              disabled={isPending}
             >
               Cancel
             </Button>

@@ -1,4 +1,5 @@
-import { useState } from "react"
+import { toast } from "sonner"
+import { useMutation } from "@tanstack/react-query"
 import { useNavigate, Link } from "react-router-dom"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -15,8 +16,6 @@ const forgotPasswordSchema = z.object({
 type ForgotPasswordValues = z.infer<typeof forgotPasswordSchema>
 
 const ForgotPasswordPage = () => {
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   const navigate = useNavigate()
 
   const {
@@ -27,18 +26,23 @@ const ForgotPasswordPage = () => {
     resolver: zodResolver(forgotPasswordSchema),
   })
 
-  const onSubmit = async (data: ForgotPasswordValues) => {
-    setIsLoading(true)
-    setError(null)
-    try {
+  const { mutate: sendOtp, isPending } = useMutation({
+    mutationFn: async (data: ForgotPasswordValues) => {
       await axiosPublic.post("/auth/forgot-password", data)
-      // Pass the phone number to the reset page
-      navigate("/reset-password", { state: { phone: data.phone } })
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Something went wrong. Please try again.")
-    } finally {
-      setIsLoading(false)
+      return data.phone
+    },
+    onSuccess: (phone) => {
+      toast.success("OTP sent to your phone!")
+      navigate("/reset-password", { state: { phone } })
+    },
+    onError: (error: any) => {
+      const message = error.response?.data?.message || "Something went wrong. Please try again."
+      toast.error(message)
     }
+  })
+
+  const onSubmit = (data: ForgotPasswordValues) => {
+    sendOtp(data)
   }
 
   return (
@@ -72,24 +76,18 @@ const ForgotPasswordPage = () => {
                   {...register("phone")}
                   placeholder="Phone Number"
                   leftIcon={<Phone className="h-5 w-5" />}
-                  disabled={isLoading}
+                  disabled={isPending}
                   className="h-12 bg-slate-50 dark:bg-slate-800/50 border-none rounded-xl"
                   error={errors.phone?.message}
                 />
             </div>
 
-            {error && (
-              <div className="p-3 rounded-lg bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 text-sm font-medium">
-                {error}
-              </div>
-            )}
-
             <Button
               type="submit"
               className="w-full h-12 rounded-xl text-base font-semibold transition-all hover:scale-[1.01] active:scale-[0.99] shadow-lg shadow-primary/20"
-              disabled={isLoading}
+              disabled={isPending}
             >
-              {isLoading ? (
+              {isPending ? (
                 <>
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                   Sending OTP...

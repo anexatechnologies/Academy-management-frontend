@@ -1,4 +1,6 @@
-import { useState, useEffect } from "react"
+import { toast } from "sonner"
+import { useMutation } from "@tanstack/react-query"
+import { useEffect } from "react"
 import { useNavigate, useLocation, Link } from "react-router-dom"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -21,9 +23,6 @@ const resetPasswordSchema = z.object({
 type ResetPasswordValues = z.infer<typeof resetPasswordSchema>
 
 const ResetPasswordPage = () => {
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
   
@@ -46,38 +45,24 @@ const ResetPasswordPage = () => {
     }
   }, [phoneFromState, navigate])
 
-  const onSubmit = async (data: ResetPasswordValues) => {
-    setIsLoading(true)
-    setError(null)
-    try {
+  const { mutate: resetPassword, isPending } = useMutation({
+    mutationFn: async (data: ResetPasswordValues) => {
       await axiosPublic.post("/auth/reset-password", data)
-      setSuccess(true)
+    },
+    onSuccess: () => {
+      toast.success("Password successfully updated!")
       setTimeout(() => {
         navigate("/login", { replace: true })
-      }, 2000)
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Invalid OTP or request expired.")
-    } finally {
-      setIsLoading(false)
+      }, 1500)
+    },
+    onError: (error: any) => {
+      const message = error.response?.data?.message || "Invalid OTP or request expired."
+      toast.error(message)
     }
-  }
+  })
 
-  if (success) {
-    return (
-      <div className="min-h-screen w-full flex items-center justify-center p-6 bg-slate-50 dark:bg-slate-950">
-        <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 p-12 text-center space-y-6">
-          <div className="mx-auto w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center">
-            <ShieldCheck className="h-8 w-8 text-emerald-600 dark:text-emerald-400" />
-          </div>
-          <div className="space-y-2">
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Password Reset!</h1>
-            <p className="text-slate-500 dark:text-slate-400">
-              Your password has been successfully updated. Redirecting to login...
-            </p>
-          </div>
-        </div>
-      </div>
-    )
+  const onSubmit = (data: ResetPasswordValues) => {
+    resetPassword(data)
   }
 
   return (
@@ -111,7 +96,7 @@ const ResetPasswordPage = () => {
                   {...register("otp")}
                   placeholder="6-digit OTP"
                   leftIcon={<ShieldCheck className="h-5 w-5" />}
-                  disabled={isLoading}
+                  disabled={isPending}
                   className="h-12 bg-slate-50 dark:bg-slate-800/50 border-none rounded-xl"
                   error={errors.otp?.message}
                 />
@@ -121,24 +106,18 @@ const ResetPasswordPage = () => {
                   type="password"
                   placeholder="New Password"
                   leftIcon={<KeyRound className="h-5 w-5" />}
-                  disabled={isLoading}
+                  disabled={isPending}
                   className="h-12 bg-slate-50 dark:bg-slate-800/50 border-none rounded-xl"
                   error={errors.new_password?.message}
                 />
             </div>
 
-            {error && (
-              <div className="p-3 rounded-lg bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 text-sm font-medium">
-                {error}
-              </div>
-            )}
-
             <Button
               type="submit"
               className="w-full h-12 rounded-xl text-base font-semibold transition-all hover:scale-[1.01] active:scale-[0.99] shadow-lg shadow-primary/20"
-              disabled={isLoading}
+              disabled={isPending}
             >
-              {isLoading ? (
+              {isPending ? (
                 <>
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                   Updating...

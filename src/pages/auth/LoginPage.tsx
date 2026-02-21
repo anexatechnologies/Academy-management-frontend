@@ -1,4 +1,5 @@
-import { useState } from "react"
+import { useMutation } from "@tanstack/react-query"
+import { toast } from "sonner"
 import { useNavigate, Link } from "react-router-dom"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -17,8 +18,6 @@ const loginSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>
 
 const LoginPage = () => {
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   const { setAuth } = useAuth()
   const navigate = useNavigate()
 
@@ -30,19 +29,24 @@ const LoginPage = () => {
     resolver: zodResolver(loginSchema),
   })
 
-  const onSubmit = async (data: LoginFormValues) => {
-    setIsLoading(true)
-    setError(null)
-    try {
+  const { mutate: login, isPending } = useMutation({
+    mutationFn: async (data: LoginFormValues) => {
       const response = await axiosPublic.post("/auth/login", data)
-      const { token, user } = response.data.data
-      setAuth({ token, user })
+      return response.data.data
+    },
+    onSuccess: (data) => {
+      toast.success("Login successful!")
+      setAuth({ token: data.token, user: data.user })
       navigate("/", { replace: true })
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Invalid username or password")
-    } finally {
-      setIsLoading(false)
+    },
+    onError: (error: any) => {
+      const message = error.response?.data?.message || "Invalid username or password"
+      toast.error(message)
     }
+  })
+
+  const onSubmit = (data: LoginFormValues) => {
+    login(data)
   }
 
   return (
@@ -68,7 +72,7 @@ const LoginPage = () => {
                   {...register("username")}
                   placeholder="Username"
                   leftIcon={<User className="h-5 w-5" />}
-                  disabled={isLoading}
+                  disabled={isPending}
                   className="h-12 bg-slate-50 dark:bg-slate-800/50 border-none rounded-xl"
                   error={errors.username?.message}
                 />
@@ -78,17 +82,11 @@ const LoginPage = () => {
                   type="password"
                   placeholder="Password"
                   leftIcon={<Lock className="h-5 w-5" />}
-                  disabled={isLoading}
+                  disabled={isPending}
                   className="h-12 bg-slate-50 dark:bg-slate-800/50 border-none rounded-xl"
                   error={errors.password?.message}
                 />
             </div>
-
-            {error && (
-              <div className="p-3 rounded-lg bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 text-sm font-medium animate-in fade-in slide-in-from-top-1">
-                {error}
-              </div>
-            )}
 
             <div className="flex items-center justify-end">
               <Link
@@ -102,9 +100,9 @@ const LoginPage = () => {
             <Button
               type="submit"
               className="w-full h-12 rounded-xl text-base font-semibold transition-all hover:scale-[1.01] active:scale-[0.99] shadow-lg shadow-primary/20"
-              disabled={isLoading}
+              disabled={isPending}
             >
-              {isLoading ? (
+              {isPending ? (
                 <>
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                   Logging in...
