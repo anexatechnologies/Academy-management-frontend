@@ -4,6 +4,8 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { SearchBar } from "@/components/ui/search-bar"
 import { Upload } from "@/components/ui/upload"
+import { EditButton } from "@/components/ui/edit-button"
+import { DeleteButton } from "@/components/ui/delete-button"
 import {
   Dialog,
   DialogContent,
@@ -27,6 +29,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { Label } from "@/components/ui/label"
 import { Loader2 } from "lucide-react"
 
 export default function ComponentsPage() {
@@ -68,6 +71,31 @@ export default function ComponentsPage() {
         </div>
       </section>
 
+      {/* Action Buttons Section */}
+      <section className="space-y-6">
+        <div className="space-y-2">
+          <h2 className="text-2xl font-bold">Action Buttons</h2>
+          <p className="text-muted-foreground">Specialized buttons for common data actions with built-in tooltips and confirmation.</p>
+        </div>
+        <div className="flex flex-col gap-8">
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-500">Standard States</h3>
+            <div className="flex gap-4 items-center">
+              <EditButton title="Student" onEdit={() => console.log("Edit clicked")} />
+              <DeleteButton title="Student" onDelete={() => console.log("Delete clicked")} />
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-500">Loading States</h3>
+            <div className="flex gap-4 items-center">
+              <EditButton title="Student" loading />
+              <DeleteButton title="Student" loading />
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Inputs Section */}
       <section className="space-y-6">
         <div className="space-y-2">
@@ -75,16 +103,22 @@ export default function ComponentsPage() {
           <p className="text-muted-foreground">Standard and custom input components.</p>
         </div>
         <div className="grid gap-8 max-w-xl">
+          <Input 
+            label="Standard Input" 
+            placeholder="Enter your name..." 
+          />
+          <Input 
+            label="Input with Error" 
+            placeholder="Enter your email..." 
+            error="Please enter a valid email address."
+            defaultValue="invalid-email"
+          />
+          <Textarea 
+            label="Description" 
+            placeholder="Enter your description..." 
+          />
           <div className="space-y-2">
-            <span className="text-sm font-medium">Standard Input</span>
-            <Input placeholder="Enter your name..." />
-          </div>
-          <div className="space-y-2">
-            <span className="text-sm font-medium">Textarea</span>
-            <Textarea placeholder="Enter your description..." />
-          </div>
-          <div className="space-y-2">
-            <span className="text-sm font-medium">Search Bar</span>
+            <Label className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 ml-0.5">Search Bar</Label>
             <SearchBar 
               placeholder="Search students, classes..." 
               onSearch={handleSearch}
