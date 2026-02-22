@@ -51,3 +51,4 @@ export const handleApiError = <T extends Record<string, any>>(
     error instanceof Error ? error.message : "An unexpected internal server error occurred"
   toast.error(fallbackMessage)
 }
+
