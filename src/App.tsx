@@ -12,6 +12,8 @@ import UserEditPage from "@/pages/users/UserEditPage"
 import CoursesListPage from "@/pages/courses/CoursesListPage"
 import CourseCreatePage from "@/pages/courses/CourseCreatePage"
 import CourseEditPage from "@/pages/courses/CourseEditPage"
+import SettingsPage from "@/pages/settings-page"
+
 
 function App() {
   return (
@@ -34,6 +36,7 @@ function App() {
             <Route path="/courses/new" element={<CourseCreatePage />} />
             <Route path="/courses/edit/:id" element={<CourseEditPage />} />
             <Route path="/components" element={<ComponentsPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
           </Route>
         </Route>
 

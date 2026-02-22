@@ -4,7 +4,6 @@ import {
   Users,
   Settings,
   BookOpen,
-  Calendar,
   Palette,
 } from "lucide-react"
 
@@ -39,16 +38,6 @@ const items = [
     title: "Course Management",
     url: "/courses",
     icon: BookOpen,
-  },
-  {
-    title: "Students",
-    url: "/students",
-    icon: Users,
-  },
-  {
-    title: "Schedule",
-    url: "/schedule",
-    icon: Calendar,
   },
   {
     title: "Components",
