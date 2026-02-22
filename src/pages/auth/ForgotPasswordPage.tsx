@@ -2,12 +2,14 @@ import { toast } from "sonner"
 import { useMutation } from "@tanstack/react-query"
 import { useNavigate, Link } from "react-router-dom"
 import { useForm } from "react-hook-form"
+import type { UseFormSetError } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { axiosPublic } from "@/api/axios"
 import { ArrowLeft, Loader2, Phone } from "lucide-react"
+import { handleApiError } from "@/utils/api-error"
 
 const forgotPasswordSchema = z.object({
   phone: z.string().min(10, "Phone number must be at least 10 digits"),
@@ -21,13 +23,14 @@ const ForgotPasswordPage = () => {
   const {
     register,
     handleSubmit,
+    setError,
     formState: { errors },
   } = useForm<ForgotPasswordValues>({
     resolver: zodResolver(forgotPasswordSchema),
   })
 
   const { mutate: sendOtp, isPending } = useMutation({
-    mutationFn: async (data: ForgotPasswordValues) => {
+    mutationFn: async ({ data }: { data: ForgotPasswordValues; setError: UseFormSetError<ForgotPasswordValues> }) => {
       await axiosPublic.post("/auth/forgot-password", data)
       return data.phone
     },
@@ -35,14 +38,13 @@ const ForgotPasswordPage = () => {
       toast.success("OTP sent to your phone!")
       navigate("/reset-password", { state: { phone } })
     },
-    onError: (error: any) => {
-      const message = error.response?.data?.message || "Something went wrong. Please try again."
-      toast.error(message)
+    onError: (error: any, variables) => {
+      handleApiError(error, variables.setError)
     }
   })
 
   const onSubmit = (data: ForgotPasswordValues) => {
-    sendOtp(data)
+    sendOtp({ data, setError })
   }
 
   return (

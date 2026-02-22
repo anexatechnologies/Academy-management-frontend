@@ -18,6 +18,7 @@ interface DeleteButtonProps {
   title?: string
   onDelete?: () => void
   loading?: boolean
+  disabled?: boolean
   className?: string
 }
 
@@ -25,6 +26,7 @@ export function DeleteButton({
   title = "Item", 
   onDelete, 
   loading = false, 
+  disabled = false,
   className 
 }: DeleteButtonProps) {
   const [open, setOpen] = React.useState(false)
@@ -45,7 +47,7 @@ export function DeleteButton({
                 <Button
                   variant="ghost"
                   size="icon"
-                  disabled={loading}
+                  disabled={loading || disabled}
                   className={cn(
                     "h-9 w-9 text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-colors rounded-lg",
                     open && "bg-rose-50 text-rose-600 shadow-inner",

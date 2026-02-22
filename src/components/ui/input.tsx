@@ -61,13 +61,13 @@ function Input({ className, type, label, error, id, leftIcon, ...props }: InputP
             </button>
           )}
         </div>
-        <div className="min-h-[20px]">
-          {error && (
+        {error && (
+          <div className="min-h-[20px]">
             <p className="text-[12px] font-medium text-rose-500 dark:text-rose-400 ml-0.5 animate-in fade-in slide-in-from-top-0.5 duration-200">
               {error}
             </p>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   )

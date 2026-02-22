@@ -2,6 +2,7 @@ import { useMutation } from "@tanstack/react-query"
 import { toast } from "sonner"
 import { useNavigate, Link } from "react-router-dom"
 import { useForm } from "react-hook-form"
+import type { UseFormSetError } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { Button } from "@/components/ui/button"
@@ -9,6 +10,7 @@ import { Input } from "@/components/ui/input"
 import { useAuth } from "@/context/AuthContext"
 import { axiosPublic } from "@/api/axios"
 import { Loader2, Lock, User } from "lucide-react"
+import { handleApiError } from "@/utils/api-error"
 
 const loginSchema = z.object({
   username: z.string().min(1, "Username is required"),
@@ -24,13 +26,14 @@ const LoginPage = () => {
   const {
     register,
     handleSubmit,
+    setError,
     formState: { errors },
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
   })
 
   const { mutate: login, isPending } = useMutation({
-    mutationFn: async (data: LoginFormValues) => {
+    mutationFn: async ({ data }: { data: LoginFormValues; setError: UseFormSetError<LoginFormValues> }) => {
       const response = await axiosPublic.post("/auth/login", data)
       return response.data.data
     },
@@ -39,14 +42,13 @@ const LoginPage = () => {
       setAuth({ token: data.token, user: data.user })
       navigate("/", { replace: true })
     },
-    onError: (error: any) => {
-      const message = error.response?.data?.message || "Invalid username or password"
-      toast.error(message)
+    onError: (error: any, variables) => {
+      handleApiError(error, variables.setError)
     }
   })
 
   const onSubmit = (data: LoginFormValues) => {
-    login(data)
+    login({ data, setError })
   }
 
   return (

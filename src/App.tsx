@@ -6,6 +6,9 @@ import ForgotPasswordPage from "@/pages/auth/ForgotPasswordPage"
 import ResetPasswordPage from "@/pages/auth/ResetPasswordPage"
 import ComponentsPage from "@/pages/components-page"
 import Dashboard from "@/pages/dashboard"
+import UsersListPage from "@/pages/users/UsersListPage"
+import UserCreatePage from "@/pages/users/UserCreatePage"
+import UserEditPage from "@/pages/users/UserEditPage"
 
 function App() {
   return (
@@ -20,6 +23,9 @@ function App() {
         <Route element={<ProtectedRoute />}>
           <Route element={<MainLayout />}>
             <Route path="/" element={<Dashboard />} />
+            <Route path="/users" element={<UsersListPage />} />
+            <Route path="/users/new" element={<UserCreatePage />} />
+            <Route path="/users/edit/:id" element={<UserEditPage />} />
             <Route path="/components" element={<ComponentsPage />} />
           </Route>
         </Route>

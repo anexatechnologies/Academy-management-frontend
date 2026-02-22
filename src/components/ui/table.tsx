@@ -8,6 +8,7 @@ interface TableProps extends React.ComponentProps<"table"> {
   page?: number
   pageSize?: number
   totalPages?: number
+  totalData?: number
   onPageChange?: (page: number) => void
   onPageSizeChange?: (pageSize: number) => void
   containerClassName?: string
@@ -19,6 +20,7 @@ function Table({
   page = 1,
   pageSize = 10,
   totalPages = 1,
+  totalData = 0,
   onPageChange = () => {},
   onPageSizeChange = () => {},
   containerClassName,
@@ -46,6 +48,7 @@ function Table({
           page={page}
           pageSize={pageSize}
           totalPages={totalPages}
+          totalData={totalData}
           onPageChange={onPageChange}
           onPageSizeChange={onPageSizeChange}
         />

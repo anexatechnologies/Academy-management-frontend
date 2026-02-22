@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { axiosPublic } from "@/api/axios"
 import { ArrowLeft, KeyRound, Loader2, ShieldCheck } from "lucide-react"
+import { handleApiError } from "@/utils/api-error"
+import type { UseFormSetError } from "react-hook-form"
 
 const resetPasswordSchema = z.object({
   phone: z.string(),
@@ -31,6 +33,7 @@ const ResetPasswordPage = () => {
   const {
     register,
     handleSubmit,
+    setError,
     formState: { errors },
   } = useForm<ResetPasswordValues>({
     resolver: zodResolver(resetPasswordSchema),
@@ -46,7 +49,7 @@ const ResetPasswordPage = () => {
   }, [phoneFromState, navigate])
 
   const { mutate: resetPassword, isPending } = useMutation({
-    mutationFn: async (data: ResetPasswordValues) => {
+    mutationFn: async ({ data }: { data: ResetPasswordValues; setError: UseFormSetError<ResetPasswordValues> }) => {
       await axiosPublic.post("/auth/reset-password", data)
     },
     onSuccess: () => {
@@ -55,14 +58,13 @@ const ResetPasswordPage = () => {
         navigate("/login", { replace: true })
       }, 1500)
     },
-    onError: (error: any) => {
-      const message = error.response?.data?.message || "Invalid OTP or request expired."
-      toast.error(message)
+    onError: (error: any, variables) => {
+      handleApiError(error, variables.setError)
     }
   })
 
   const onSubmit = (data: ResetPasswordValues) => {
-    resetPassword(data)
+    resetPassword({ data, setError })
   }
 
   return (

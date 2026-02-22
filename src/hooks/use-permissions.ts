@@ -1,0 +1,31 @@
+import { useAuth } from "@/context/AuthContext"
+
+type Action = "create" | "read" | "update" | "delete"
+
+export const usePermissions = () => {
+  const { auth } = useAuth()
+
+  const hasPermission = (module: string, action: Action) => {
+    // Super admin can do everything
+    if (auth.user?.role === "super_admin" || auth.user?.role === "SUPER_ADMIN") {
+      return true
+    }
+
+    if (!auth.user?.permissions) {
+      return false
+    }
+
+    return auth.user.permissions.some(
+      (p) => p.module === module && p.action === action
+    )
+  }
+
+  // Helper properties for common modules
+  return {
+    hasPermission,
+    canCreateUser: hasPermission("users", "create"),
+    canReadUsers: hasPermission("users", "read"),
+    canUpdateUser: hasPermission("users", "update"),
+    canDeleteUser: hasPermission("users", "delete"),
+  }
+}

@@ -26,6 +26,11 @@ import { NavUser } from "@/components/nav-user"
 // Menu items.
 const items = [
   {
+    title: "User Management",
+    url: "/users",
+    icon: Users,
+  },
+  {
     title: "Dashboard",
     url: "/",
     icon: LayoutDashboard,

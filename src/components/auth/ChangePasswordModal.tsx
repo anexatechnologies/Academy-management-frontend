@@ -1,6 +1,7 @@
 import { toast } from "sonner"
 import { useMutation } from "@tanstack/react-query"
 import { useForm } from "react-hook-form"
+import type { UseFormSetError } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { useEffect } from "react"
@@ -15,6 +16,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useAxiosPrivate } from "@/hooks/useAxiosPrivate"
 import { Loader2, KeyRound, ShieldCheck } from "lucide-react"
+import { handleApiError } from "@/utils/api-error"
 
 const changePasswordSchema = z
   .object({
@@ -44,6 +46,7 @@ export function ChangePasswordModal({ open, onOpenChange }: ChangePasswordModalP
   const {
     register,
     handleSubmit,
+    setError,
     formState: { errors },
     reset: resetForm,
   } = useForm<ChangePasswordValues>({
@@ -56,7 +59,7 @@ export function ChangePasswordModal({ open, onOpenChange }: ChangePasswordModalP
     isSuccess,
     reset: resetMutation 
   } = useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: async ({ data }: { data: ChangePasswordValues; setError: UseFormSetError<ChangePasswordValues> }) => {
       await axiosPrivate.put("/auth/change-password", {
         current_password: data.current_password,
         new_password: data.new_password,
@@ -69,9 +72,8 @@ export function ChangePasswordModal({ open, onOpenChange }: ChangePasswordModalP
         onOpenChange(false)
       }, 1500)
     },
-    onError: (error: any) => {
-      const message = error.response?.data?.message || "Failed to change password. Check your current password."
-      toast.error(message)
+    onError: (error: any, variables) => {
+      handleApiError(error, variables.setError)
     }
   })
 
@@ -84,7 +86,7 @@ export function ChangePasswordModal({ open, onOpenChange }: ChangePasswordModalP
   }, [open, resetForm, resetMutation])
 
   const onSubmit = (data: ChangePasswordValues) => {
-    changePassword(data)
+    changePassword({ data, setError })
   }
 
   return (

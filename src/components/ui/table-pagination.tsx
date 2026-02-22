@@ -19,6 +19,7 @@ interface TablePaginationProps {
   page: number
   pageSize: number
   totalPages: number
+  totalData?: number
   onPageChange: (page: number) => void
   onPageSizeChange: (pageSize: number) => void
   pageSizeOptions?: number[]
@@ -28,6 +29,7 @@ export function TablePagination({
   page,
   pageSize,
   totalPages,
+  totalData = 0,
   onPageChange,
   onPageSizeChange,
   pageSizeOptions = [10, 50, 100],
@@ -50,6 +52,11 @@ export function TablePagination({
             ))}
           </SelectContent>
         </Select>
+        {totalData > 0 && (
+          <span className="text-xs text-slate-500 ml-2">
+            Showing {Math.min((page - 1) * pageSize + 1, totalData)} to {Math.min(page * pageSize, totalData)} of {totalData}
+          </span>
+        )}
       </div>
 
       <Pagination className="w-auto mx-0">
