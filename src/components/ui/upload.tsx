@@ -13,7 +13,7 @@ const Upload = React.forwardRef<HTMLInputElement, UploadProps>(
   ({ className, onFilesSelected, maxFiles = 1, accept, ...props }, ref) => {
     const [dragActive, setDragActive] = React.useState(false)
     const [selectedFiles, setSelectedFiles] = React.useState<File[]>([])
-    const inputRef = React.useRef<HTMLInputElement>(null)
+    const inputRef = React.useRef<HTMLInputElement | null>(null)
 
     const handleDrag = (e: React.DragEvent) => {
       e.preventDefault()
@@ -74,7 +74,6 @@ const Upload = React.forwardRef<HTMLInputElement, UploadProps>(
             ref={(node) => {
               if (typeof ref === 'function') ref(node)
               else if (ref) ref.current = node
-              // @ts-ignore
               inputRef.current = node
             }}
             type="file"

@@ -9,6 +9,9 @@ import Dashboard from "@/pages/dashboard"
 import UsersListPage from "@/pages/users/UsersListPage"
 import UserCreatePage from "@/pages/users/UserCreatePage"
 import UserEditPage from "@/pages/users/UserEditPage"
+import CoursesListPage from "@/pages/courses/CoursesListPage"
+import CourseCreatePage from "@/pages/courses/CourseCreatePage"
+import CourseEditPage from "@/pages/courses/CourseEditPage"
 
 function App() {
   return (
@@ -26,6 +29,10 @@ function App() {
             <Route path="/users" element={<UsersListPage />} />
             <Route path="/users/new" element={<UserCreatePage />} />
             <Route path="/users/edit/:id" element={<UserEditPage />} />
+
+            <Route path="/courses" element={<CoursesListPage />} />
+            <Route path="/courses/new" element={<CourseCreatePage />} />
+            <Route path="/courses/edit/:id" element={<CourseEditPage />} />
             <Route path="/components" element={<ComponentsPage />} />
           </Route>
         </Route>

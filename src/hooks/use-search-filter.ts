@@ -1,11 +1,12 @@
 import { useState, useMemo, useEffect, useCallback } from "react"
 
-interface UseSearchFilterOptions<T extends Record<string, string>> {
+interface UseSearchFilterOptions<T extends Record<string, string | undefined>> {
   initialFilters: T
   debounceMs?: number
+  onFilterChange?: () => void
 }
 
-interface UseSearchFilterReturn<T extends Record<string, string>> {
+interface UseSearchFilterReturn<T extends Record<string, string | undefined>> {
   search: string
   setSearch: (value: string) => void
   debouncedSearch: string
@@ -15,10 +16,10 @@ interface UseSearchFilterReturn<T extends Record<string, string>> {
   params: { search?: string } & Partial<T>
 }
 
-export function useSearchFilter<T extends Record<string, string>>(
+export function useSearchFilter<T extends Record<string, string | undefined>>(
   options: UseSearchFilterOptions<T>
 ): UseSearchFilterReturn<T> {
-  const { initialFilters, debounceMs = 300 } = options
+  const { initialFilters, debounceMs = 300, onFilterChange } = options
 
   const [search, setSearch] = useState("")
   const [debouncedSearch, setDebouncedSearch] = useState("")
@@ -31,6 +32,11 @@ export function useSearchFilter<T extends Record<string, string>>(
     }, debounceMs)
     return () => clearTimeout(timer)
   }, [search, debounceMs])
+
+  // Call onFilterChange when debouncedSearch or filters change
+  useEffect(() => {
+    onFilterChange?.()
+  }, [debouncedSearch, filters, onFilterChange])
 
   const setFilter = useCallback(<K extends keyof T>(key: K, value: T[K]) => {
     setFilters((prev) => ({ ...prev, [key]: value }))

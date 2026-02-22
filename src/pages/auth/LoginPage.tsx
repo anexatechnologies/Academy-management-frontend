@@ -42,7 +42,7 @@ const LoginPage = () => {
       setAuth({ token: data.token, user: data.user })
       navigate("/", { replace: true })
     },
-    onError: (error: any, variables) => {
+    onError: (error: unknown, variables) => {
       handleApiError(error, variables.setError)
     }
   })

@@ -26,24 +26,24 @@ import { NavUser } from "@/components/nav-user"
 // Menu items.
 const items = [
   {
-    title: "User Management",
-    url: "/users",
-    icon: Users,
-  },
-  {
     title: "Dashboard",
     url: "/",
     icon: LayoutDashboard,
   },
   {
-    title: "Students",
-    url: "/students",
+    title: "User Management",
+    url: "/users",
     icon: Users,
   },
   {
-    title: "Classes",
-    url: "/classes",
+    title: "Course Management",
+    url: "/courses",
     icon: BookOpen,
+  },
+  {
+    title: "Students",
+    url: "/students",
+    icon: Users,
   },
   {
     title: "Schedule",

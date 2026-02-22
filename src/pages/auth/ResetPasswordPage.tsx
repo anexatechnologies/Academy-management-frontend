@@ -58,7 +58,7 @@ const ResetPasswordPage = () => {
         navigate("/login", { replace: true })
       }, 1500)
     },
-    onError: (error: any, variables) => {
+    onError: (error: unknown, variables) => {
       handleApiError(error, variables.setError)
     }
   })

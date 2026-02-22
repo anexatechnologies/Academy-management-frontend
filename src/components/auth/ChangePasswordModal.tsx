@@ -72,7 +72,7 @@ export function ChangePasswordModal({ open, onOpenChange }: ChangePasswordModalP
         onOpenChange(false)
       }, 1500)
     },
-    onError: (error: any, variables) => {
+    onError: (error: unknown, variables) => {
       handleApiError(error, variables.setError)
     }
   })

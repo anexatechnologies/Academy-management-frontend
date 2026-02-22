@@ -10,7 +10,8 @@ interface InputProps extends React.ComponentProps<"input"> {
 }
 
 function Input({ className, type, label, error, id, leftIcon, ...props }: InputProps) {
-  const inputId = id || React.useId()
+  const gId = React.useId()
+  const inputId = id || gId
   const [showPassword, setShowPassword] = React.useState(false)
   const isPassword = type === "password"
   

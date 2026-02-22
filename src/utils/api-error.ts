@@ -1,4 +1,4 @@
-import type { UseFormSetError } from "react-hook-form"
+import type { UseFormSetError, FieldValues, Path } from "react-hook-form"
 import { toast } from "sonner"
 import { isAxiosError } from "axios"
 
@@ -18,7 +18,7 @@ export interface ApiErrorResponse {
  * @param error The error object caught from the API (usually AxiosError)
  * @param setError The react-hook-form setError function
  */
-export const handleApiError = <T extends Record<string, any>>(
+export const handleApiError = <T extends FieldValues>(
   error: unknown,
   setError: UseFormSetError<T>
 ) => {
@@ -29,7 +29,7 @@ export const handleApiError = <T extends Record<string, any>>(
     if (data.status === "error" && data.errors && Array.isArray(data.errors)) {
       data.errors.forEach((err) => {
         // We cast the field to Path<T> assuming the backend fields match the form fields
-        setError(err.field as any, {
+        setError(err.field as Path<T>, {
           type: "server",
           message: err.message,
         })
@@ -51,4 +51,3 @@ export const handleApiError = <T extends Record<string, any>>(
     error instanceof Error ? error.message : "An unexpected internal server error occurred"
   toast.error(fallbackMessage)
 }
-

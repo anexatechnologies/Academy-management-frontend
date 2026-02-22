@@ -8,7 +8,8 @@ interface TextareaProps extends React.ComponentProps<"textarea"> {
 }
 
 function Textarea({ className, label, error, id, ...props }: TextareaProps) {
-  const textareaId = id || React.useId()
+  const reactId = React.useId()
+  const textareaId = id || reactId
 
   return (
     <div className="space-y-1.5 w-full">

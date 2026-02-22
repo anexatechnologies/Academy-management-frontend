@@ -2,7 +2,7 @@ import { useMemo, useEffect } from "react"
 import { RequirePermission } from "@/components/auth/RequirePermission"
 import { usePermissions } from "@/hooks/use-permissions"
 import { useNavigate } from "react-router-dom"
-import { UserPlus, X } from "lucide-react"
+import { Plus, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Table,
@@ -12,8 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { useUsers, useDeleteUser, useToggleUserStatus } from "@/hooks/api/use-users"
-import { useRoles } from "@/hooks/api/use-roles"
+import { useCourses, useDeleteCourse, useToggleCourseStatus } from "@/hooks/api/use-courses"
 import BodyLayout from "@/components/layout/BodyLayout"
 import { toast } from "sonner"
 import { EditButton } from "@/components/ui/edit-button"
@@ -23,21 +22,20 @@ import { CustomSelect } from "@/components/ui/custom-select"
 import { useSearchFilter } from "@/hooks/use-search-filter"
 import { usePagination } from "@/hooks/use-pagination"
 
-const UsersListPage = () => {
+const CoursesListPage = () => {
   const navigate = useNavigate()
   const { page, pageSize, setPage, setPageSize, setTotal } = usePagination()
 
-  type UserFilters = {
-    role?: string
+  type CourseFilters = {
     status?: string
   }
 
-  const { search, setSearch, params, setFilter, resetFilters } = useSearchFilter<UserFilters>({
+  const { search, setSearch, params, setFilter, resetFilters } = useSearchFilter<CourseFilters>({
     initialFilters: {},
     onFilterChange: () => setPage(1),
   })
 
-  const { data, isLoading } = useUsers({
+  const { data, isLoading } = useCourses({
     page,
     limit: pageSize,
     ...params,
@@ -50,54 +48,51 @@ const UsersListPage = () => {
     }
   }, [data?.pagination?.totalData, setTotal])
 
-  const { mutate: deleteUser, isPending: isDeleting } = useDeleteUser()
-  const { mutate: toggleStatus } = useToggleUserStatus()
-
-  const { data: rolesData, isLoading: isLoadingRoles } = useRoles()
-  const { canUpdateUser, canDeleteUser } = usePermissions()
+  const { mutate: deleteCourse, isPending: isDeleting } = useDeleteCourse()
+  const { mutate: toggleStatus } = useToggleCourseStatus()
+  const { canUpdateCourse, canDeleteCourse } = usePermissions()
 
   const handleDelete = (id: number) => {
     toast.promise(
       new Promise((resolve, reject) => {
-        deleteUser(id, {
+        deleteCourse(id, {
           onSuccess: resolve,
           onError: reject,
         })
       }),
       {
-        loading: "Deleting user...",
-        success: "User deleted successfully",
+        loading: "Deleting course...",
+        success: "Course deleted successfully",
         error: (err: unknown) => {
           const error = err as Error & { response?: { data?: { message?: string } } };
-          return error.response?.data?.message || "Failed to delete user";
+          return error.response?.data?.message || "Failed to delete course";
         },
       }
     )
   }
 
-  const handleStatusChange = (userId: number, currentStatus: boolean, newStatusStr: string) => {
-    const newStatus = newStatusStr === "active"
-    if (currentStatus !== newStatus) {
-      toast.promise(
-        new Promise((resolve, reject) => {
-          toggleStatus(userId, {
-            onSuccess: resolve,
-            onError: reject,
-          })
-        }),
-        {
-          loading: "Updating status...",
-          success: "Status updated successfully",
-          error: (err: unknown) => {
-            const error = err as Error & { response?: { data?: { message?: string } } };
-            return error.response?.data?.message || "Failed to update status";
-          },
-        }
-      )
-    }
+  const handleStatusChange = (id: number, currentStatus: string, newStatus: string) => {
+    if (currentStatus === newStatus) return
+
+    toast.promise(
+      new Promise((resolve, reject) => {
+        toggleStatus(id, {
+          onSuccess: resolve,
+          onError: reject,
+        })
+      }),
+      {
+        loading: "Updating status...",
+        success: "Course status updated",
+        error: (err: unknown) => {
+          const error = err as Error & { response?: { data?: { message?: string } } };
+          return error.response?.data?.message || "Failed to update status";
+        },
+      }
+    )
   }
 
-  const breadcrumbs = useMemo(() => [{ label: "User Management" }], [])
+  const breadcrumbs = useMemo(() => [{ label: "Course Management" }], [])
 
   return (
     <BodyLayout
@@ -105,24 +100,13 @@ const UsersListPage = () => {
       toolbar={
         <div className="flex items-center gap-3">
           <SearchBar
-            placeholder="Search users..."
+            placeholder="Search courses..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-72 bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 h-10"
           />
           <div className="w-px h-6 bg-slate-200 dark:bg-slate-800 hidden sm:block" />
           
-          <CustomSelect
-            value={params.role || "all"}
-            onValueChange={(val) => setFilter("role", val === "all" ? undefined : val)}
-            triggerClassName="w-[150px]"
-            isLoading={isLoadingRoles}
-            options={[
-              { value: "all", label: "All Roles" },
-              ...(rolesData || []).map(r => ({ value: r.name, label: r.name.replace("_", " ").replace(/\b\w/g, l => l.toUpperCase()) }))
-            ]}
-          />
-
           <CustomSelect
             value={params.status || "all"}
             onValueChange={(val) => setFilter("status", val === "all" ? undefined : val)}
@@ -150,7 +134,7 @@ const UsersListPage = () => {
             ]}
           />
 
-          {(search || params.role || params.status) && (
+          {(search || params.status) && (
             <Button
               variant="ghost"
               size="icon"
@@ -164,10 +148,10 @@ const UsersListPage = () => {
         </div>
       }
       actions={
-        <RequirePermission module="users" action="create">
-          <Button onClick={() => navigate("/users/new")} className="rounded-xl shadow-lg shadow-primary/20 h-10">
-            <UserPlus className="mr-2 h-4 w-4" />
-            Add User
+        <RequirePermission module="courses" action="create">
+          <Button onClick={() => navigate("/courses/new")} className="rounded-xl shadow-lg shadow-primary/20 h-10">
+            <Plus className="mr-2 h-4 w-4" />
+            Add Course
           </Button>
         </RequirePermission>
       }
@@ -183,37 +167,33 @@ const UsersListPage = () => {
         >
           <TableHeader>
             <TableRow>
-              <TableHead>Full Name</TableHead>
-              <TableHead>Username</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Phone</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead className="w-[100px]">Status</TableHead>
-              {(canUpdateUser || canDeleteUser) && (
+              <TableHead className="w-[80px]">Sr NO</TableHead>
+              <TableHead>Course Name</TableHead>
+              <TableHead>Course Fees</TableHead>
+              <TableHead className="w-[150px]">Status</TableHead>
+              {(canUpdateCourse || canDeleteCourse) && (
                 <TableHead className="w-[120px] text-center">Actions</TableHead>
               )}
             </TableRow>
           </TableHeader>
-          <TableBody loading={isLoading} columnCount={(canUpdateUser || canDeleteUser) ? 7 : 6} rowCount={pageSize}>
-            {!isLoading && data?.data.map((user) => (
-              <TableRow key={user.id}>
-                <TableCell className="font-semibold text-slate-900 dark:text-slate-100">
-                  {user.full_name}
+          <TableBody loading={isLoading} columnCount={(canUpdateCourse || canDeleteCourse) ? 5 : 4} rowCount={pageSize}>
+            {!isLoading && data?.data.map((course, index) => (
+              <TableRow key={course.id}>
+                <TableCell className="text-slate-500 font-medium">
+                  {(page - 1) * pageSize + index + 1}
                 </TableCell>
-                <TableCell>{user.username}</TableCell>
-                <TableCell>{user.email}</TableCell>
-                <TableCell>{user.phone}</TableCell>
-                <TableCell>
-                  <span className="px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-xs font-medium uppercase tracking-wider">
-                    {user.role_name?.replace(/_/g, " ")}
-                  </span>
+                <TableCell className="font-semibold text-slate-900 dark:text-slate-100">
+                  {course.name}
+                </TableCell>
+                <TableCell className="font-medium text-primary">
+                  {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(course.fees)}
                 </TableCell>
                 <TableCell>
                   <CustomSelect
-                    value={user.is_active ? "active" : "inactive"}
-                    disabled={!canUpdateUser}
-                    onValueChange={(val) => handleStatusChange(user.id, user.is_active, val)}
-                    triggerClassName="h-8 w-[110px] text-sm font-medium"
+                    value={course.status}
+                    disabled={!canUpdateCourse}
+                    onValueChange={(val) => handleStatusChange(course.id, course.status, val)}
+                    triggerClassName="h-8 w-[120px] text-sm font-medium"
                     options={[
                       {
                         value: "active",
@@ -236,17 +216,17 @@ const UsersListPage = () => {
                     ]}
                   />
                 </TableCell>
-                {(canUpdateUser || canDeleteUser) && (
+                {(canUpdateCourse || canDeleteCourse) && (
                   <TableCell>
                     <div className="flex justify-center gap-1">
-                      {canUpdateUser && (
-                        <EditButton title="User" onEdit={() => navigate(`/users/edit/${user.id}`)} />
+                      {canUpdateCourse && (
+                        <EditButton title="Course" onEdit={() => navigate(`/courses/edit/${course.id}`)} />
                       )}
-                      {canDeleteUser && (
+                      {canDeleteCourse && (
                         <DeleteButton
-                          title="User"
+                          title="Course"
                           loading={isDeleting}
-                          onDelete={() => handleDelete(user.id)}
+                          onDelete={() => handleDelete(course.id)}
                         />
                       )}
                     </div>
@@ -256,8 +236,8 @@ const UsersListPage = () => {
             ))}
             {!isLoading && data?.data.length === 0 && (
               <TableRow>
-                <TableCell colSpan={(canUpdateUser || canDeleteUser) ? 7 : 6} className="h-32 text-center text-muted-foreground">
-                  No users found.
+                <TableCell colSpan={(canUpdateCourse || canDeleteCourse) ? 5 : 4} className="h-32 text-center text-muted-foreground">
+                  No courses found.
                 </TableCell>
               </TableRow>
             )}
@@ -268,4 +248,4 @@ const UsersListPage = () => {
   )
 }
 
-export default UsersListPage
+export default CoursesListPage
