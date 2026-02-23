@@ -39,10 +39,13 @@ export function FormFooter({
   }
 
   const containerClasses = cn(
-    "flex items-center gap-3 pt-6 border-slate-200 dark:border-slate-800",
+    "flex items-center gap-3",
+    !className?.includes("pt-") && "pt-6",
+    !className?.includes("border-") && "border-slate-200 dark:border-slate-800",
     fixed 
       ? "fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t p-4 md:p-6 z-40 md:left-[var(--sidebar-width)] justify-end" 
-      : "justify-end border-t mt-8",
+      : "justify-end",
+    !fixed && !className?.includes("border-t") && "border-t mt-8",
     className
   )
 

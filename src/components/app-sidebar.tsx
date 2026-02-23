@@ -40,6 +40,11 @@ const items = [
     icon: BookOpen,
   },
   {
+    title: "Staff Management",
+    url: "/staff",
+    icon: Users,
+  },
+  {
     title: "Components",
     url: "/components",
     icon: Palette,
@@ -73,7 +78,7 @@ export function AppSidebar() {
                   <SidebarMenuButton 
                     asChild 
                     tooltip={item.title}
-                    isActive={location.pathname === item.url}
+                    isActive={item.url === '/' ? location.pathname === '/' : location.pathname.startsWith(item.url)}
                   >
                     <Link to={item.url}>
                       <item.icon />

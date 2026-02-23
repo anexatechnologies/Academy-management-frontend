@@ -1,4 +1,4 @@
-import { Pencil, Loader2 } from "lucide-react"
+import { Eye, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Tooltip,
@@ -8,19 +8,19 @@ import {
 } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 
-interface EditButtonProps {
+interface ViewButtonProps {
   title?: string
-  onEdit?: () => void
+  onView?: () => void
   loading?: boolean
   className?: string
 }
 
-export function EditButton({ 
+export function ViewButton({ 
   title = "Item", 
-  onEdit, 
+  onView, 
   loading = false, 
   className 
-}: EditButtonProps) {
+}: ViewButtonProps) {
   return (
     <TooltipProvider>
       <Tooltip>
@@ -28,7 +28,7 @@ export function EditButton({
           <Button
             variant="ghost"
             size="icon"
-            onClick={onEdit}
+            onClick={onView}
             disabled={loading}
             className={cn(
               "h-8 w-8 text-slate-500 hover:text-primary hover:bg-primary/10 transition-colors rounded-lg",
@@ -38,12 +38,12 @@ export function EditButton({
             {loading ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-              <Pencil className="h-4 w-4" />
+              <Eye className="h-4 w-4" />
             )}
           </Button>
         </TooltipTrigger>
         <TooltipContent side="top">
-          <p>Edit {title}</p>
+          <p>View {title} Details</p>
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>

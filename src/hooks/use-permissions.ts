@@ -31,5 +31,9 @@ export const usePermissions = () => {
     canReadCourses: hasPermission("courses", "read"),
     canUpdateCourse: hasPermission("courses", "update"),
     canDeleteCourse: hasPermission("courses", "delete"),
+    canCreateStaff: hasPermission("staff", "create"),
+    canReadStaff: hasPermission("staff", "read"),
+    canUpdateStaff: hasPermission("staff", "update"),
+    canDeleteStaff: hasPermission("staff", "delete"),
   }
 }

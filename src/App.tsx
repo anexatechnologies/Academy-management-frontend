@@ -12,6 +12,10 @@ import UserEditPage from "@/pages/users/UserEditPage"
 import CoursesListPage from "@/pages/courses/CoursesListPage"
 import CourseCreatePage from "@/pages/courses/CourseCreatePage"
 import CourseEditPage from "@/pages/courses/CourseEditPage"
+import StaffListPage from "@/pages/staff/StaffListPage"
+import StaffCreatePage from "@/pages/staff/StaffCreatePage"
+import StaffEditPage from "@/pages/staff/StaffEditPage"
+import StaffViewPage from "@/pages/staff/StaffViewPage"
 import SettingsPage from "@/pages/settings-page"
 
 
@@ -35,6 +39,12 @@ function App() {
             <Route path="/courses" element={<CoursesListPage />} />
             <Route path="/courses/new" element={<CourseCreatePage />} />
             <Route path="/courses/edit/:id" element={<CourseEditPage />} />
+
+            <Route path="/staff" element={<StaffListPage />} />
+            <Route path="/staff/new" element={<StaffCreatePage />} />
+            <Route path="/staff/edit/:id" element={<StaffEditPage />} />
+            <Route path="/staff/view/:id" element={<StaffViewPage />} />
+
             <Route path="/components" element={<ComponentsPage />} />
             <Route path="/settings" element={<SettingsPage />} />
           </Route>

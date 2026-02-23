@@ -151,6 +151,123 @@
   --sidebar-primary-foreground: oklch(0.985 0 0);
   --sidebar-accent: oklch(0.269 0 0);
   --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+}
+/* React Datepicker Custom Theme Overrides - Premium Design */
+.react-datepicker {
+  @apply !font-sans !border !border-primary/20 !rounded-[20px] !shadow-2xl !bg-white dark:!bg-slate-900 !p-4 !pt-5 !pb-5;
+}
+
+.react-datepicker-popper {
+  z-index: 50 !important;
+}
+.react-datepicker-popper[data-placement^=bottom] {
+  @apply !pt-3;
+}
+
+.react-datepicker-popper[data-placement^=top] {
+  @apply !pb-3;
+}
+
+.react-datepicker__triangle {
+  display: none !important;
+}
+
+.react-datepicker__header {
+  @apply !bg-transparent !border-none !p-0;
+}
+
+.react-datepicker__current-month {
+  @apply !hidden;
+}
+
+.react-datepicker__header__dropdown {
+  @apply !flex !justify-center !gap-2 !mb-4 !mt-1;
+}
+
+.react-datepicker__month-select,
+.react-datepicker__year-select {
+  @apply !appearance-none !bg-slate-50 dark:!bg-slate-800/50 !border !border-slate-200 dark:!border-slate-700 hover:!border-slate-300 dark:hover:!border-slate-600 !rounded-lg !py-1.5 !pl-3 !pr-8 !text-sm !font-semibold !text-slate-700 dark:!text-slate-200 !outline-none !transition-all !cursor-pointer focus:!ring-2 focus:!ring-primary/20 focus:!border-primary;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 8px center !important;
+  background-size: 14px !important;
+}
+
+.react-datepicker__navigation {
+  @apply !top-[20px] !w-8 !h-8 !rounded-full hover:!bg-primary/10 !transition-colors !flex !items-center !justify-center;
+}
+
+.react-datepicker__navigation--previous {
+  @apply !left-3;
+}
+
+.react-datepicker__navigation--next {
+  @apply !right-3;
+}
+
+.react-datepicker__navigation-icon {
+  @apply !w-full !h-full !flex !items-center !justify-center;
+}
+.react-datepicker__navigation-icon::before {
+  @apply !border-primary dark:!border-primary !border-2 !transition-colors;
+  position: relative !important;
+  top: auto !important;
+  left: auto !important;
+  right: auto !important;
+  border-width: 2px 2px 0 0 !important;
+  width: 10px !important;
+  height: 10px !important;
+}
+.react-datepicker__navigation-icon--previous::before {
+  transform: rotate(-135deg) !important;
+  margin-left: 4px !important;
+}
+.react-datepicker__navigation-icon--next::before {
+  transform: rotate(45deg) !important;
+  margin-right: 4px !important;
+}
+
+.react-datepicker__day-names {
+  @apply !flex !justify-between !mb-2 !px-1;
+}
+
+.react-datepicker__day-name {
+  @apply !text-primary !font-bold !text-[13px] !w-9 !leading-[36px] !h-9 !flex !items-center !justify-center !m-0;
+}
+
+.react-datepicker__month {
+  @apply !m-0 !px-1 !pb-1;
+}
+
+.react-datepicker__week {
+  @apply !flex !justify-between !mb-1 !gap-1;
+}
+
+.react-datepicker__day {
+  @apply !text-slate-400 dark:!text-slate-500 !w-9 !h-9 !flex !items-center !justify-center !rounded-full hover:!bg-slate-100 dark:hover:!bg-slate-800 !transition-colors !text-[14px] !font-medium !m-0;
+}
+
+.react-datepicker__day--selected,
+.react-datepicker__day--in-selecting-range,
+.react-datepicker__day--in-range {
+  @apply !bg-primary !text-white hover:!bg-primary hover:!text-white !font-bold !shadow-md !shadow-primary/30;
+}
+
+.react-datepicker__day--keyboard-selected {
+  @apply !bg-transparent !text-slate-400 dark:!text-slate-500 !font-medium;
+}
+
+.react-datepicker__day--outside-month {
+  visibility: hidden !important;
+}
+
+.react-datepicker__day--today {
+  @apply !bg-primary/10 !text-primary hover:!bg-primary/20 !font-bold;
+}
+
+.react-datepicker__day--today.react-datepicker__day--selected {
+  @apply !bg-primary !text-white;
 }

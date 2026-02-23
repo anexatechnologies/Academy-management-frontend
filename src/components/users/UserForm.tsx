@@ -73,12 +73,14 @@ export const UserForm = ({ initialValues, onSubmit, isLoading, isEdit }: UserFor
           placeholder="Enter full name"
           {...register("full_name")}
           error={errors.full_name?.message}
+          disabled={isLoading}
         />
         <Input
           label="Username"
           placeholder="Enter username"
           {...register("username")}
           error={errors.username?.message}
+          disabled={isLoading}
         />
         <Input
           label="Email Address"
@@ -86,12 +88,14 @@ export const UserForm = ({ initialValues, onSubmit, isLoading, isEdit }: UserFor
           type="email"
           {...register("email")}
           error={errors.email?.message}
+          disabled={isLoading}
         />
         <Input
           label="Phone Number"
           placeholder="Enter phone number"
           {...register("phone")}
           error={errors.phone?.message}
+          disabled={isLoading}
         />
         
         <div className="space-y-2">
@@ -101,6 +105,7 @@ export const UserForm = ({ initialValues, onSubmit, isLoading, isEdit }: UserFor
             onValueChange={(val) => setValue("role_id", val, { shouldValidate: true })}
             placeholder="Select role"
             isLoading={isLoadingRoles}
+            disabled={isLoading}
             triggerClassName="w-full h-11 rounded-lg bg-white dark:bg-slate-900/50 border-slate-200 border shadow-[0_1px_2px_rgba(0,0,0,0.05)] hover:border-primary/40 hover:shadow-sm focus:border-primary focus:ring-[3px] focus:ring-primary/20 transition-all px-3.5 text-base md:text-sm"
             options={(roles || []).map((role) => ({
               value: role.id.toString(),
@@ -120,6 +125,7 @@ export const UserForm = ({ initialValues, onSubmit, isLoading, isEdit }: UserFor
           type="password"
           {...register("password")}
           error={errors.password?.message}
+          disabled={isLoading}
         />
       </div>
 
