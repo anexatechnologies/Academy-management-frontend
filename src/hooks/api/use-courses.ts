@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query"
 import { useAxiosPrivate } from "@/hooks/useAxiosPrivate"
 import type { Course, CreateCoursePayload, UpdateCoursePayload, CourseListResponse } from "@/types/course"
 
@@ -12,6 +12,7 @@ export const useCourses = (params?: { page?: number; limit?: number; search?: st
       })
       return response.data
     },
+    placeholderData: keepPreviousData,
   })
 }
 

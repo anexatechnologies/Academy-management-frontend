@@ -4,6 +4,7 @@ import {
   Users,
   Settings,
   BookOpen,
+  Layers,
   Palette,
 } from "lucide-react"
 
@@ -38,6 +39,11 @@ const items = [
     title: "Course Management",
     url: "/courses",
     icon: BookOpen,
+  },
+  {
+    title: "Batch Management",
+    url: "/batches",
+    icon: Layers,
   },
   {
     title: "Staff Management",

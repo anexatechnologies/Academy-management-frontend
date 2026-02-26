@@ -57,6 +57,7 @@ export function DatePickerInput({
               "hover:border-primary/40 hover:shadow-sm",
               "focus-visible:border-primary focus-visible:ring-primary/20 focus-visible:ring-[3px] focus-visible:shadow-md",
               error && "border-rose-400 focus-visible:border-rose-500 focus-visible:ring-rose-500/20",
+              props.disabled && "opacity-50 cursor-not-allowed bg-slate-100 dark:bg-slate-800 hover:border-slate-200 hover:shadow-none",
               className
             )}
             wrapperClassName="w-full"

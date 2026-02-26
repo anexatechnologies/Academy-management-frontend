@@ -3,7 +3,8 @@ import { toast } from "sonner"
 import { isAxiosError } from "axios"
 
 export interface ApiErrorResponse {
-  status: string
+  status?: string
+  success?: boolean
   message: string
   errors?: Array<{
     field: string
@@ -26,7 +27,8 @@ export const handleApiError = <T extends FieldValues>(
     const data = error.response.data as ApiErrorResponse
 
     // If it's a validation error with specific fields, map them to the form
-    if (data.status === "error" && data.errors && Array.isArray(data.errors)) {
+    const isError = data.status === "error" || data.success === false
+    if (isError && data.errors && Array.isArray(data.errors)) {
       data.errors.forEach((err) => {
         // We cast the field to Path<T> assuming the backend fields match the form fields
         setError(err.field as Path<T>, {

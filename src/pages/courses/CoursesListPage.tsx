@@ -1,4 +1,4 @@
-import { useMemo, useEffect } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { RequirePermission } from "@/components/auth/RequirePermission"
 import { usePermissions } from "@/hooks/use-permissions"
 import { useNavigate } from "react-router-dom"
@@ -35,7 +35,7 @@ const CoursesListPage = () => {
     onFilterChange: () => setPage(1),
   })
 
-  const { data, isLoading } = useCourses({
+  const { data, isLoading, isFetching } = useCourses({
     page,
     limit: pageSize,
     ...params,
@@ -48,27 +48,22 @@ const CoursesListPage = () => {
     }
   }, [data?.pagination?.totalData, setTotal])
 
-  const { mutate: deleteCourse, isPending: isDeleting } = useDeleteCourse()
+  const deleteCourse = useDeleteCourse()
   const { mutate: toggleStatus } = useToggleCourseStatus()
   const { canUpdateCourse, canDeleteCourse } = usePermissions()
+  const [deletingId, setDeletingId] = useState<number | null>(null)
 
-  const handleDelete = (id: number) => {
-    toast.promise(
-      new Promise((resolve, reject) => {
-        deleteCourse(id, {
-          onSuccess: resolve,
-          onError: reject,
-        })
-      }),
-      {
-        loading: "Deleting course...",
-        success: "Course deleted successfully",
-        error: (err: unknown) => {
-          const error = err as Error & { response?: { data?: { message?: string } } };
-          return error.response?.data?.message || "Failed to delete course";
-        },
-      }
-    )
+  const handleDelete = async (id: number) => {
+    setDeletingId(id)
+    try {
+      await deleteCourse.mutateAsync(id)
+      toast.success("Course deleted successfully")
+    } catch (err: unknown) {
+      const error = err as Error & { response?: { data?: { message?: string } } };
+      toast.error(error.response?.data?.message || "Failed to delete course")
+    } finally {
+      setDeletingId(null)
+    }
   }
 
   const handleStatusChange = (id: number, currentStatus: string, newStatus: string) => {
@@ -176,7 +171,7 @@ const CoursesListPage = () => {
               )}
             </TableRow>
           </TableHeader>
-          <TableBody loading={isLoading} columnCount={(canUpdateCourse || canDeleteCourse) ? 5 : 4} rowCount={pageSize}>
+          <TableBody loading={isLoading} fetching={isFetching && !isLoading} columnCount={(canUpdateCourse || canDeleteCourse) ? 5 : 4} rowCount={pageSize}>
             {!isLoading && data?.data.map((course, index) => (
               <TableRow key={course.id}>
                 <TableCell className="text-slate-500 font-medium">
@@ -225,7 +220,7 @@ const CoursesListPage = () => {
                       {canDeleteCourse && (
                         <DeleteButton
                           title="Course"
-                          loading={isDeleting}
+                          loading={deletingId === course.id}
                           onDelete={() => handleDelete(course.id)}
                         />
                       )}

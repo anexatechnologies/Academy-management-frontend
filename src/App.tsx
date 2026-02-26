@@ -16,6 +16,10 @@ import StaffListPage from "@/pages/staff/StaffListPage"
 import StaffCreatePage from "@/pages/staff/StaffCreatePage"
 import StaffEditPage from "@/pages/staff/StaffEditPage"
 import StaffViewPage from "@/pages/staff/StaffViewPage"
+import BatchesListPage from "@/pages/batches/BatchesListPage"
+import BatchCreatePage from "@/pages/batches/BatchCreatePage"
+import BatchEditPage from "@/pages/batches/BatchEditPage"
+import BatchViewPage from "@/pages/batches/BatchViewPage"
 import SettingsPage from "@/pages/settings-page"
 
 
@@ -44,6 +48,11 @@ function App() {
             <Route path="/staff/new" element={<StaffCreatePage />} />
             <Route path="/staff/edit/:id" element={<StaffEditPage />} />
             <Route path="/staff/view/:id" element={<StaffViewPage />} />
+
+            <Route path="/batches" element={<BatchesListPage />} />
+            <Route path="/batches/new" element={<BatchCreatePage />} />
+            <Route path="/batches/edit/:id" element={<BatchEditPage />} />
+            <Route path="/batches/view/:id" element={<BatchViewPage />} />
 
             <Route path="/components" element={<ComponentsPage />} />
             <Route path="/settings" element={<SettingsPage />} />

@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from "react"
+import { useState, useMemo, useEffect, useCallback, useRef } from "react"
 
 interface UseSearchFilterOptions<T extends Record<string, string | undefined>> {
   initialFilters: T
@@ -33,10 +33,19 @@ export function useSearchFilter<T extends Record<string, string | undefined>>(
     return () => clearTimeout(timer)
   }, [search, debounceMs])
 
+  // Use a ref for the callback to avoid re-running the effect when the function reference changes
+  const onFilterChangeRef = useRef(onFilterChange)
+  onFilterChangeRef.current = onFilterChange
+
   // Call onFilterChange when debouncedSearch or filters change
+  const isInitialMount = useRef(true)
   useEffect(() => {
-    onFilterChange?.()
-  }, [debouncedSearch, filters, onFilterChange])
+    if (isInitialMount.current) {
+      isInitialMount.current = false
+      return
+    }
+    onFilterChangeRef.current?.()
+  }, [debouncedSearch, filters])
 
   const setFilter = useCallback(<K extends keyof T>(key: K, value: T[K]) => {
     setFilters((prev) => ({ ...prev, [key]: value }))

@@ -12,63 +12,64 @@ import {
 } from "@/components/ui/table"
 import { usePagination } from "@/hooks/use-pagination"
 import { useSearchFilter } from "@/hooks/use-search-filter"
-import { useStaffList, useDeleteStaff, useToggleStaffStatus } from "@/hooks/api/use-staff"
-import { STAFF_TYPES } from "@/utils/staff-constants"
+import { useBatches, useDeleteBatch, useToggleBatchStatus } from "@/hooks/api/use-batches"
 import { toast } from "sonner"
 import { EditButton } from "@/components/ui/edit-button"
 import { DeleteButton } from "@/components/ui/delete-button"
 import { ViewButton } from "@/components/ui/view-button"
 import { SearchBar } from "@/components/ui/search-bar"
 import { CustomSelect } from "@/components/ui/custom-select"
+import { ComboBox } from "@/components/ui/combobox"
 import { RequirePermission } from "@/components/auth/RequirePermission"
 import { usePermissions } from "@/hooks/use-permissions"
 import BodyLayout from "@/components/layout/BodyLayout"
-import { cn } from "@/lib/utils"
 import { DateCell } from "@/components/ui/date-cell"
+import { useCourseComboBox } from "@/hooks/use-combobox-data"
 
-const StaffListPage = () => {
+const BatchesListPage = () => {
   const navigate = useNavigate()
   const { page, pageSize, setPage, setPageSize, setTotal } = usePagination()
-  
-  type StaffFilters = {
-    staff_type: string | undefined
-    status: string | undefined
+  const [deletingId, setDeletingId] = useState<number | null>(null)
+
+  type BatchFilters = {
+    status?: string
+    course_id?: string
   }
 
-  const { search, setSearch, params, setFilter, resetFilters } = useSearchFilter<StaffFilters>({
+  const { search, setSearch, params, setFilter, resetFilters } = useSearchFilter<BatchFilters>({
     initialFilters: {
-      staff_type: undefined,
       status: undefined,
+      course_id: undefined,
     },
-    onFilterChange: () => setPage(1)
+    onFilterChange: () => setPage(1),
   })
 
-  const { data, isLoading, isFetching } = useStaffList({
+  const { data, isLoading, isFetching } = useBatches({
     page,
     limit: pageSize,
     search,
-    ...params
+    ...params,
   })
 
-  // Sync total items with pagination hook
+  const courseComboBox = useCourseComboBox()
+
   useEffect(() => {
     if (data?.pagination?.totalData) {
       setTotal(data.pagination.totalData)
     }
   }, [data?.pagination?.totalData, setTotal])
 
-  const deleteStaff = useDeleteStaff()
-  const toggleStatus = useToggleStaffStatus()
-  const { canUpdateStaff, canDeleteStaff } = usePermissions()
-  const [deletingId, setDeletingId] = useState<number | null>(null)
+  const deleteBatch = useDeleteBatch()
+  const toggleStatus = useToggleBatchStatus()
+  const { canUpdateBatch, canDeleteBatch } = usePermissions()
 
   const handleDelete = async (id: number) => {
     setDeletingId(id)
     try {
-      await deleteStaff.mutateAsync(id)
-      toast.success("Staff deleted successfully")
+      await deleteBatch.mutateAsync(id)
+      toast.success("Batch deleted successfully")
     } catch {
-      toast.error("Failed to delete staff")
+      toast.error("Failed to delete batch")
     } finally {
       setDeletingId(null)
     }
@@ -85,7 +86,7 @@ const StaffListPage = () => {
       }),
       {
         loading: "Updating status...",
-        success: `Staff ${newStatus === "active" ? "activated" : "deactivated"} successfully`,
+        success: `Batch ${newStatus === "active" ? "activated" : "deactivated"} successfully`,
         error: (err: unknown) => {
           const error = err as Error & { response?: { data?: { message?: string } } }
           return error.response?.data?.message || "Failed to update status"
@@ -94,29 +95,37 @@ const StaffListPage = () => {
     )
   }
 
-  const breadcrumbs = useMemo(() => [{ label: "Staff Management" }], [])
+  const breadcrumbs = useMemo(() => [{ label: "Batch Management" }], [])
+
+  const colCount = (canUpdateBatch || canDeleteBatch) ? 8 : 7
 
   return (
-    <BodyLayout 
+    <BodyLayout
       breadcrumbs={breadcrumbs}
       toolbar={
         <div className="flex items-center gap-3">
           <SearchBar
-            placeholder="Search staff..."
+            placeholder="Search batches..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-72 bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 h-10"
           />
           <div className="w-px h-6 bg-slate-200 dark:bg-slate-800 hidden sm:block" />
-          
-          <CustomSelect
-            value={params.staff_type || "all"}
-            onValueChange={(val) => setFilter("staff_type", val === "all" ? undefined : val)}
-            triggerClassName="w-[150px]"
-            options={[
-              { value: "all", label: "All Types" },
-              ...STAFF_TYPES
-            ]}
+
+          <ComboBox
+            placeholder="All Courses"
+            value={params.course_id || ""}
+            onValueChange={(val) => setFilter("course_id", val || undefined)}
+            options={courseComboBox.options}
+            onSearch={courseComboBox.onSearch}
+            onLoadMore={courseComboBox.onLoadMore}
+            onReset={courseComboBox.onReset}
+            hasMore={courseComboBox.hasMore}
+            isLoading={courseComboBox.isLoading}
+            isLoadingMore={courseComboBox.isLoadingMore}
+            searchPlaceholder="Search courses..."
+            emptyText="No courses found."
+            triggerClassName="w-[180px] h-10 bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700"
           />
 
           <CustomSelect
@@ -132,7 +141,7 @@ const StaffListPage = () => {
                     <span className="h-2 w-2 rounded-full bg-emerald-500" />
                     <span>Active</span>
                   </div>
-                )
+                ),
               },
               {
                 value: "inactive",
@@ -141,12 +150,12 @@ const StaffListPage = () => {
                     <span className="h-2 w-2 rounded-full bg-rose-500" />
                     <span>Inactive</span>
                   </div>
-                )
-              }
+                ),
+              },
             ]}
           />
 
-          {(search || params.staff_type || params.status) && (
+          {(search || params.status || params.course_id) && (
             <Button
               variant="ghost"
               size="icon"
@@ -154,16 +163,16 @@ const StaffListPage = () => {
               className="h-10 w-10 text-slate-500 hover:text-slate-900 dark:hover:text-slate-100 shrink-0 rounded-full"
               title="Clear filters"
             >
-               <X className="h-4 w-4" />
+              <X className="h-4 w-4" />
             </Button>
           )}
         </div>
       }
       actions={
-        <RequirePermission module="staff" action="create">
-          <Button onClick={() => navigate("/staff/new")} className="rounded-xl shadow-lg shadow-primary/20 h-10">
+        <RequirePermission module="batches" action="create">
+          <Button onClick={() => navigate("/batches/new")} className="rounded-xl shadow-lg shadow-primary/20 h-10">
             <Plus className="mr-2 h-4 w-4" />
-            Add Staff
+            Add Batch
           </Button>
         </RequirePermission>
       }
@@ -180,54 +189,42 @@ const StaffListPage = () => {
           <TableHeader>
             <TableRow>
               <TableHead className="w-[80px]">Sr No</TableHead>
-              <TableHead>Staff Name</TableHead>
-              <TableHead>Staff Type</TableHead>
-              <TableHead>Contact Number</TableHead>
-              <TableHead>Joining Date</TableHead>
-              <TableHead>Experience</TableHead>
-              <TableHead className="w-[120px]">Status</TableHead>
-              {(canUpdateStaff || canDeleteStaff) && (
+              <TableHead>Batch Name</TableHead>
+              <TableHead>Course</TableHead>
+              <TableHead>Capacity</TableHead>
+              <TableHead>Start Date</TableHead>
+              <TableHead>End Date</TableHead>
+              <TableHead className="w-[140px]">Status</TableHead>
+              {(canUpdateBatch || canDeleteBatch) && (
                 <TableHead className="w-[120px] text-center">Actions</TableHead>
               )}
             </TableRow>
           </TableHeader>
-          <TableBody loading={isLoading} fetching={isFetching && !isLoading} columnCount={(canUpdateStaff || canDeleteStaff) ? 8 : 7} rowCount={pageSize}>
-            {!isLoading && data?.data.map((staff, index) => (
-              <TableRow key={staff.id}>
+          <TableBody loading={isLoading} fetching={isFetching && !isLoading} columnCount={colCount} rowCount={pageSize}>
+            {!isLoading && data?.data.map((batch, index) => (
+              <TableRow key={batch.id}>
                 <TableCell>{(page - 1) * pageSize + index + 1}</TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-3">
-                    <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold overflow-hidden shrink-0">
-                      {staff.photo_url ? (
-                        <img src={staff.photo_url} alt={staff.full_name} className="h-full w-full object-cover" />
-                      ) : (
-                        staff.full_name.charAt(0)
-                      )}
-                    </div>
-                    <span className="font-semibold text-slate-900 dark:text-slate-100">{staff.full_name}</span>
-                  </div>
+                <TableCell className="font-semibold text-slate-900 dark:text-slate-100">
+                  {batch.name}
                 </TableCell>
                 <TableCell>
-                  <span className={cn(
-                    "px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-wider",
-                    staff.staff_type === "Teaching" 
-                      ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" 
-                      : "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400"
-                  )}>
-                    {staff.staff_type}
+                  <span className="px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-wider bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400">
+                    {batch.course_name}
                   </span>
                 </TableCell>
-                <TableCell>{staff.contact_number}</TableCell>
+                <TableCell className="font-medium">{batch.capacity}</TableCell>
                 <TableCell>
-                  <DateCell date={staff.joining_date} />
+                  <DateCell date={batch.start_date} />
                 </TableCell>
-                <TableCell>{staff.experience_years} Years</TableCell>
+                <TableCell>
+                  <DateCell date={batch.end_date} />
+                </TableCell>
                 <TableCell>
                   <CustomSelect
-                    value={staff.status}
-                    disabled={!canUpdateStaff}
-                    onValueChange={() => handleToggleStatus(staff.id, staff.status)}
-                    triggerClassName="h-8 w-[110px] text-sm font-medium"
+                    value={batch.status}
+                    disabled={!canUpdateBatch}
+                    onValueChange={() => handleToggleStatus(batch.id, batch.status)}
+                    triggerClassName="h-8 w-[130px] text-sm font-medium"
                     options={[
                       {
                         value: "active",
@@ -236,7 +233,7 @@ const StaffListPage = () => {
                             <span className="h-2 w-2 rounded-full bg-emerald-500" />
                             <span>Active</span>
                           </div>
-                        )
+                        ),
                       },
                       {
                         value: "inactive",
@@ -245,26 +242,26 @@ const StaffListPage = () => {
                             <span className="h-2 w-2 rounded-full bg-rose-500" />
                             <span>Inactive</span>
                           </div>
-                        )
-                      }
+                        ),
+                      },
                     ]}
                   />
                 </TableCell>
-                {(canUpdateStaff || canDeleteStaff) && (
+                {(canUpdateBatch || canDeleteBatch) && (
                   <TableCell>
                     <div className="flex justify-center gap-1">
-                      <ViewButton 
-                        title="Staff" 
-                        onView={() => navigate(`/staff/view/${staff.id}`)} 
+                      <ViewButton
+                        title="Batch"
+                        onView={() => navigate(`/batches/view/${batch.id}`)}
                       />
-                      {canUpdateStaff && (
-                        <EditButton title="Staff" onEdit={() => navigate(`/staff/edit/${staff.id}`)} />
+                      {canUpdateBatch && (
+                        <EditButton title="Batch" onEdit={() => navigate(`/batches/edit/${batch.id}`)} />
                       )}
-                      {canDeleteStaff && (
+                      {canDeleteBatch && (
                         <DeleteButton
-                          title="Staff"
-                          loading={deletingId === staff.id}
-                          onDelete={() => handleDelete(staff.id)}
+                          title="Batch"
+                          loading={deletingId === batch.id}
+                          onDelete={() => handleDelete(batch.id)}
                         />
                       )}
                     </div>
@@ -274,8 +271,8 @@ const StaffListPage = () => {
             ))}
             {!isLoading && data?.data.length === 0 && (
               <TableRow>
-                <TableCell colSpan={(canUpdateStaff || canDeleteStaff) ? 8 : 7} className="h-32 text-center text-muted-foreground">
-                  No staff members found.
+                <TableCell colSpan={colCount} className="h-32 text-center text-muted-foreground">
+                  No batches found.
                 </TableCell>
               </TableRow>
             )}
@@ -286,4 +283,4 @@ const StaffListPage = () => {
   )
 }
 
-export default StaffListPage
+export default BatchesListPage

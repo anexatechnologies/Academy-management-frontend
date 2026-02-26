@@ -37,7 +37,7 @@ const UsersListPage = () => {
     onFilterChange: () => setPage(1),
   })
 
-  const { data, isLoading } = useUsers({
+  const { data, isLoading, isFetching } = useUsers({
     page,
     limit: pageSize,
     ...params,
@@ -194,7 +194,7 @@ const UsersListPage = () => {
               )}
             </TableRow>
           </TableHeader>
-          <TableBody loading={isLoading} columnCount={(canUpdateUser || canDeleteUser) ? 7 : 6} rowCount={pageSize}>
+          <TableBody loading={isLoading} fetching={isFetching && !isLoading} columnCount={(canUpdateUser || canDeleteUser) ? 7 : 6} rowCount={pageSize}>
             {!isLoading && data?.data.map((user) => (
               <TableRow key={user.id}>
                 <TableCell className="font-semibold text-slate-900 dark:text-slate-100">

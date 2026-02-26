@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query"
 import { useAxiosPrivate } from "@/hooks/useAxiosPrivate"
 import type { User, CreateUserPayload, UpdateUserPayload } from "@/types/user"
 
@@ -22,6 +22,7 @@ export const useUsers = (params?: { page?: number; limit?: number; search?: stri
       })
       return response.data
     },
+    placeholderData: keepPreviousData,
   })
 }
 

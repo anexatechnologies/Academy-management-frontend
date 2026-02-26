@@ -34,7 +34,7 @@ function Table({
       )}>
         <div
           data-slot="table-container"
-          className="relative w-full overflow-auto"
+          className="relative w-full overflow-auto max-h-[calc(100vh-280px)]"
         >
           <table
             data-slot="table"
@@ -69,6 +69,7 @@ function TableHeader({ className, ...props }: React.ComponentProps<"thead">) {
 
 interface TableBodyProps extends React.ComponentProps<"tbody"> {
   loading?: boolean
+  fetching?: boolean
   columnCount?: number
   rowCount?: number
 }
@@ -76,6 +77,7 @@ interface TableBodyProps extends React.ComponentProps<"tbody"> {
 function TableBody({ 
   className, 
   loading, 
+  fetching,
   columnCount, 
   rowCount = 5, 
   children, 
@@ -100,7 +102,11 @@ function TableBody({
   return (
     <tbody
       data-slot="table-body"
-      className={cn("[&_tr:last-child]:border-0", className)}
+      className={cn(
+        "[&_tr:last-child]:border-0 relative transition-opacity duration-200",
+        fetching && "opacity-50 pointer-events-none",
+        className
+      )}
       {...props}
     >
       {children}

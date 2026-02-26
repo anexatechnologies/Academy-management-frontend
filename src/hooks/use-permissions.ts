@@ -35,5 +35,9 @@ export const usePermissions = () => {
     canReadStaff: hasPermission("staff", "read"),
     canUpdateStaff: hasPermission("staff", "update"),
     canDeleteStaff: hasPermission("staff", "delete"),
+    canCreateBatch: hasPermission("batches", "create"),
+    canReadBatches: hasPermission("batches", "read"),
+    canUpdateBatch: hasPermission("batches", "update"),
+    canDeleteBatch: hasPermission("batches", "delete"),
   }
 }
