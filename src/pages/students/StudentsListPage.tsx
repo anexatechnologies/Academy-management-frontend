@@ -229,7 +229,7 @@ const StudentsListPage = () => {
               <TableHead>Gender</TableHead>
               <TableHead>Reg. Date</TableHead>
               <TableHead>Location</TableHead>
-              <TableHead className="w-[120px]">Status</TableHead>
+              <TableHead className="w-[150px]">Status</TableHead>
               {(canUpdateStudent || canDeleteStudent) && (
                 <TableHead className="w-[120px] text-center">Actions</TableHead>
               )}
@@ -278,7 +278,7 @@ const StudentsListPage = () => {
                     value={student.status}
                     disabled={!canUpdateStudent}
                     onValueChange={() => handleToggleStatus(student.id)}
-                    triggerClassName="h-8 w-[110px] text-sm font-medium"
+                    triggerClassName="h-8 w-[130px] text-sm font-medium"
                     options={[
                       {
                         value: "active",

@@ -21,6 +21,8 @@ import BatchCreatePage from "@/pages/batches/BatchCreatePage"
 import BatchEditPage from "@/pages/batches/BatchEditPage"
 import BatchViewPage from "@/pages/batches/BatchViewPage"
 import StudentsListPage from "@/pages/students/StudentsListPage"
+import StudentCreatePage from "@/pages/students/StudentCreatePage"
+import StudentEditPage from "@/pages/students/StudentEditPage"
 import SettingsPage from "@/pages/settings-page"
 
 
@@ -56,6 +58,8 @@ function App() {
             <Route path="/batches/view/:id" element={<BatchViewPage />} />
 
             <Route path="/students" element={<StudentsListPage />} />
+            <Route path="/students/new" element={<StudentCreatePage />} />
+            <Route path="/students/edit/:id" element={<StudentEditPage />} />
 
             <Route path="/components" element={<ComponentsPage />} />
             <Route path="/settings" element={<SettingsPage />} />

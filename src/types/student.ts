@@ -20,6 +20,8 @@ export interface Student {
   father_contact: string
   mother_contact: string
   email: string
+  father_email: string
+  mother_email: string
   reference: string
   school_college_company: string
   stream: string
@@ -30,6 +32,40 @@ export interface Student {
   created_at: string
   updated_at: string
 }
+
+export interface CreateStudentPayload {
+  name: string
+  photo?: File
+  photo_url?: string
+  father_husband_name?: string
+  mother_name?: string
+  address?: string
+  state?: string
+  city?: string
+  pincode?: string
+  gender?: string
+  date_of_birth?: string
+  registration_date?: string
+  nationality?: string
+  category?: string
+  religion?: string
+  heard_about_us?: string
+  personal_contact: string
+  father_contact?: string
+  mother_contact?: string
+  email?: string
+  father_email?: string
+  mother_email?: string
+  reference?: string
+  school_college_company?: string
+  stream?: string
+  class_year?: string
+  semester?: string
+  university_enrollment_no?: string
+  batch_ids?: number[]
+}
+
+export type UpdateStudentPayload = Partial<CreateStudentPayload>
 
 export interface StudentListResponse {
   success: boolean

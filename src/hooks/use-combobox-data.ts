@@ -3,6 +3,7 @@ import { useCourses } from "@/hooks/api/use-courses"
 import { useStaffList } from "@/hooks/api/use-staff"
 import { useBatches } from "@/hooks/api/use-batches"
 import type { ComboBoxOption } from "@/components/ui/combobox"
+import type { Batch } from "@/types/batch"
 
 const PAGE_SIZE = 10
 
@@ -144,6 +145,7 @@ export function useBatchComboBox() {
   const [search, setSearch] = useState("")
   const [page, setPage] = useState(1)
   const [accumulated, setAccumulated] = useState<ComboBoxOption[]>([])
+  const [rawData, setRawData] = useState<Batch[]>([])
   const lastProcessed = useRef("")
 
   const { data, isLoading } = useBatches({
@@ -166,10 +168,16 @@ export function useBatchComboBox() {
 
     if (page === 1) {
       setAccumulated(newOptions)
+      setRawData(data.data)
     } else {
       setAccumulated((prev) => {
         const seen = new Set(prev.map((o) => o.value))
         const unique = newOptions.filter((o) => !seen.has(o.value))
+        return [...prev, ...unique]
+      })
+      setRawData((prev) => {
+        const seen = new Set(prev.map((b) => b.id))
+        const unique = data.data.filter((b) => !seen.has(b.id))
         return [...prev, ...unique]
       })
     }
@@ -197,6 +205,7 @@ export function useBatchComboBox() {
 
   return {
     options: accumulated,
+    rawData,
     isLoading: isLoading && page === 1,
     isLoadingMore: isLoading && page > 1,
     hasMore,

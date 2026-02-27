@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query"
 import { useAxiosPrivate } from "@/hooks/useAxiosPrivate"
-import type { Student, StudentListResponse } from "@/types/student"
+import type { Student, StudentListResponse, CreateStudentPayload, UpdateStudentPayload } from "@/types/student"
 
 export const useStudents = (params?: {
   page?: number
@@ -37,6 +37,61 @@ export const useStudent = (id: number) => {
       return data.data
     },
     enabled: !!id,
+  })
+}
+
+export const useCreateStudent = () => {
+  const axiosPrivate = useAxiosPrivate()
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (payload: CreateStudentPayload) => {
+      const formData = new FormData()
+      Object.entries(payload).forEach(([key, value]) => {
+        if (value === undefined || value === null || value === "" || key === "photo_url") return
+        if (key === "batch_ids" && Array.isArray(value)) {
+          value.forEach((id) => formData.append("batch_ids", String(id)))
+        } else if (value instanceof File) {
+          formData.append(key, value)
+        } else {
+          formData.append(key, String(value))
+        }
+      })
+      const { data } = await axiosPrivate.post("/students", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      })
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["students"] })
+    },
+  })
+}
+
+export const useUpdateStudent = (id: number) => {
+  const axiosPrivate = useAxiosPrivate()
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (payload: UpdateStudentPayload) => {
+      const formData = new FormData()
+      Object.entries(payload).forEach(([key, value]) => {
+        if (value === undefined || value === null || value === "" || key === "photo_url") return
+        if (key === "batch_ids" && Array.isArray(value)) {
+          value.forEach((id) => formData.append("batch_ids", String(id)))
+        } else if (value instanceof File) {
+          formData.append(key, value)
+        } else {
+          formData.append(key, String(value))
+        }
+      })
+      const { data } = await axiosPrivate.put(`/students/${id}`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      })
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["students"] })
+      queryClient.invalidateQueries({ queryKey: ["students", id] })
+    },
   })
 }
 
