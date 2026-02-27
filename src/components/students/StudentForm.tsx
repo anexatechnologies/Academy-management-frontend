@@ -100,7 +100,13 @@ export const StudentForm = ({
     // Find the batch from the combobox options data
     const batch = batchComboBox.rawData?.find((b) => b.id === batchId)
     if (batch) {
-      setSelectedBatches((prev) => [...prev, { ...batch, is_removable: true } as any])
+      setSelectedBatches((prev) => [...prev, { 
+        ...batch, 
+        batch_id: batch.id,
+        batch_name: batch.name,
+        course_base_fees: batch.course_fees,
+        is_removable: true 
+      } as any])
       setValue("batch_ids", [...selectedBatchIds, batchId])
     }
   }
@@ -124,7 +130,8 @@ export const StudentForm = ({
 
     // 1. One-time calculations (General/Subtotal)
     const subtotal = selectedBatches.reduce((acc, batch) => {
-      const fee = typeof batch.course_fees === "string" ? parseFloat(batch.course_fees) : (batch.course_fees || 0)
+      const baseFee = batch.course_base_fees !== undefined ? batch.course_base_fees : (batch.course_fees || 0)
+      const fee = typeof baseFee === "string" ? parseFloat(baseFee) : (baseFee || 0)
       return acc + fee
     }, 0)
 
@@ -134,7 +141,8 @@ export const StudentForm = ({
 
     // 2. Monthly calculations
     const monthlySubtotal = selectedBatches.reduce((acc, batch) => {
-      const fee = typeof batch.course_fees === "string" ? parseFloat(batch.course_fees) : (batch.course_fees || 0)
+      const baseFee = batch.course_base_fees !== undefined ? batch.course_base_fees : (batch.course_fees || 0)
+      const fee = typeof baseFee === "string" ? parseFloat(baseFee) : (baseFee || 0)
       
       const start = new Date(batch.start_date)
       const end = new Date(batch.end_date)
@@ -537,15 +545,15 @@ export const StudentForm = ({
                           >
                             <div className="flex items-center gap-3 min-w-0">
                               <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary text-xs font-bold shrink-0">
-                                {batch.name?.charAt(0) || "?"}
+                                {(batch.batch_name || batch.name)?.charAt(0) || "?"}
                               </div>
                               <div className="min-w-0">
-                                <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">{batch.name || "Unknown Batch"}</p>
+                                <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">{batch.batch_name || batch.name || "Unknown Batch"}</p>
                                 <div className="flex items-center gap-2">
                                   <p className="text-xs text-muted-foreground truncate">{batch.course_name || "No Course"}</p>
                                   <div className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-700 text-[10px] font-bold text-slate-600 dark:text-slate-400">
                                     <IndianRupee className="h-2.5 w-2.5" />
-                                    {batch.course_fees}
+                                    {batch.course_base_fees || batch.course_fees}
                                   </div>
                                 </div>
                               </div>

@@ -182,7 +182,6 @@ const FeeSettingsPage = () => {
                   isLoading={updateSettings.isPending}
                   submitLabel="Save Settings"
                   loadingLabel="Saving..."
-                  cancelHref="/settings"
                   className="border-none shadow-none p-0 bg-transparent mt-0"
                 />
               </div>

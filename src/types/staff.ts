@@ -27,17 +27,17 @@ export interface CreateStaffPayload {
   staff_type: StaffType
   full_name: string
   photo?: File
-  photo_url?: string
+  photo_url?: string | null
   address: string
   contact_number: string
   email: string
   date_of_birth: string
   category: StaffCategory
-  remarks?: string
+  remarks?: string | null
   joining_date: string
   education: StaffEducation
   experience_years: number
-  last_employer?: string
+  last_employer?: string | null
 }
 
 export type UpdateStaffPayload = Partial<CreateStaffPayload>
