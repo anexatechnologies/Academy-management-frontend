@@ -23,6 +23,7 @@ import BatchViewPage from "@/pages/batches/BatchViewPage"
 import StudentsListPage from "@/pages/students/StudentsListPage"
 import StudentCreatePage from "@/pages/students/StudentCreatePage"
 import StudentEditPage from "@/pages/students/StudentEditPage"
+import FeeSettingsPage from "@/pages/fee-settings/FeeSettingsPage"
 import SettingsPage from "@/pages/settings-page"
 
 
@@ -62,6 +63,7 @@ function App() {
             <Route path="/students/edit/:id" element={<StudentEditPage />} />
 
             <Route path="/components" element={<ComponentsPage />} />
+            <Route path="/fee-settings" element={<FeeSettingsPage />} />
             <Route path="/settings" element={<SettingsPage />} />
           </Route>
         </Route>
