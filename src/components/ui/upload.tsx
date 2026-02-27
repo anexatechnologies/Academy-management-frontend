@@ -7,7 +7,7 @@ export interface UploadProps extends React.InputHTMLAttributes<HTMLInputElement>
   onFilesSelected?: (files: File[]) => void
   maxFiles?: number
   accept?: string
-  imagePreview?: string
+  imagePreview?: string | null
   onRemove?: () => void
 }
 

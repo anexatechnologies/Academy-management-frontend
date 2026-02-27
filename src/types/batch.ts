@@ -9,6 +9,7 @@ export interface Batch {
   end_date: string
   staff_id: number
   staff_name: string
+  course_fees: string | number
   status: "active" | "inactive"
   created_at: string
   updated_at: string

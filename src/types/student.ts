@@ -1,3 +1,19 @@
+
+export interface EnrolledBatch {
+  id: number
+  batch_id: number
+  batch_name: string
+  course_id: number
+  course_name: string
+  start_date: string
+  end_date: string
+  course_base_fees: string | number
+  total_fees_with_tax: string | number
+  fees_paid: string | number
+  fees_remaining: string | number
+  is_removable: boolean
+}
+
 export interface Student {
   id: number
   student_id: string
@@ -29,6 +45,7 @@ export interface Student {
   semester: string
   university_enrollment_no: string
   status: "active" | "inactive"
+  batches?: EnrolledBatch[]
   created_at: string
   updated_at: string
 }

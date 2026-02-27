@@ -86,6 +86,7 @@ export const UserForm = ({ initialValues, onSubmit, isLoading, isEdit }: UserFor
         />
         <Input
           label="Email Address"
+          required={true}
           placeholder="Enter email address"
           type="email"
           {...register("email")}
@@ -94,6 +95,7 @@ export const UserForm = ({ initialValues, onSubmit, isLoading, isEdit }: UserFor
         />
         <Input
           label="Phone Number"
+          required={true}
           placeholder="Enter phone number"
           {...register("phone")}
           error={errors.phone?.message}

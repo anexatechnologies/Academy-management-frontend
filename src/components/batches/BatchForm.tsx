@@ -46,14 +46,10 @@ export const BatchForm = ({
     resolver: zodResolver(batchSchema) as any,
     defaultValues: initialValues
       ? {
-          course_id: initialValues.course_id,
-          name: initialValues.name,
-          capacity: initialValues.capacity,
-          hall_no: initialValues.hall_no,
-          start_date: initialValues.start_date,
-          end_date: initialValues.end_date,
-          staff_id: initialValues.staff_id,
-        }
+          ...Object.fromEntries(
+            Object.entries(initialValues).map(([k, v]) => [k, v === null ? (typeof initialValues[k as keyof Batch] === 'number' ? 0 : "") : v])
+          ),
+        } as any
       : {
           course_id: 0,
           name: "",
@@ -112,6 +108,7 @@ export const BatchForm = ({
               <Input
                 {...register("capacity")}
                 label="Batch Capacity"
+                required={true}
                 type="number"
                 placeholder="e.g. 30"
                 className="h-10 rounded-lg text-sm"
@@ -122,6 +119,7 @@ export const BatchForm = ({
               <Input
                 {...register("hall_no")}
                 label="Hall Number"
+                required={true}
                 placeholder="e.g. Hall 1A"
                 className="h-10 rounded-lg text-sm"
                 error={errors.hall_no?.message}
@@ -146,6 +144,7 @@ export const BatchForm = ({
                 render={({ field }) => (
                   <DatePickerInput
                     label="Start Date"
+                    required={true}
                     value={field.value ? new Date(field.value) : null}
                     onChange={(date) => field.onChange(date ? date.toISOString().split('T')[0] : '')}
                     error={errors.start_date?.message}
@@ -161,6 +160,7 @@ export const BatchForm = ({
                 render={({ field }) => (
                   <DatePickerInput
                     label="End Date"
+                    required={true}
                     value={field.value ? new Date(field.value) : null}
                     onChange={(date) => field.onChange(date ? date.toISOString().split('T')[0] : '')}
                     error={errors.end_date?.message}
@@ -172,6 +172,7 @@ export const BatchForm = ({
 
               <ComboBox
                 label="Assigned Staff"
+                required={true}
                 placeholder="Select a staff member"
                 value={String(watch("staff_id") || "")}
                 onValueChange={(val) => setValue("staff_id", Number(val))}

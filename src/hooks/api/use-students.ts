@@ -49,7 +49,7 @@ export const useCreateStudent = () => {
       Object.entries(payload).forEach(([key, value]) => {
         if (value === undefined || value === null || value === "" || key === "photo_url") return
         if (key === "batch_ids" && Array.isArray(value)) {
-          value.forEach((id) => formData.append("batch_ids", String(id)))
+          formData.append("batch_ids", JSON.stringify(value))
         } else if (value instanceof File) {
           formData.append(key, value)
         } else {
@@ -76,7 +76,7 @@ export const useUpdateStudent = (id: number) => {
       Object.entries(payload).forEach(([key, value]) => {
         if (value === undefined || value === null || value === "" || key === "photo_url") return
         if (key === "batch_ids" && Array.isArray(value)) {
-          value.forEach((id) => formData.append("batch_ids", String(id)))
+          formData.append("batch_ids", JSON.stringify(value))
         } else if (value instanceof File) {
           formData.append(key, value)
         } else {

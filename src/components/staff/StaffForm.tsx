@@ -18,17 +18,17 @@ const staffSchema = z.object({
   staff_type: z.enum(["Teaching", "Non-Teaching"]),
   full_name: z.string().min(1, "Full name is required"),
   photo: z.instanceof(File).optional(),
-  photo_url: z.string().optional(),
+  photo_url: z.string().nullish(),
   address: z.string().min(1, "Address is required"),
   contact_number: z.string().min(10, "Contact number must be at least 10 digits"),
   email: z.string().email("Invalid email address"),
   date_of_birth: z.string().min(1, "Date of birth is required"),
   category: z.enum(["General", "OBC", "SC", "ST", "Other"]),
-  remarks: z.string().optional(),
+  remarks: z.string().nullish(),
   joining_date: z.string().min(1, "Joining date is required"),
   education: z.enum(["SSC", "HSC", "Diploma", "Graduate", "Post Graduate", "PhD", "Other"]),
   experience_years: z.coerce.number().min(0, "Experience cannot be negative"),
-  last_employer: z.string().optional(),
+  last_employer: z.string().nullish(),
 })
 
 export type StaffFormValues = z.infer<typeof staffSchema>
@@ -57,9 +57,11 @@ export const StaffForm = ({
   } = useForm<StaffFormValues>({
     resolver: zodResolver(staffSchema) as any,
     defaultValues: initialValues ? {
-      ...initialValues,
+      ...Object.fromEntries(
+        Object.entries(initialValues).map(([k, v]) => [k, v === null ? "" : v])
+      ),
       experience_years: Number(initialValues.experience_years),
-    } : {
+    } as any : {
       staff_type: "Teaching",
       category: "General",
       education: "SSC",
@@ -155,6 +157,7 @@ export const StaffForm = ({
               <Textarea 
                 {...register("address")}
                 label="Address"
+                required={true}
                 placeholder="Enter residential address"
                 className="min-h-[80px] rounded-lg resize-none text-sm"
                 error={errors.address?.message}
@@ -164,6 +167,7 @@ export const StaffForm = ({
                 <Input
                   {...register("contact_number")}
                   label="Contact Number"
+                  required={true}
                   placeholder="+91 00000 00000"
                   className="h-10 rounded-lg text-sm"
                   error={errors.contact_number?.message}
@@ -172,6 +176,7 @@ export const StaffForm = ({
                 <Input
                   {...register("email")}
                   label="Email Address"
+                  required={true}
                   type="email"
                   placeholder="john.doe@example.com"
                   className="h-10 rounded-lg text-sm"
@@ -198,6 +203,7 @@ export const StaffForm = ({
                 render={({ field }) => (
                   <DatePickerInput
                     label="Date of Birth"
+                    required={true}
                     value={field.value ? new Date(field.value) : null}
                     onChange={(date) => field.onChange(date ? date.toISOString().split('T')[0] : '')}
                     error={errors.date_of_birth?.message}
@@ -246,6 +252,7 @@ export const StaffForm = ({
                 render={({ field }) => (
                   <DatePickerInput
                     label="Joining Date"
+                    required={true}
                     value={field.value ? new Date(field.value) : null}
                     onChange={(date) => field.onChange(date ? date.toISOString().split('T')[0] : '')}
                     error={errors.joining_date?.message}
