@@ -39,6 +39,7 @@ interface ComboBoxProps {
   error?: string
   triggerClassName?: string
   className?: string
+  required?: boolean
 }
 
 export function ComboBox({
@@ -59,6 +60,7 @@ export function ComboBox({
   error,
   triggerClassName,
   className,
+  required,
 }: ComboBoxProps) {
   const [open, setOpen] = React.useState(false)
   const [canScrollUp, setCanScrollUp] = React.useState(false)
@@ -112,7 +114,10 @@ export function ComboBox({
   return (
     <div className={cn("space-y-1.5 w-full", className)}>
       {label && (
-        <Label className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 ml-0.5">
+        <Label 
+          className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 ml-0.5"
+          required={required}
+        >
           {label}
         </Label>
       )}

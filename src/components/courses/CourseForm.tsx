@@ -39,6 +39,7 @@ export const CourseForm = ({ initialValues, onSubmit, isLoading, isEdit }: Cours
         <div className="space-y-2">
           <Input
             label="Course Name"
+            required={true}
             placeholder="e.g. Full Stack Web Development"
             {...register("name")}
             error={errors.name?.message}
@@ -49,6 +50,7 @@ export const CourseForm = ({ initialValues, onSubmit, isLoading, isEdit }: Cours
         <div className="space-y-2">
           <Input
             label="Course Fees"
+            required={true}
             type="number"
             placeholder="0.00"
             {...register("fees", { valueAsNumber: true })}

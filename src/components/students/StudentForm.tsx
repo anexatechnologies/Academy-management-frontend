@@ -91,7 +91,8 @@ export const StudentForm = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
               <Input
                 {...register("name")}
-                label="Student Name *"
+                label="Student Name"
+                required={true}
                 placeholder="Enter student's full name"
                 className="rounded-lg text-sm"
                 error={errors.name?.message}
@@ -100,6 +101,7 @@ export const StudentForm = ({
               <Input
                 {...register("father_husband_name")}
                 label="Father / Husband Name"
+                required={true}
                 placeholder="Enter father or husband name"
                 className="rounded-lg text-sm"
                 error={errors.father_husband_name?.message}
@@ -115,7 +117,12 @@ export const StudentForm = ({
               />
 
               <div className="space-y-1.5">
-                <Label className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 ml-0.5">Gender</Label>
+                <Label 
+                  className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 ml-0.5"
+                  required={true}
+                >
+                  Gender
+                </Label>
                 <CustomSelect
                   options={[...GENDER_TYPES]}
                   value={watch("gender") || "Male"}
@@ -133,6 +140,7 @@ export const StudentForm = ({
                 render={({ field }) => (
                   <DatePickerInput
                     label="Date of Birth"
+                    required={true}
                     value={field.value ? new Date(field.value) : null}
                     onChange={(date) => field.onChange(date ? date.toISOString().split('T')[0] : '')}
                     error={errors.date_of_birth?.message}
@@ -148,6 +156,7 @@ export const StudentForm = ({
                 render={({ field }) => (
                   <DatePickerInput
                     label="Registration Date"
+                    required={true}
                     value={field.value ? new Date(field.value) : null}
                     onChange={(date) => field.onChange(date ? date.toISOString().split('T')[0] : '')}
                     error={errors.registration_date?.message}
@@ -274,7 +283,8 @@ export const StudentForm = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
               <Input
                 {...register("personal_contact")}
-                label="Personal Contact *"
+                label="Personal Contact"
+                required={true}
                 placeholder="+91 00000 00000"
                 className="rounded-lg text-sm"
                 error={errors.personal_contact?.message}

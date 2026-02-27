@@ -82,6 +82,7 @@ export const BatchForm = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
               <ComboBox
                 label="Course"
+                required={true}
                 placeholder="Select a course"
                 value={String(watch("course_id") || "")}
                 onValueChange={(val) => setValue("course_id", Number(val))}
@@ -101,6 +102,7 @@ export const BatchForm = ({
               <Input
                 {...register("name")}
                 label="Batch Name"
+                required={true}
                 placeholder="e.g. Morning Batch A"
                 className="h-10 rounded-lg text-sm"
                 error={errors.name?.message}

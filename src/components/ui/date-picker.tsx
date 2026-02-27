@@ -13,6 +13,7 @@ interface CustomDatePickerProps extends Omit<DatePickerProps, "onChange" | "valu
   onChange: (date: Date | null) => void
   placeholder?: string
   className?: string
+  required?: boolean
 }
 
 export function DatePickerInput({
@@ -23,6 +24,7 @@ export function DatePickerInput({
   placeholder = "Pick a date",
   className,
   id,
+  required,
   ...props
 }: CustomDatePickerProps) {
   const generatedId = React.useId()
@@ -34,6 +36,7 @@ export function DatePickerInput({
         <Label 
           htmlFor={inputId}
           className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 ml-0.5"
+          required={required}
         >
           {label}
         </Label>

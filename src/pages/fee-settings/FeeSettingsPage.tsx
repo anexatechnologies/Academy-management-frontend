@@ -98,7 +98,12 @@ const FeeSettingsPage = () => {
                 <div className="space-y-4">
                   <div className="flex items-center gap-3">
                     <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-primary text-[10px] font-bold">1</span>
-                    <h2 className="text-[13px] font-bold text-slate-500 uppercase tracking-widest">Fee Mode</h2>
+                    <Label 
+                      className="text-[13px] font-bold text-slate-500 uppercase tracking-widest"
+                      required={true}
+                    >
+                      Fee Mode
+                    </Label>
                   </div>
                   <RadioGroup
                     value={feeMode}
@@ -143,6 +148,7 @@ const FeeSettingsPage = () => {
                     <Input
                       {...register("tax_percentage")}
                       label="Tax Percentage (%)"
+                      required={true}
                       type="number"
                       step="0.01"
                       min="0"
@@ -155,6 +161,7 @@ const FeeSettingsPage = () => {
                     <Input
                       {...register("monthly_tax_percentage")}
                       label="Monthly Tax Percentage (%)"
+                      required={true}
                       type="number"
                       step="0.01"
                       min="0"

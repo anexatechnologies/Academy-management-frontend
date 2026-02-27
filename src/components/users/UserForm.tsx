@@ -70,6 +70,7 @@ export const UserForm = ({ initialValues, onSubmit, isLoading, isEdit }: UserFor
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Input
           label="Full Name"
+          required={true}
           placeholder="Enter full name"
           {...register("full_name")}
           error={errors.full_name?.message}
@@ -77,6 +78,7 @@ export const UserForm = ({ initialValues, onSubmit, isLoading, isEdit }: UserFor
         />
         <Input
           label="Username"
+          required={true}
           placeholder="Enter username"
           {...register("username")}
           error={errors.username?.message}
@@ -99,7 +101,12 @@ export const UserForm = ({ initialValues, onSubmit, isLoading, isEdit }: UserFor
         />
         
         <div className="space-y-2">
-          <Label className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 ml-0.5">Role</Label>
+          <Label 
+            className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 ml-0.5"
+            required={true}
+          >
+            Role
+          </Label>
           <CustomSelect
             value={selectedRoleId}
             onValueChange={(val) => setValue("role_id", val, { shouldValidate: true })}
@@ -121,6 +128,7 @@ export const UserForm = ({ initialValues, onSubmit, isLoading, isEdit }: UserFor
 
         <Input
           label={isEdit ? "New Password (Optional)" : "Password"}
+          required={!isEdit}
           placeholder={isEdit ? "Leave blank to keep current" : "Enter password"}
           type="password"
           {...register("password")}

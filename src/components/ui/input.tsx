@@ -7,9 +7,10 @@ interface InputProps extends React.ComponentProps<"input"> {
   label?: string
   error?: string
   leftIcon?: React.ReactNode
+  required?: boolean
 }
 
-function Input({ className, type, label, error, id, leftIcon, ...props }: InputProps) {
+function Input({ className, type, label, error, required, id, leftIcon, ...props }: InputProps) {
   const gId = React.useId()
   const inputId = id || gId
   const [showPassword, setShowPassword] = React.useState(false)
@@ -21,6 +22,7 @@ function Input({ className, type, label, error, id, leftIcon, ...props }: InputP
         <Label 
           htmlFor={inputId}
           className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 ml-0.5"
+          required={required}
         >
           {label}
         </Label>

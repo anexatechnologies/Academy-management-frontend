@@ -82,7 +82,12 @@ export const StaffForm = ({
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
               <div className="space-y-3">
-                <Label className="text-[13px] font-semibold text-slate-700 dark:text-slate-300">Staff Type</Label>
+                <Label 
+                  className="text-[13px] font-semibold text-slate-700 dark:text-slate-300"
+                  required={true}
+                >
+                  Staff Type
+                </Label>
                 <RadioGroup
                   value={staffType}
                   onValueChange={(value) => setValue("staff_type", value as StaffType)}
@@ -108,6 +113,7 @@ export const StaffForm = ({
               <Input
                 {...register("full_name")}
                 label="Full Name"
+                required={true}
                 placeholder="Enter full name"
                 className="h-10 rounded-lg text-sm"
                 error={errors.full_name?.message}
