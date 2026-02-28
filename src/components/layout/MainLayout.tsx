@@ -3,6 +3,7 @@ import { AppSidebar } from "@/components/app-sidebar"
 import { Outlet, Link, useNavigate } from "react-router-dom"
 import { BreadcrumbProvider, useBreadcrumbs } from "@/context/BreadcrumbContext"
 import { ChevronRight, ChevronLeft } from "lucide-react"
+import { TooltipProvider } from "@/components/ui/tooltip"
 import React from "react"
 
 const HeaderBreadcrumbs = () => {
@@ -52,28 +53,30 @@ const HeaderBreadcrumbs = () => {
 
 const MainLayout = () => {
   return (
-    <BreadcrumbProvider>
-      <SidebarProvider>
-        <div className="flex min-h-screen w-full">
-          <AppSidebar />
-          <main className="flex-1 overflow-hidden bg-slate-50/50 dark:bg-slate-950/50 flex flex-col h-screen">
-            <header className="flex h-[73px] items-center gap-2 border-b px-4 md:px-6 bg-white dark:bg-slate-900 sticky top-0 z-10 shrink-0">
-              <SidebarTrigger className="md:hidden" />
-              <div className="h-4 w-px bg-slate-200 dark:bg-slate-800 md:hidden" />
-              <div className="flex items-center gap-2 overflow-hidden">
-                <h2 className="text-sm font-medium text-slate-400 uppercase tracking-wider whitespace-nowrap">
-                  Academy Management
-                </h2>
-                <HeaderBreadcrumbs />
+    <TooltipProvider>
+      <BreadcrumbProvider>
+        <SidebarProvider>
+          <div className="flex min-h-screen w-full">
+            <AppSidebar />
+            <main className="flex-1 overflow-hidden bg-slate-50/50 dark:bg-slate-950/50 flex flex-col h-screen">
+              <header className="flex h-[73px] items-center gap-2 border-b px-4 md:px-6 bg-white dark:bg-slate-900 sticky top-0 z-10 shrink-0">
+                <SidebarTrigger className="md:hidden" />
+                <div className="h-4 w-px bg-slate-200 dark:bg-slate-800 md:hidden" />
+                <div className="flex items-center gap-2 overflow-hidden">
+                  <h2 className="text-sm font-medium text-slate-400 uppercase tracking-wider whitespace-nowrap">
+                    Academy Management
+                  </h2>
+                  <HeaderBreadcrumbs />
+                </div>
+              </header>
+              <div className="flex-1 overflow-auto">
+                <Outlet />
               </div>
-            </header>
-            <div className="flex-1 overflow-auto">
-              <Outlet />
-            </div>
-          </main>
-        </div>
-      </SidebarProvider>
-    </BreadcrumbProvider>
+            </main>
+          </div>
+        </SidebarProvider>
+      </BreadcrumbProvider>
+    </TooltipProvider>
   )
 }
 

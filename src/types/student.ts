@@ -1,6 +1,7 @@
 
 export interface EnrolledBatch {
   id: number
+  student_course_id: number
   batch_id: number
   batch_name: string
   name?: string // UI compatibility
