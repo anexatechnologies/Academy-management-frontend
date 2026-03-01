@@ -26,6 +26,7 @@ import StudentEditPage from "@/pages/students/StudentEditPage"
 import StudentViewPage from "@/pages/students/StudentViewPage"
 import FeeSettingsPage from "@/pages/fee-settings/FeeSettingsPage"
 import SettingsPage from "@/pages/settings-page"
+import ConfigurePage from "@/pages/configure/ConfigurePage"
 
 
 function App() {
@@ -65,6 +66,7 @@ function App() {
             <Route path="/students/view/:id" element={<StudentViewPage />} />
 
             <Route path="/components" element={<ComponentsPage />} />
+            <Route path="/configure" element={<ConfigurePage />} />
             <Route path="/fee-settings" element={<FeeSettingsPage />} />
             <Route path="/settings" element={<SettingsPage />} />
           </Route>

@@ -8,6 +8,7 @@ import {
   Palette,
   GraduationCap,
   IndianRupee,
+  Building,
 } from "lucide-react"
 
 import {
@@ -66,6 +67,11 @@ const items = [
     title: "Fee Settings",
     url: "/fee-settings",
     icon: IndianRupee,
+  },
+  {
+    title: "Configure",
+    url: "/configure",
+    icon: Building,
   },
   {
     title: "Settings",
