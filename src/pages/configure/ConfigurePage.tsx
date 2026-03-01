@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { toast } from "sonner"
-import { Phone, Hash, ReceiptText, Image as ImageIcon, Loader2 } from "lucide-react"
+import { Building, Phone, Hash, ReceiptText, Image as ImageIcon, Loader2 } from "lucide-react"
 
 import BodyLayout from "@/components/layout/BodyLayout"
 import { FormFooter } from "@/components/ui/form-footer"
@@ -128,7 +128,19 @@ const ConfigurePage = () => {
         </div>
 
         <form onSubmit={form.handleSubmit(onSubmit)} className="relative flex flex-col">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm relative">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm relative overflow-hidden">
+            <div className="p-6 md:p-8 bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-4">
+                <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                  <Building className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">Institute / Company Information</h3>
+                  <p className="text-sm text-slate-500 font-medium">This information will be displayed on reports and receipts.</p>
+                </div>
+              </div>
+            </div>
+
             <div className="p-6 md:p-8 pb-24 md:pb-28">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                 <div className="md:col-span-2">

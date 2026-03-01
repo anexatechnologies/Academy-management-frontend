@@ -93,7 +93,7 @@ const CoursesListPage = () => {
     <BodyLayout
       breadcrumbs={breadcrumbs}
       toolbar={
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 px-2 py-2">
           <SearchBar
             placeholder="Search courses..."
             value={search}

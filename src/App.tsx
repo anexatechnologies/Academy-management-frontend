@@ -27,6 +27,7 @@ import StudentViewPage from "@/pages/students/StudentViewPage"
 import FeeSettingsPage from "@/pages/fee-settings/FeeSettingsPage"
 import SettingsPage from "@/pages/settings-page"
 import ConfigurePage from "@/pages/configure/ConfigurePage"
+import RolesListPage from "@/pages/settings/roles/RolesListPage"
 
 
 function App() {
@@ -69,6 +70,7 @@ function App() {
             <Route path="/configure" element={<ConfigurePage />} />
             <Route path="/fee-settings" element={<FeeSettingsPage />} />
             <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/roles" element={<RolesListPage />} />
           </Route>
         </Route>
 

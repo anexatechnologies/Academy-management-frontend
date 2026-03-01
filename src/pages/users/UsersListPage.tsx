@@ -13,7 +13,8 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { useUsers, useDeleteUser, useToggleUserStatus } from "@/hooks/api/use-users"
-import { useRoles } from "@/hooks/api/use-roles"
+import { useRoleComboBox } from "@/hooks/use-combobox-data"
+import { ComboBox } from "@/components/ui/combobox"
 import BodyLayout from "@/components/layout/BodyLayout"
 import { toast } from "sonner"
 import { EditButton } from "@/components/ui/edit-button"
@@ -53,7 +54,7 @@ const UsersListPage = () => {
   const { mutate: deleteUser, isPending: isDeleting } = useDeleteUser()
   const { mutate: toggleStatus } = useToggleUserStatus()
 
-  const { data: rolesData, isLoading: isLoadingRoles } = useRoles()
+  const roleComboBox = useRoleComboBox("name")
   const { canUpdateUser, canDeleteUser } = usePermissions()
 
   const handleDelete = (id: number) => {
@@ -103,7 +104,7 @@ const UsersListPage = () => {
     <BodyLayout
       breadcrumbs={breadcrumbs}
       toolbar={
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 px-2 py-2">
           <SearchBar
             placeholder="Search users..."
             value={search}
@@ -112,15 +113,18 @@ const UsersListPage = () => {
           />
           <div className="w-px h-6 bg-slate-200 dark:bg-slate-800 hidden sm:block" />
           
-          <CustomSelect
-            value={params.role || "all"}
-            onValueChange={(val) => setFilter("role", val === "all" ? undefined : val)}
-            triggerClassName="w-[150px]"
-            isLoading={isLoadingRoles}
-            options={[
-              { value: "all", label: "All Roles" },
-              ...(rolesData || []).map(r => ({ value: r.name, label: r.name.replace("_", " ").replace(/\b\w/g, l => l.toUpperCase()) }))
-            ]}
+          <ComboBox
+            value={params.role || ""}
+            onValueChange={(val) => setFilter("role", val === "" ? undefined : val)}
+            placeholder="All Roles"
+            options={roleComboBox.options}
+            onSearch={roleComboBox.onSearch}
+            onLoadMore={roleComboBox.onLoadMore}
+            onReset={roleComboBox.onReset}
+            hasMore={roleComboBox.hasMore}
+            isLoading={roleComboBox.isLoading}
+            isLoadingMore={roleComboBox.isLoadingMore}
+            triggerClassName="w-[180px]"
           />
 
           <CustomSelect

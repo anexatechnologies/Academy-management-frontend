@@ -9,6 +9,7 @@ import {
   GraduationCap,
   IndianRupee,
   Building,
+  Shield,
 } from "lucide-react"
 
 import {
@@ -72,6 +73,11 @@ const items = [
     title: "Configure",
     url: "/configure",
     icon: Building,
+  },
+  {
+    title: "Roles & Permissions",
+    url: "/roles",
+    icon: Shield,
   },
   {
     title: "Settings",

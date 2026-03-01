@@ -3,9 +3,9 @@ import type { UseFormSetError } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { Input } from "@/components/ui/input"
-import { CustomSelect } from "@/components/ui/custom-select"
+import { ComboBox } from "@/components/ui/combobox"
 import { Label } from "@/components/ui/label"
-import { useRoles } from "@/hooks/api/use-roles"
+import { useRoleComboBox } from "@/hooks/use-combobox-data"
 import { FormFooter } from "@/components/ui/form-footer"
 
 const userSchema = z.object({
@@ -32,7 +32,7 @@ interface UserFormProps {
 }
 
 export const UserForm = ({ initialValues, onSubmit, isLoading, isEdit }: UserFormProps) => {
-  const { data: roles, isLoading: isLoadingRoles } = useRoles()
+  const roleComboBox = useRoleComboBox("id")
 
   const {
     register,
@@ -109,17 +109,19 @@ export const UserForm = ({ initialValues, onSubmit, isLoading, isEdit }: UserFor
           >
             Role
           </Label>
-          <CustomSelect
+          <ComboBox
             value={selectedRoleId}
             onValueChange={(val) => setValue("role_id", val, { shouldValidate: true })}
-            placeholder="Select role"
-            isLoading={isLoadingRoles}
+            placeholder="Select user role"
+            options={roleComboBox.options}
+            onSearch={roleComboBox.onSearch}
+            onLoadMore={roleComboBox.onLoadMore}
+            onReset={roleComboBox.onReset}
+            hasMore={roleComboBox.hasMore}
+            isLoading={roleComboBox.isLoading}
+            isLoadingMore={roleComboBox.isLoadingMore}
             disabled={isLoading}
             triggerClassName="w-full h-11 rounded-lg bg-white dark:bg-slate-900/50 border-slate-200 border shadow-[0_1px_2px_rgba(0,0,0,0.05)] hover:border-primary/40 hover:shadow-sm focus:border-primary focus:ring-[3px] focus:ring-primary/20 transition-all px-3.5 text-base md:text-sm"
-            options={(roles || []).map((role) => ({
-              value: role.id.toString(),
-              label: role.name.replace("_", " ").replace(/\b\w/g, (l) => l.toUpperCase()),
-            }))}
           />
           {errors.role_id && (
             <p className="text-[11px] font-medium text-rose-500 ml-1 mt-1 transition-all">
