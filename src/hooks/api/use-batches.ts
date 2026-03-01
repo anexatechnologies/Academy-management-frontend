@@ -1,7 +1,13 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query"
 import { useAxiosPrivate } from "@/hooks/useAxiosPrivate"
-import type { Batch, CreateBatchPayload, UpdateBatchPayload, BatchListResponse } from "@/types/batch"
-
+import type { 
+  Batch, 
+  CreateBatchPayload, 
+  UpdateBatchPayload, 
+  BatchListResponse,
+  BatchStudentsResponse,
+  AssignBatchStudentPayload
+} from "@/types/batch"
 export const useBatches = (params?: {
   page?: number
   limit?: number
@@ -89,6 +95,49 @@ export const useToggleBatchStatus = () => {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["batches"] })
       queryClient.invalidateQueries({ queryKey: ["batches", variables.id] })
+    },
+  })
+}
+
+export const useBatchStudents = (batchId: number) => {
+  const axiosPrivate = useAxiosPrivate()
+  return useQuery({
+    queryKey: ["batch-students", batchId],
+    queryFn: async () => {
+      const { data } = await axiosPrivate.get<BatchStudentsResponse>(
+        `/batches/${batchId}/students`
+      )
+      return data
+    },
+    enabled: !!batchId,
+  })
+}
+
+export const useAssignStudentsToBatch = (batchId: number) => {
+  const axiosPrivate = useAxiosPrivate()
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (payload: AssignBatchStudentPayload) => {
+      const { data } = await axiosPrivate.post(`/batches/${batchId}/students`, payload)
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["batch-students", batchId] })
+      queryClient.invalidateQueries({ queryKey: ["batches", batchId] })
+    },
+  })
+}
+
+export const useRemoveStudentFromBatch = (batchId: number) => {
+  const axiosPrivate = useAxiosPrivate()
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (studentId: number) => {
+      await axiosPrivate.delete(`/batches/${batchId}/students/${studentId}`)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["batch-students", batchId] })
+      queryClient.invalidateQueries({ queryKey: ["batches", batchId] })
     },
   })
 }

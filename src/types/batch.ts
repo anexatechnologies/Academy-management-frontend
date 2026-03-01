@@ -38,3 +38,31 @@ export interface BatchListResponse {
   }
   data: Batch[]
 }
+
+export interface BatchStudent {
+  id: number
+  student_id: string
+  name: string
+  personal_contact: string
+  status: string
+  assigned_at: string
+}
+
+export interface BatchStudentsResponse {
+  status: string
+  count: number
+  data: BatchStudent[]
+}
+
+export interface AssignBatchStudentPayload {
+  student_ids: number[]
+  force?: boolean
+}
+
+export interface BatchAssignmentConflict {
+  student_name: string
+  student_id: string
+  subject: string
+  existing_batch: string
+  new_batch: string
+}

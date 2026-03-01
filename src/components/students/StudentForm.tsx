@@ -50,10 +50,7 @@ export const StudentForm = ({
     formState: { errors },
   } = useForm<StudentFormValues>({
     resolver: zodResolver(
-      studentSchema.refine((data) => isEdit || (data.batch_ids && data.batch_ids.length > 0), {
-        message: "At least one batch must be selected",
-        path: ["batch_ids"],
-      })
+      studentSchema
     ) as any,
     defaultValues: initialValues
       ? {

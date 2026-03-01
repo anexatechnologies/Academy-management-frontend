@@ -1,3 +1,4 @@
+import { useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { ArrowLeft, Edit, Calendar, Users, MapPin } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -6,12 +7,15 @@ import { useBatch } from "@/hooks/api/use-batches"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { DateCell } from "@/components/ui/date-cell"
+import { BatchStudentsList } from "@/components/batches/BatchStudentsList"
+import { BatchAssignModal } from "@/components/batches/BatchAssignModal"
 import { cn } from "@/lib/utils"
 
 const BatchViewPage = () => {
   const { id } = useParams()
   const navigate = useNavigate()
   const { data: batch, isLoading } = useBatch(Number(id))
+  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false)
 
   const breadcrumbs = [
     { label: "Batch Management", href: "/batches" },
@@ -71,8 +75,8 @@ const BatchViewPage = () => {
           </Button>
         </div>
 
-        {/* Details Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Details and Students */}
+        <div className="flex flex-col gap-6">
           <Card className="shadow-sm border-none bg-white dark:bg-slate-950">
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
@@ -80,7 +84,7 @@ const BatchViewPage = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-8">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-y-6 gap-x-8">
                 <DetailItem label="Start Date" value={<DateCell date={batch.start_date} />} />
                 <DetailItem label="End Date" value={<DateCell date={batch.end_date} />} />
                 <DetailItem label="Capacity" value={`${batch.capacity} Students`} />
@@ -91,25 +95,27 @@ const BatchViewPage = () => {
           </Card>
 
           <Card className="shadow-sm border-none bg-white dark:bg-slate-950">
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-lg flex items-center gap-2">
                 <Users className="h-5 w-5 text-primary" /> Students
               </CardTitle>
+              <Button size="sm" className="h-8" onClick={() => setIsAssignModalOpen(true)}>
+                Assign Students
+              </Button>
             </CardHeader>
-            <CardContent>
-              <div className="flex flex-col items-center justify-center py-12 text-center">
-                <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                  <Users className="h-8 w-8 text-primary/60" />
-                </div>
-                <h3 className="text-lg font-semibold text-slate-700 dark:text-slate-300">Coming Soon</h3>
-                <p className="text-sm text-muted-foreground mt-1 max-w-xs">
-                  Student assignment and transfer functionality will be available once the Student module is integrated.
-                </p>
-              </div>
+            <CardContent className="p-0 sm:p-6 sm:pt-0">
+              <BatchStudentsList batchId={batch.id} />
             </CardContent>
           </Card>
         </div>
       </div>
+      {batch && (
+        <BatchAssignModal
+          batchId={batch.id}
+          isOpen={isAssignModalOpen}
+          onClose={() => setIsAssignModalOpen(false)}
+        />
+      )}
     </BodyLayout>
   )
 }
