@@ -23,6 +23,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { DateCell } from "@/components/ui/date-cell"
 import { cn, formatCurrency } from "@/lib/utils"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { usePayments } from "@/hooks/api/use-payments"
 import { PaymentDialog } from "@/components/students/PaymentDialog"
@@ -225,6 +226,89 @@ const StudentViewPage = () => {
                   </CardContent>
                 </Card>
               </div>
+            </div>
+
+            {/* Enrolled Courses & Batches Section */}
+            <div className="mt-6 md:mt-8">
+              <Card className="shadow-sm border-none bg-white dark:bg-slate-950 overflow-hidden rounded-2xl">
+                <CardHeader className="pb-4 pt-5 px-6 border-b border-slate-100 dark:border-slate-800/60">
+                  <CardTitle className="text-lg font-bold flex items-center gap-2 text-slate-800 dark:text-slate-100 m-0">
+                    <BookOpen className="h-5 w-5 text-primary" /> Enrolled Courses & Batches
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-0">
+                  {student.batches && student.batches.length > 0 ? (
+                    <div className="w-full relative">
+                      <Table paginationRequired={false}>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Course</TableHead>
+                            <TableHead>Batch</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead className="text-right">Total Fees</TableHead>
+                            <TableHead className="text-right">Fee Paid</TableHead>
+                            <TableHead className="text-right">Balance</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {student.batches.map((batch: any) => (
+                            <TableRow key={batch.id}>
+                              <TableCell className="font-semibold text-slate-900 dark:text-slate-100">
+                                {batch.course_name}
+                              </TableCell>
+                              <TableCell className="font-medium text-primary">
+                                {batch.batch_name}
+                              </TableCell>
+                              <TableCell>
+                                {(() => {
+                                  const isEndDatePassed = new Date(batch.end_date) < new Date()
+                                  const hasPendingFees = Number(batch.fees_remaining) > 0
+
+                                  if (isEndDatePassed && hasPendingFees) {
+                                    return (
+                                      <span className="px-2.5 py-0.5 text-[10px] uppercase font-bold tracking-wider rounded-md bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                                        Fee Due
+                                      </span>
+                                    )
+                                  } else if (isEndDatePassed && !hasPendingFees) {
+                                    return (
+                                      <span className="px-2.5 py-0.5 text-[10px] uppercase font-bold tracking-wider rounded-md bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400">
+                                        Completed
+                                      </span>
+                                    )
+                                  } else {
+                                    return (
+                                      <span className="px-2.5 py-0.5 text-[10px] uppercase font-bold tracking-wider rounded-md bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+                                        Active
+                                      </span>
+                                    )
+                                  }
+                                })()}
+                              </TableCell>
+                              <TableCell className="text-right font-medium text-slate-900 dark:text-slate-100">
+                                ₹{formatCurrency(batch.total_fees_with_tax)}
+                              </TableCell>
+                              <TableCell className="text-right font-bold text-emerald-600">
+                                ₹{formatCurrency(batch.fees_paid)}
+                              </TableCell>
+                              <TableCell className="text-right font-bold text-rose-600">
+                                ₹{formatCurrency(batch.fees_remaining)}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  ) : (
+                    <div className="text-center py-12">
+                      <div className="inline-flex items-center justify-center h-12 w-12 rounded-full bg-slate-50 dark:bg-slate-900 mb-3 ring-8 ring-slate-50/50 dark:ring-slate-900/50">
+                        <BookOpen className="h-5 w-5 text-slate-400" />
+                      </div>
+                      <p className="text-sm font-medium text-slate-500">No courses enrolled yet.</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             </div>
           </TabsContent>
 
