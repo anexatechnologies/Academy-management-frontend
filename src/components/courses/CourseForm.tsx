@@ -52,6 +52,7 @@ export const CourseForm = ({ initialValues, onSubmit, isLoading, isEdit }: Cours
             label="Course Fees"
             required={true}
             type="number"
+            step="any"
             placeholder="0.00"
             {...register("fees", { valueAsNumber: true })}
             error={errors.fees?.message}

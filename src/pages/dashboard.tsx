@@ -6,7 +6,8 @@ import {
   useFeesSummary,
   useTodayBirthdays,
   useDuePayments,
-  useSendBirthdayWishes
+  useSendBirthdayWishes,
+  useSendDueFeesReminders
 } from "@/hooks/api/use-dashboard"
 import { Skeleton } from "@/components/ui/skeleton"
 import { usePagination } from "@/hooks/use-pagination"
@@ -34,6 +35,7 @@ export default function Dashboard() {
   })
 
   const { mutate: sendWishes, isPending: isSendingWishes } = useSendBirthdayWishes()
+  const { mutate: sendReminders, isPending: isSendingReminders } = useSendDueFeesReminders()
 
   const stats = [
     {
@@ -204,6 +206,17 @@ export default function Dashboard() {
               </CardTitle>
               <CardDescription>Pending or overdue payments for today</CardDescription>
             </div>
+            {payments && payments.count && payments.count > 0 ? (
+              <Button
+                size="sm"
+                onClick={() => sendReminders()}
+                disabled={isSendingReminders}
+                className="h-8"
+              >
+                <Send className="mr-2 h-4 w-4" />
+                {isSendingReminders ? "Sending..." : "Send Reminders"}
+              </Button>
+            ) : null}
           </CardHeader>
           <CardContent className="px-0 pb-0">
             <Table

@@ -92,6 +92,25 @@ export const useSendBirthdayWishes = () => {
   })
 }
 
+export const useSendDueFeesReminders = () => {
+  const axiosPrivate = useAxiosPrivate()
+  return useMutation({
+    mutationFn: async () => {
+      const { data } = await axiosPrivate.post<{ status: string; message: string }>(
+        "/dashboard/send-due-fees-reminders"
+      )
+      return data
+    },
+    onSuccess: (data) => {
+      toast.success(data.message || "Fee reminders sent successfully!")
+    },
+    onError: (error: any) => {
+      const msg = error?.response?.data?.message || "Failed to send fee reminders"
+      toast.error(msg)
+    },
+  })
+}
+
 export const useDuePayments = (params: { page?: number; limit?: number }) => {
   const axiosPrivate = useAxiosPrivate()
   return useQuery({

@@ -127,6 +127,7 @@ export const PaymentDialog = ({
             <Input
               {...register("amount", { valueAsNumber: true })}
               type="number"
+              step="any"
               label="Amount"
               leftIcon={<IndianRupee className="h-5 w-5" />}
               placeholder="0.00"
