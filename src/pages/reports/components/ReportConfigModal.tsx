@@ -47,7 +47,7 @@ export default function ReportConfigModal({
   const { downloadPdfReport } = useDownloadReport()
   const [isDownloading, setIsDownloading] = useState(false)
 
-  const { control, handleSubmit, watch, reset, setValue } = useForm<FormValues>({
+  const { control, handleSubmit, watch, reset } = useForm<FormValues>({
     defaultValues: {
       batch_id: "",
       student_id: "",
