@@ -10,6 +10,7 @@ import {
   IndianRupee,
   Building,
   Shield,
+  FileText,
 } from "lucide-react"
 
 import {
@@ -58,6 +59,11 @@ const items = [
     title: "Staff Management",
     url: "/staff",
     icon: Users,
+  },
+  {
+    title: "Reports",
+    url: "/reports",
+    icon: FileText,
   },
   {
     title: "Components",

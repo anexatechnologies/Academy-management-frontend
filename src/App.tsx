@@ -28,7 +28,7 @@ import FeeSettingsPage from "@/pages/fee-settings/FeeSettingsPage"
 import SettingsPage from "@/pages/settings-page"
 import ConfigurePage from "@/pages/configure/ConfigurePage"
 import RolesListPage from "@/pages/settings/roles/RolesListPage"
-
+import ReportsPage from "@/pages/reports/ReportsPage"
 
 function App() {
   return (
@@ -65,6 +65,8 @@ function App() {
             <Route path="/students/new" element={<StudentCreatePage />} />
             <Route path="/students/edit/:id" element={<StudentEditPage />} />
             <Route path="/students/view/:id" element={<StudentViewPage />} />
+
+            <Route path="/reports" element={<ReportsPage />} />
 
             <Route path="/components" element={<ComponentsPage />} />
             <Route path="/configure" element={<ConfigurePage />} />
