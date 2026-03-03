@@ -29,6 +29,7 @@ import SettingsPage from "@/pages/settings-page"
 import ConfigurePage from "@/pages/configure/ConfigurePage"
 import RolesListPage from "@/pages/settings/roles/RolesListPage"
 import ReportsPage from "@/pages/reports/ReportsPage"
+import CertificationPage from "@/pages/certificates/CertificationPage"
 
 function App() {
   return (
@@ -66,6 +67,7 @@ function App() {
             <Route path="/students/edit/:id" element={<StudentEditPage />} />
             <Route path="/students/view/:id" element={<StudentViewPage />} />
 
+            <Route path="/certificates" element={<CertificationPage />} />
             <Route path="/reports" element={<ReportsPage />} />
 
             <Route path="/components" element={<ComponentsPage />} />

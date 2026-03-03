@@ -11,6 +11,7 @@ import {
   Building,
   Shield,
   FileText,
+  Award,
 } from "lucide-react"
 
 import {
@@ -59,6 +60,11 @@ const items = [
     title: "Staff Management",
     url: "/staff",
     icon: Users,
+  },
+  {
+    title: "Certification",
+    url: "/certificates",
+    icon: Award,
   },
   {
     title: "Reports",
