@@ -1,6 +1,5 @@
 import { useState, useMemo } from "react"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Label } from "@/components/ui/label"
 import ReportConfigModal from "./components/ReportConfigModal"
 import BodyLayout from "@/components/layout/BodyLayout"
 import { FormFooter } from "@/components/ui/form-footer"
@@ -51,15 +50,13 @@ export default function ReportsPage() {
               className="flex flex-col space-y-4 pl-2"
             >
               {REPORT_TYPES.map((report) => (
-                <div key={report.id} className="flex items-start space-x-3">
-                  <RadioGroupItem value={report.id} id={report.id} className="mt-[2px]" />
-                  <Label
-                    htmlFor={report.id}
-                    className="text-sm font-medium leading-[1.3] peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer text-slate-700 dark:text-slate-300"
-                  >
-                    {report.label}
-                  </Label>
-                </div>
+                <RadioGroupItem
+                  key={report.id}
+                  value={report.id}
+                  id={report.id}
+                  label={report.label}
+                  labelClassName="text-sm font-medium leading-[1.3] text-slate-700 dark:text-slate-300"
+                />
               ))}
             </RadioGroup>
           </div>

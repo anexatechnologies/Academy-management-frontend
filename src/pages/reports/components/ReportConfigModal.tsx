@@ -334,18 +334,8 @@ export default function ReportConfigModal({
                       className="flex space-x-4"
                       disabled={isDownloading}
                     >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="asc" id="r1" disabled={isDownloading} />
-                        <Label htmlFor="r1" className="cursor-pointer">
-                          Ascending (A→Z)
-                        </Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="desc" id="r2" disabled={isDownloading} />
-                        <Label htmlFor="r2" className="cursor-pointer">
-                          Descending (Z→A)
-                        </Label>
-                      </div>
+                      <RadioGroupItem value="asc" label="Ascending (A→Z)" disabled={isDownloading} />
+                      <RadioGroupItem value="desc" label="Descending (Z→A)" disabled={isDownloading} />
                     </RadioGroup>
                   </div>
                 )}
@@ -429,74 +419,47 @@ export default function ReportConfigModal({
 
           {showStatusFilters && (
             <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-800">
-              <div className="flex flex-wrap gap-6 justify-center">
-                <Controller
-                  control={control}
-                  name="status_active"
-                  render={({ field }) => (
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="status-active"
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                        disabled={isDownloading}
-                      />
-                      <label
-                        htmlFor="status-active"
-                        className={`text-sm font-medium leading-none cursor-pointer ${
-                          isDownloading ? "opacity-50 cursor-not-allowed" : ""
-                        }`}
-                      >
-                        Active
-                      </label>
-                    </div>
-                  )}
-                />
-                <Controller
-                  control={control}
-                  name="status_inactive"
-                  render={({ field }) => (
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="status-inactive"
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                        disabled={isDownloading}
-                      />
-                      <label
-                        htmlFor="status-inactive"
-                        className={`text-sm font-medium leading-none cursor-pointer ${
-                          isDownloading ? "opacity-50 cursor-not-allowed" : ""
-                        }`}
-                      >
-                        Inactive
-                      </label>
-                    </div>
-                  )}
-                />
-                <Controller
-                  control={control}
-                  name="status_archived"
-                  render={({ field }) => (
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="status-archive"
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                        disabled={isDownloading}
-                      />
-                      <label
-                        htmlFor="status-archive"
-                        className={`text-sm font-medium leading-none cursor-pointer ${
-                          isDownloading ? "opacity-50 cursor-not-allowed" : ""
-                        }`}
-                      >
-                        Archive
-                      </label>
-                    </div>
-                  )}
-                />
-              </div>
+            <div className="flex flex-wrap gap-6 justify-center">
+              <Controller
+                control={control}
+                name="status_active"
+                render={({ field }) => (
+                  <Checkbox
+                    id="status-active"
+                    label="Active"
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                    disabled={isDownloading}
+                  />
+                )}
+              />
+              <Controller
+                control={control}
+                name="status_inactive"
+                render={({ field }) => (
+                  <Checkbox
+                    id="status-inactive"
+                    label="Inactive"
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                    disabled={isDownloading}
+                  />
+                )}
+              />
+              <Controller
+                control={control}
+                name="status_archived"
+                render={({ field }) => (
+                  <Checkbox
+                    id="status-archive"
+                    label="Archive"
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                    disabled={isDownloading}
+                  />
+                )}
+              />
+            </div>
             </div>
           )}
 

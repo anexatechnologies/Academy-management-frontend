@@ -97,16 +97,14 @@ export const StaffForm = ({
                   disabled={isLoading}
                 >
                   {STAFF_TYPES.map((type) => (
-                    <div key={type.value} className="flex items-center space-x-2">
-                      <RadioGroupItem 
-                        value={type.value} 
-                        id={`type-${type.value}`} 
-                        className="h-4 w-4 border-slate-300 dark:border-slate-700 text-primary focus-visible:ring-0 focus-visible:ring-offset-0" 
-                      />
-                      <Label htmlFor={`type-${type.value}`} className="text-sm font-medium cursor-pointer text-slate-600 dark:text-slate-400">
-                        {type.label}
-                      </Label>
-                    </div>
+                    <RadioGroupItem 
+                      key={type.value}
+                      value={type.value} 
+                      id={`type-${type.value}`} 
+                      label={type.label}
+                      className="h-4 w-4 border-slate-300 dark:border-slate-700 text-primary focus-visible:ring-0 focus-visible:ring-offset-0"
+                      labelClassName="text-sm font-medium cursor-pointer text-slate-600 dark:text-slate-400"
+                    />
                   ))}
                 </RadioGroup>
                 {errors.staff_type && <p className="text-[11px] text-rose-500 font-medium">{errors.staff_type.message}</p>}
