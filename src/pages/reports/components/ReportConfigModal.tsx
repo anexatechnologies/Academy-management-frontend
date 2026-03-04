@@ -176,8 +176,8 @@ export default function ReportConfigModal({
           break
       }
 
-      await downloadPdfReport(endpoint, params, `${reportId}-report.pdf`)
-      toast.success("Report Generated Successfully!")
+      await downloadPdfReport(endpoint, params)
+      toast.success("Report opened successfully!")
     // onClose() // User can keep downloading or close manually
     } catch (error: any) {
       console.error(error)

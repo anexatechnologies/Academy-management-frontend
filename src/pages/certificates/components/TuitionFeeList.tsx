@@ -58,8 +58,8 @@ const TuitionFeeList = () => {
   const handleDownloadReceipt = async (paymentId: number) => {
     try {
       setIsDownloading(`receipt-${paymentId}`)
-      await downloadCertificate(`receipt/${paymentId}`, {}, `receipt_${paymentId}.pdf`)
-      toast.success("Payment receipt downloaded successfully")
+      await downloadCertificate(`receipt/${paymentId}`, {})
+      toast.success("Payment receipt opened successfully")
     } catch (error) {
       toast.error("Failed to download receipt")
     } finally {

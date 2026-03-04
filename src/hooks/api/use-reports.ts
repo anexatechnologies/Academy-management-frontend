@@ -5,8 +5,7 @@ export const useDownloadReport = () => {
 
   const downloadPdfReport = async (
     endpointUrl: string,
-    params: Record<string, any> = {},
-    defaultFilename: string = "report.pdf"
+    params: Record<string, any> = {}
   ) => {
     try {
       // 1. Make the request expecting a Blob (binary data)
@@ -15,31 +14,12 @@ export const useDownloadReport = () => {
         responseType: "blob", // CRITICAL: Tells axios to not parse it as string/JSON
       })
 
-      // 2. Extract filename from Content-Disposition header if possible
-      let filename = defaultFilename
-      const disposition = response.headers["content-disposition"]
-      if (disposition && disposition.indexOf("attachment") !== -1) {
-        const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/
-        const matches = filenameRegex.exec(disposition)
-        if (matches != null && matches[1]) {
-          filename = matches[1].replace(/['"]/g, "")
-        }
-      }
-
       // 3. Create a temporary Blob URL
       const file = new Blob([response.data], { type: "application/pdf" })
       const fileURL = URL.createObjectURL(file)
 
-      // 4. Create a temporary anchor tag to force download
-      const link = document.createElement("a")
-      link.href = fileURL
-      link.setAttribute("download", filename)
-      document.body.appendChild(link)
-      link.click()
-
-      // 5. Cleanup
-      link.parentNode?.removeChild(link)
-      URL.revokeObjectURL(fileURL)
+      // 4. Open in a new tab
+      window.open(fileURL, "_blank")
 
       return true // Success
     } catch (error: any) {

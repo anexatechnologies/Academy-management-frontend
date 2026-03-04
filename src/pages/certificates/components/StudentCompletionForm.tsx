@@ -23,8 +23,8 @@ const StudentCompletionForm = ({ studentId, courseId, isDownloading, setIsDownlo
         student_id: studentId,
         course_id: courseId,
         grade: grade
-      }, `completion_${studentId}.pdf`)
-      toast.success("Completion certificate downloaded successfully")
+      })
+      toast.success("Completion certificate opened successfully")
     } catch (error) {
       toast.error("Failed to download completion certificate")
     } finally {
@@ -79,7 +79,7 @@ const StudentCompletionForm = ({ studentId, courseId, isDownloading, setIsDownlo
             ) : (
               <>
                 <Download className="h-5 w-5" />
-                Download Reward
+                View Reward
               </>
             )}
           </Button>

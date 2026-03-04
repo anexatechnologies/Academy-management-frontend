@@ -29,8 +29,8 @@ const BonafideForm = () => {
       await downloadCertificate("bonafide", {
         student_id: studentId,
         reason: reason.trim()
-      }, `bonafide_${studentId}.pdf`)
-      toast.success("Bonafide certificate downloaded successfully")
+      })
+      toast.success("Bonafide certificate opened successfully")
     } catch (error) {
       toast.error("Failed to download bonafide certificate")
     } finally {
@@ -92,7 +92,7 @@ const BonafideForm = () => {
             ) : (
               <>
                 <Download className="mr-2 h-4 w-4" />
-                Download Certificate
+                View Certificate
               </>
             )}
           </Button>

@@ -38,8 +38,8 @@ const TCForm = () => {
         conduct: conduct.trim(),
         last_exam_year: examYear.trim(),
         last_exam_result: examResult
-      }, `tc_${studentId}.pdf`)
-      toast.success("Transfer certificate downloaded successfully")
+      })
+      toast.success("Transfer certificate opened successfully")
     } catch (error) {
       toast.error("Failed to download transfer certificate")
     } finally {
@@ -142,7 +142,7 @@ const TCForm = () => {
             ) : (
               <>
                 <Download className="mr-2 h-4 w-4" />
-                Download TC
+                View TC
               </>
             )}
           </Button>

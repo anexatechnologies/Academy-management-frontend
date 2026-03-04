@@ -7,8 +7,7 @@ export const useCertificates = () => {
 
   const downloadCertificate = async (
     type: string,
-    params: Record<string, any> = {},
-    defaultFilename: string = "certificate.pdf"
+    params: Record<string, any> = {}
   ) => {
     try {
       const response = await axiosPrivate.get(`/certificates/${type}`, {
@@ -16,27 +15,9 @@ export const useCertificates = () => {
         responseType: "blob",
       })
 
-      let filename = defaultFilename
-      const disposition = response.headers["content-disposition"]
-      if (disposition && disposition.indexOf("attachment") !== -1) {
-        const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/
-        const matches = filenameRegex.exec(disposition)
-        if (matches != null && matches[1]) {
-          filename = matches[1].replace(/['"]/g, "")
-        }
-      }
-
       const file = new Blob([response.data], { type: "application/pdf" })
       const fileURL = URL.createObjectURL(file)
-
-      const link = document.createElement("a")
-      link.href = fileURL
-      link.setAttribute("download", filename)
-      document.body.appendChild(link)
-      link.click()
-
-      link.parentNode?.removeChild(link)
-      URL.revokeObjectURL(fileURL)
+      window.open(fileURL, "_blank")
 
       return true
     } catch (error: any) {
