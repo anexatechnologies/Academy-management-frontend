@@ -164,7 +164,13 @@ const StudentViewPage = () => {
                       <div className="w-full space-y-5 text-left">
                         <ContactItem icon={<Mail className="h-4 w-4" />} label="Email Address" value={student.email} />
                         <ContactItem icon={<Phone className="h-4 w-4" />} label="Personal Contact" value={student.personal_contact} />
-                        <ContactItem icon={<MapPin className="h-4 w-4" />} label="Address" value={`${student.address}, ${student.city}, ${student.state} - ${student.pincode}`} />
+                        <ContactItem 
+                          icon={<MapPin className="h-4 w-4" />} 
+                          label="Address" 
+                          value={[student.address, student.city, student.state]
+                            .filter(Boolean)
+                            .join(", ") + (student.pincode ? ` - ${student.pincode}` : "") || "N/A"} 
+                        />
                       </div>
                     </CardContent>
                   </Card>

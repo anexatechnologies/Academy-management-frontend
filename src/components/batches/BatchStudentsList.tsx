@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { Link } from "react-router-dom"
 import { useBatchStudents, useRemoveStudentFromBatch } from "@/hooks/api/use-batches"
 import { Skeleton } from "@/components/ui/skeleton"
 import { DateCell } from "@/components/ui/date-cell"
@@ -79,7 +80,9 @@ export function BatchStudentsList({ batchId }: { batchId: number }) {
                     {student.name.charAt(0)}
                   </div>
                   <div className="flex flex-col">
-                    <span className="font-semibold text-sm text-slate-900 dark:text-slate-100">{student.name}</span>
+                    <Link to={`/students/view/${student.id}`} className="font-semibold text-sm text-slate-900 dark:text-slate-100 hover:text-primary dark:hover:text-primary hover:underline transition-colors w-fit">
+                      {student.name}
+                    </Link>
                     <span className="text-xs text-slate-500">{student.student_id}</span>
                   </div>
                 </div>

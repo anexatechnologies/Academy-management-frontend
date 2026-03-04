@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, Link } from "react-router-dom"
 import { Plus, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -249,7 +249,9 @@ const StudentsListPage = () => {
                       )}
                     </div>
                     <div className="flex flex-col">
-                      <span className="font-semibold text-slate-900 dark:text-slate-100">{student.name}</span>
+                      <Link to={`/students/view/${student.id}`} className="font-semibold text-slate-900 dark:text-slate-100 hover:text-primary dark:hover:text-primary hover:underline transition-colors w-fit">
+                        {student.name}
+                      </Link>
                       <span className="text-[11px] text-slate-500 font-mono tracking-wider">{student.student_id}</span>
                     </div>
                   </div>
@@ -271,7 +273,9 @@ const StudentsListPage = () => {
                   <DateCell date={student.registration_date} />
                 </TableCell>
                 <TableCell>
-                  <span className="text-sm">{student.city}{student.state ? `, ${student.state}` : ""}</span>
+                  <span className="text-sm">
+                    {[student.city, student.state].filter(Boolean).join(", ") || "-"}
+                  </span>
                 </TableCell>
                 <TableCell>
                   <CustomSelect
