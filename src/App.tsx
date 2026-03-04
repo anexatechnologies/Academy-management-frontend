@@ -30,6 +30,7 @@ import ConfigurePage from "@/pages/configure/ConfigurePage"
 import RolesListPage from "@/pages/settings/roles/RolesListPage"
 import ReportsPage from "@/pages/reports/ReportsPage"
 import CertificationPage from "@/pages/certificates/CertificationPage"
+import AttendanceListPage from "@/pages/attendance/AttendanceListPage"
 
 function App() {
   return (
@@ -68,6 +69,7 @@ function App() {
             <Route path="/students/view/:id" element={<StudentViewPage />} />
 
             <Route path="/certificates" element={<CertificationPage />} />
+            <Route path="/attendance" element={<AttendanceListPage />} />
             <Route path="/reports" element={<ReportsPage />} />
 
             <Route path="/components" element={<ComponentsPage />} />

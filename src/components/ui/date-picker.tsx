@@ -64,6 +64,8 @@ export function DatePickerInput({
               className
             )}
             wrapperClassName="w-full"
+            popperProps={{ strategy: "fixed" }}
+            popperPlacement="bottom-end"
             {...(props as any)}
           />
         </div>

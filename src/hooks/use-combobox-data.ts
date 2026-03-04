@@ -323,7 +323,7 @@ export function useRoleComboBox(valueKey: "id" | "name" = "id") {
   }
 }
 
-export function useStudentComboBox(batchId?: string) {
+export function useStudentComboBox(batchId?: string, valueKey: "id" | "student_id" = "id") {
   const [inputValue, setInputValue] = useState("")
   const [search, setSearch] = useState("")
   const [page, setPage] = useState(1)
@@ -359,12 +359,12 @@ export function useStudentComboBox(batchId?: string) {
 
   useEffect(() => {
     if (!data?.data) return
-    const key = `${search}-${page}-${data.data.length}-${batchId}`
+    const key = `${search}-${page}-${data.data.length}-${batchId}-${valueKey}`
     if (key === lastProcessed.current) return
     lastProcessed.current = key
 
     const newOptions = data.data.map((s) => ({
-      value: String(s.id),
+      value: String(s[valueKey]),
       label: s.name,
     }))
 

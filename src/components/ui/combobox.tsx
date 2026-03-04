@@ -171,6 +171,7 @@ export function ComboBox({
             <CommandList
               ref={listRef}
               onScroll={handleScroll}
+              onWheel={(e) => e.stopPropagation()}
               className="max-h-[220px]"
             >
               {!isLoading && <CommandEmpty>{emptyText}</CommandEmpty>}
