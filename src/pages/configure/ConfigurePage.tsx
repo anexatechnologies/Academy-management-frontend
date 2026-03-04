@@ -121,14 +121,14 @@ const ConfigurePage = () => {
 
   return (
     <BodyLayout breadcrumbs={breadcrumbs}>
-      <div className="max-w-2xl space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-12">
+      <div className="max-w-2xl space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Configure Academy</h1>
           <p className="text-sm text-muted-foreground">Manage your institute or company information.</p>
         </div>
 
         <form onSubmit={form.handleSubmit(onSubmit)} className="relative flex flex-col">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm relative overflow-hidden">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm relative">
             <div className="p-6 md:p-8 bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800">
               <div className="flex items-center gap-4">
                 <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
