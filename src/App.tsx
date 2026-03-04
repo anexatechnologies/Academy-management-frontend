@@ -4,7 +4,6 @@ import MainLayout from "@/components/layout/MainLayout"
 import LoginPage from "@/pages/auth/LoginPage"
 import ForgotPasswordPage from "@/pages/auth/ForgotPasswordPage"
 import ResetPasswordPage from "@/pages/auth/ResetPasswordPage"
-import ComponentsPage from "@/pages/components-page"
 import Dashboard from "@/pages/dashboard"
 import UsersListPage from "@/pages/users/UsersListPage"
 import UserCreatePage from "@/pages/users/UserCreatePage"
@@ -72,7 +71,6 @@ function App() {
             <Route path="/attendance" element={<AttendanceListPage />} />
             <Route path="/reports" element={<ReportsPage />} />
 
-            <Route path="/components" element={<ComponentsPage />} />
             <Route path="/configure" element={<ConfigurePage />} />
             <Route path="/fee-settings" element={<FeeSettingsPage />} />
             <Route path="/settings" element={<SettingsPage />} />

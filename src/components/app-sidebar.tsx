@@ -5,7 +5,6 @@ import {
   Settings,
   BookOpen,
   Layers,
-  Palette,
   GraduationCap,
   IndianRupee,
   Building,
@@ -76,11 +75,6 @@ const items = [
     title: "Reports",
     url: "/reports",
     icon: FileText,
-  },
-  {
-    title: "Components",
-    url: "/components",
-    icon: Palette,
   },
   {
     title: "Fee Settings",
