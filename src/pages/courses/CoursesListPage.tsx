@@ -59,8 +59,10 @@ const CoursesListPage = () => {
       await deleteCourse.mutateAsync(id)
       toast.success("Course deleted successfully")
     } catch (err: unknown) {
-      const error = err as Error & { response?: { data?: { message?: string } } };
-      toast.error(error.response?.data?.message || "Failed to delete course")
+      const error = err as Error & { response?: { data?: { message?: string, errors?: { message: string }[] } } };
+      const data = error.response?.data;
+      const errorMessage = data?.errors?.[0]?.message || data?.message || "Failed to delete course";
+      toast.error(errorMessage)
     } finally {
       setDeletingId(null)
     }
