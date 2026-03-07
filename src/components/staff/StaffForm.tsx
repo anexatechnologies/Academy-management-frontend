@@ -20,7 +20,7 @@ const staffSchema = z.object({
   photo: z.instanceof(File).optional(),
   photo_url: z.string().nullish(),
   address: z.string().min(1, "Address is required"),
-  contact_number: z.string().min(10, "Contact number must be at least 10 digits"),
+  contact_number: z.string().regex(/^\d{10}$/, "Contact number must be exactly 10 digits"),
   email: z.string().email("Invalid email address"),
   date_of_birth: z.string().min(1, "Date of birth is required"),
   category: z.enum(["General", "OBC", "SC", "ST", "Other"]),
@@ -166,8 +166,12 @@ export const StaffForm = ({
                   {...register("contact_number")}
                   label="Contact Number"
                   required={true}
-                  placeholder="+91 00000 00000"
+                  placeholder="Enter 10-digit number"
                   className="h-10 rounded-lg text-sm"
+                  maxLength={10}
+                  onInput={(e: React.FormEvent<HTMLInputElement>) => {
+                    e.currentTarget.value = e.currentTarget.value.replace(/\D/g, '').slice(0, 10);
+                  }}
                   error={errors.contact_number?.message}
                   disabled={isLoading}
                 />

@@ -96,8 +96,12 @@ export const UserForm = ({ initialValues, onSubmit, isLoading, isEdit }: UserFor
         <Input
           label="Phone Number"
           required={true}
-          placeholder="Enter phone number"
+          placeholder="Enter 10-digit phone number"
           {...register("phone")}
+          maxLength={10}
+          onInput={(e: React.FormEvent<HTMLInputElement>) => {
+            e.currentTarget.value = e.currentTarget.value.replace(/\D/g, '').slice(0, 10);
+          }}
           error={errors.phone?.message}
           disabled={isLoading}
         />

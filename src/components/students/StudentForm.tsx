@@ -381,8 +381,12 @@ export const StudentForm = ({
                 {...register("personal_contact")}
                 label="Personal Contact"
                 required={true}
-                placeholder="+91 00000 00000"
+                placeholder="Enter 10-digit number"
                 className="rounded-lg text-sm"
+                maxLength={10}
+                onInput={(e: React.FormEvent<HTMLInputElement>) => {
+                  e.currentTarget.value = e.currentTarget.value.replace(/\D/g, '').slice(0, 10);
+                }}
                 error={errors.personal_contact?.message}
                 disabled={isLoading}
               />
@@ -398,8 +402,12 @@ export const StudentForm = ({
               <Input
                 {...register("father_contact")}
                 label="Father's Contact"
-                placeholder="+91 00000 00000"
+                placeholder="Enter 10-digit number"
                 className="rounded-lg text-sm"
+                maxLength={10}
+                onInput={(e: React.FormEvent<HTMLInputElement>) => {
+                  e.currentTarget.value = e.currentTarget.value.replace(/\D/g, '').slice(0, 10);
+                }}
                 error={errors.father_contact?.message}
                 disabled={isLoading}
               />
@@ -415,8 +423,12 @@ export const StudentForm = ({
               <Input
                 {...register("mother_contact")}
                 label="Mother's Contact"
-                placeholder="+91 00000 00000"
+                placeholder="Enter 10-digit number"
                 className="rounded-lg text-sm"
+                maxLength={10}
+                onInput={(e: React.FormEvent<HTMLInputElement>) => {
+                  e.currentTarget.value = e.currentTarget.value.replace(/\D/g, '').slice(0, 10);
+                }}
                 error={errors.mother_contact?.message}
                 disabled={isLoading}
               />

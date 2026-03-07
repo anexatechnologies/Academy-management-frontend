@@ -20,9 +20,9 @@ export const studentSchema = z.object({
   heard_about_us: z.string().nullish(),
 
   // Section 2: Contact Info
-  personal_contact: z.string().min(10, "Contact must be at least 10 digits").max(15, "Contact is too long"),
-  father_contact: z.string().nullish(),
-  mother_contact: z.string().nullish(),
+  personal_contact: z.string().regex(/^\d{10}$/, "Contact must be exactly 10 digits"),
+  father_contact: z.string().regex(/^\d{10}$/, "Contact must be exactly 10 digits").nullish().or(z.literal('')),
+  mother_contact: z.string().regex(/^\d{10}$/, "Contact must be exactly 10 digits").nullish().or(z.literal('')),
   email: z.string().email("Invalid email format").nullish().or(z.literal("")),
   father_email: z.string().email("Invalid email format").nullish().or(z.literal("")),
   mother_email: z.string().email("Invalid email format").nullish().or(z.literal("")),
