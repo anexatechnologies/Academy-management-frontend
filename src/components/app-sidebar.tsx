@@ -1,3 +1,4 @@
+import { useState } from "react"
 import { Link, useLocation } from "react-router-dom"
 import {
   LayoutDashboard,
@@ -6,12 +7,13 @@ import {
   BookOpen,
   Layers,
   GraduationCap,
-  IndianRupee,
   Building,
   Shield,
   FileText,
   Award,
   CalendarCheck,
+  IndianRupee,
+  ChevronRight,
 } from "lucide-react"
 
 import {
@@ -27,9 +29,14 @@ import {
   SidebarMenuItem,
   SidebarTrigger,
 } from "@/components/ui/sidebar"
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible"
 import { NavUser } from "@/components/nav-user"
 
-// Menu items.
+// Menu items (flat).
 const items = [
   {
     title: "Dashboard",
@@ -77,11 +84,6 @@ const items = [
     icon: FileText,
   },
   {
-    title: "Fee Settings",
-    url: "/fee-settings",
-    icon: IndianRupee,
-  },
-  {
     title: "Configure",
     url: "/configure",
     icon: Building,
@@ -91,15 +93,27 @@ const items = [
     url: "/roles",
     icon: Shield,
   },
+]
+
+// Settings sub-menu items
+const settingsItems = [
   {
     title: "Settings",
     url: "/settings",
     icon: Settings,
   },
+  {
+    title: "Fee Settings",
+    url: "/settings/fees",
+    icon: IndianRupee,
+  },
 ]
 
 export function AppSidebar() {
   const location = useLocation()
+
+  const isUnderSettings = location.pathname.startsWith("/settings")
+  const [settingsOpen, setSettingsOpen] = useState(isUnderSettings)
 
   return (
     <Sidebar variant="sidebar" collapsible="icon">
@@ -117,8 +131,8 @@ export function AppSidebar() {
             <SidebarMenu>
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton 
-                    asChild 
+                  <SidebarMenuButton
+                    asChild
                     tooltip={item.title}
                     isActive={item.url === '/' ? location.pathname === '/' : location.pathname.startsWith(item.url)}
                   >
@@ -129,6 +143,62 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+
+              {/* Settings collapsible item */}
+              <Collapsible
+                open={settingsOpen}
+                onOpenChange={setSettingsOpen}
+                className="group/collapsible"
+              >
+                <SidebarMenuItem>
+                  {/* In icon-only mode: click gear icon goes directly to the active settings sub-page */}
+                  <CollapsibleTrigger asChild>
+                    <SidebarMenuButton
+                      tooltip="Settings"
+                      isActive={isUnderSettings}
+                      className="w-full cursor-pointer"
+                    >
+                      <Settings />
+                      <span>Settings</span>
+                      {/* Chevron hidden in icon-only collapsed mode */}
+                      <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90 group-data-[collapsible=icon]:hidden" />
+                    </SidebarMenuButton>
+                  </CollapsibleTrigger>
+                  {/* Sub-menu hidden entirely when sidebar is icon-only collapsed */}
+                  <CollapsibleContent className="transition-all duration-200 group-data-[collapsible=icon]:hidden">
+                    {/* Custom tree sub-menu: single continuous vertical line on left */}
+                    <div className="relative ml-[22px] mt-0.5 mb-1">
+                      {/* The continuous vertical guide line */}
+                      <span className="absolute left-0 top-0 bottom-0 w-px bg-slate-200 dark:bg-slate-700" />
+
+                      {settingsItems.map((sub) => {
+                        // Exact match only — prevents parent routes matching child routes
+                        const isActive = location.pathname === sub.url
+                        return (
+                          <Link
+                            key={sub.title}
+                            to={sub.url}
+                            className={`relative flex items-center gap-2 py-1.5 pl-5 pr-2 text-sm rounded-md transition-colors
+                              ${isActive
+                                ? "text-primary font-semibold"
+                                : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+                              }`}
+                          >
+                            {/* Dot — only visible when active, sits on the vertical line */}
+                            <span className={`absolute left-[-4.5px] top-1/2 -translate-y-1/2 h-2 w-2 rounded-full border-2 transition-all
+                              ${isActive
+                                ? "bg-primary border-primary scale-110"
+                                : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700"
+                              }`}
+                            />
+                            <span>{sub.title}</span>
+                          </Link>
+                        )
+                      })}
+                    </div>
+                  </CollapsibleContent>
+                </SidebarMenuItem>
+              </Collapsible>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
