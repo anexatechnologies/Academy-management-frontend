@@ -9,7 +9,7 @@ import { Upload } from "@/components/ui/upload"
 import { FormFooter } from "@/components/ui/form-footer"
 import { DatePickerInput } from "@/components/ui/date-picker"
 import { ComboBox } from "@/components/ui/combobox"
-import { X, IndianRupee, Calculator } from "lucide-react"
+import { X, IndianRupee, Calculator, Percent } from "lucide-react"
 import {
   Tooltip,
   TooltipContent,
@@ -21,11 +21,13 @@ import { GENDER_TYPES, STUDENT_CATEGORIES, RELIGIONS, HEARD_ABOUT_US } from "@/u
 import { useBatchComboBox } from "@/hooks/use-combobox-data"
 import type { EnrolledBatch } from "@/types/student"
 import { useFeeSettings } from "@/hooks/api/use-fee-settings"
-import { useState, useMemo, useEffect } from "react"
+import { useState, useMemo, useEffect, useCallback } from "react"
 import { differenceInMonths, isValid } from "date-fns"
 import { cn } from "@/lib/utils"
 import type { UseFormSetError } from "react-hook-form"
 import type { Student } from "@/types/student"
+
+type DiscountType = "flat" | "percent"
 
 interface StudentFormProps {
   initialValues?: Student
@@ -58,14 +60,29 @@ export const StudentForm = ({
             Object.entries(initialValues).map(([k, v]) => [k, v === null ? "" : v])
           ),
           batch_ids: [],
+          fee_mode: "one-time",
+          discount_amount: null,
+          discount_percentage: null,
         } as any
       : {
           gender: "Male",
           category: "Open/General",
           nationality: "Indian",
           batch_ids: [],
+          fee_mode: "one-time",
+          discount_amount: null,
+          discount_percentage: null,
         },
   })
+
+  const [discountType, setDiscountType] = useState<DiscountType>("flat")
+
+  const handleDiscountTypeChange = useCallback((type: DiscountType) => {
+    setDiscountType(type)
+    // Clear the other field so only one is sent
+    if (type === "flat") setValue("discount_percentage", null)
+    else setValue("discount_amount", null)
+  }, [setValue])
 
   // Batch ComboBox for Section 4
   const batchComboBox = useBatchComboBox()
@@ -121,44 +138,68 @@ export const StudentForm = ({
 
   // Fee calculation logic
   const { data: feeSettings } = useFeeSettings()
+  const watchedFeeMode = watch("fee_mode")
+  const watchedDiscountAmount = watch("discount_amount")
+  const watchedDiscountPercent = watch("discount_percentage")
   
   const feeSummary = useMemo(() => {
     if (selectedBatches.length === 0) return null
 
-    // 1. One-time calculations (General/Subtotal)
-    const subtotal = selectedBatches.reduce((acc, batch) => {
+    // 1. Raw subtotal (sum of base fees across all batches)
+    const rawSubtotal = selectedBatches.reduce((acc, batch) => {
       const baseFee = batch.course_base_fees !== undefined ? batch.course_base_fees : (batch.course_fees || 0)
       const fee = typeof baseFee === "string" ? parseFloat(baseFee) : (baseFee || 0)
       return acc + fee
     }, 0)
 
+    // 2. Apply discount — BEFORE tax
+    let discountValue = 0
+    if (watchedDiscountAmount && !isNaN(Number(watchedDiscountAmount))) {
+      discountValue = Math.min(Number(watchedDiscountAmount), rawSubtotal)
+    } else if (watchedDiscountPercent && !isNaN(Number(watchedDiscountPercent))) {
+      discountValue = (rawSubtotal * Math.min(Number(watchedDiscountPercent), 100)) / 100
+    }
+    const subtotal = rawSubtotal - discountValue
+
+    // 3. One-time total (always compute for preview)
     const taxPercent = parseFloat(feeSettings?.tax_percentage || "0")
     const taxAmount = (subtotal * taxPercent) / 100
     const total = subtotal + taxAmount
 
-    // 2. Monthly calculations
-    const monthlySubtotal = selectedBatches.reduce((acc, batch) => {
+    // 4. Monthly calculations (always compute for preview)
+    const batchBreakdowns = selectedBatches.map((batch) => {
       const baseFee = batch.course_base_fees !== undefined ? batch.course_base_fees : (batch.course_fees || 0)
-      const fee = typeof baseFee === "string" ? parseFloat(baseFee) : (baseFee || 0)
-      
+      const rawFee = typeof baseFee === "string" ? parseFloat(baseFee) : (baseFee || 0)
+      // Apply discount proportionally per batch
+      const batchDiscount = rawSubtotal > 0 ? (rawFee / rawSubtotal) * discountValue : 0
+      const fee = rawFee - batchDiscount
+
       const start = new Date(batch.start_date)
       const end = new Date(batch.end_date)
-      
+
       let months = 1
       if (isValid(start) && isValid(end)) {
-        // We add 1 to make it inclusive or at least represent the span
-        // e.g. Jan 1 to Jan 31 is 1 month. Jan 1 to Feb 28 is 2 months.
         months = Math.max(1, Math.ceil(differenceInMonths(end, start) + 0.1))
       }
 
-      return acc + (fee / months)
-    }, 0)
+      return { fee, months, batchName: batch.batch_name || batch.name || "", months_count: months }
+    })
 
+    const monthlySubtotal = batchBreakdowns.reduce((acc, b) => acc + (b.fee / b.months), 0)
     const monthlyTaxPercent = parseFloat(feeSettings?.monthly_tax_percentage || "0")
     const monthlyTaxAmount = (monthlySubtotal * monthlyTaxPercent) / 100
     const monthlyTotal = monthlySubtotal + monthlyTaxAmount
 
+    // 5. EMI preview (when installment fee_mode chosen)
+    const emiBreakdown = batchBreakdowns.map((b) => ({
+      batchName: b.batchName,
+      installments: b.months_count,
+      perInstallment: b.fee / b.months_count,
+    }))
+
     return {
+      rawSubtotal,
+      discountValue,
       subtotal,
       taxPercent,
       taxAmount,
@@ -167,9 +208,11 @@ export const StudentForm = ({
       monthlyTaxPercent,
       monthlyTaxAmount,
       monthlyTotal,
+      emiBreakdown,
       feeMode: feeSettings?.fee_mode || "one-time"
     }
-  }, [selectedBatches, feeSettings])
+  }, [selectedBatches, feeSettings, watchedDiscountAmount, watchedDiscountPercent, watchedFeeMode])
+
 
   return (
     <TooltipProvider>
@@ -597,6 +640,85 @@ export const StudentForm = ({
 
                   {errors.batch_ids && <p className="text-[11px] text-rose-500 font-medium">{errors.batch_ids.message}</p>}
 
+                  {/* Fee Mode + Discount fields (visible once at least one batch is selected) */}
+                  {selectedBatches.length > 0 && (
+                    <div className="mt-6 space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                      {/* Fee Mode */}
+                      <Controller
+                        name="fee_mode"
+                        control={control}
+                        render={({ field }) => (
+                          <CustomSelect
+                            label="Fee Mode"
+                            options={[
+                              { label: "One-Time (Full payment, no EMI)", value: "one-time" },
+                              { label: "Installment (EMI schedule auto-generated)", value: "installment" },
+                            ]}
+                            value={field.value}
+                            onValueChange={field.onChange}
+                            required
+                          />
+                        )}
+                      />
+
+                      {/* Discount */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Discount <span className="text-slate-400 font-normal">(optional)</span></label>
+                          {/* Flat / % toggle */}
+                          <div className="flex items-center rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
+                            <button
+                              type="button"
+                              onClick={() => handleDiscountTypeChange("flat")}
+                              className={cn(
+                                "px-3 py-1.5 text-xs font-bold flex items-center gap-1 transition-colors",
+                                discountType === "flat"
+                                  ? "bg-primary text-white"
+                                  : "text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800"
+                              )}
+                            >
+                              <IndianRupee className="h-3 w-3" /> Flat
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDiscountTypeChange("percent")}
+                              className={cn(
+                                "px-3 py-1.5 text-xs font-bold flex items-center gap-1 transition-colors",
+                                discountType === "percent"
+                                  ? "bg-primary text-white"
+                                  : "text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800"
+                              )}
+                            >
+                              <Percent className="h-3 w-3" /> %
+                            </button>
+                          </div>
+                        </div>
+                        {discountType === "flat" ? (
+                          <Input
+                            {...register("discount_amount", { valueAsNumber: true })}
+                            type="number"
+                            step="any"
+                            min={0}
+                            leftIcon={<IndianRupee className="h-4 w-4" />}
+                            placeholder="e.g. 500"
+                            error={errors.discount_amount?.message as string}
+                          />
+                        ) : (
+                          <Input
+                            {...register("discount_percentage", { valueAsNumber: true })}
+                            type="number"
+                            step="any"
+                            min={0}
+                            max={100}
+                            leftIcon={<Percent className="h-4 w-4" />}
+                            placeholder="e.g. 10"
+                            error={errors.discount_percentage?.message as string}
+                          />
+                        )}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Dynamic Fee Summary / Fees Structure */}
                   {feeSummary && (
                     <div className="mt-8 animate-in fade-in slide-in-from-top-2 duration-300">
@@ -613,13 +735,33 @@ export const StudentForm = ({
                           )}>
                             <div className="flex justify-between items-center text-sm">
                               <div className="flex items-center gap-2">
-                                <span className="text-slate-600 dark:text-slate-400 font-medium">Fees :</span>
+                                <span className="text-slate-600 dark:text-slate-400 font-medium">Base Fees :</span>
                                 {feeSummary.feeMode !== "one-time" && (
                                   <span className="text-[9px] bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-slate-400 uppercase font-black tracking-tighter">Preview</span>
                                 )}
                               </div>
-                              <span className="font-semibold text-slate-800 dark:text-slate-200">₹{feeSummary.subtotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                              <span className="font-semibold text-slate-800 dark:text-slate-200">₹{feeSummary.rawSubtotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                             </div>
+
+                            {/* Discount row */}
+                            {feeSummary.discountValue > 0 && (
+                              <div className="flex justify-between items-center text-sm">
+                                <span className="text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1">
+                                  <Percent className="h-3 w-3" /> Discount :
+                                </span>
+                                <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                                  − ₹{feeSummary.discountValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                </span>
+                              </div>
+                            )}
+
+                            {feeSummary.discountValue > 0 && (
+                              <div className="flex justify-between items-center text-sm">
+                                <span className="text-slate-600 dark:text-slate-400 font-medium">Fees after Discount :</span>
+                                <span className="font-semibold text-slate-800 dark:text-slate-200">₹{feeSummary.subtotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                              </div>
+                            )}
+
                             <div className="flex justify-between items-center text-sm">
                               <span className="text-slate-600 dark:text-slate-400 font-medium whitespace-nowrap">Tax ({feeSummary.taxPercent}%) :</span>
                               <span className="font-semibold text-slate-800 dark:text-slate-200">₹{feeSummary.taxAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
@@ -684,6 +826,33 @@ export const StudentForm = ({
                             </div>
                           </div>
                         </div>
+
+                        {/* EMI Preview — only when installment mode is chosen */}
+                        {watchedFeeMode === "installment" && feeSummary.emiBreakdown.length > 0 && (
+                          <div className="border-t border-slate-100 dark:border-slate-800 px-5 py-4 space-y-3 bg-amber-50/40 dark:bg-amber-900/10">
+                            <p className="text-[11px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-widest flex items-center gap-1.5">
+                              <Calculator className="h-3.5 w-3.5" /> EMI Schedule Preview
+                            </p>
+                            <div className="space-y-2">
+                              {feeSummary.emiBreakdown.map((emi, i) => (
+                                <div key={i} className="flex items-center justify-between rounded-lg bg-white dark:bg-slate-900 border border-amber-100 dark:border-amber-800/30 px-3 py-2">
+                                  <div>
+                                    <p className="text-xs font-semibold text-slate-700 dark:text-slate-300 truncate max-w-[160px]">{emi.batchName}</p>
+                                    <p className="text-[10px] text-slate-400 mt-0.5">{emi.installments} installment{emi.installments !== 1 ? "s" : ""} · 30 days apart</p>
+                                  </div>
+                                  <div className="text-right">
+                                    <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Per EMI</p>
+                                    <p className="text-sm font-black text-amber-600 dark:text-amber-400 flex items-center gap-0.5">
+                                      <IndianRupee className="h-3 w-3" />{emi.perInstallment.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    </p>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                            <p className="text-[10px] text-slate-400">EMI amounts are pre-tax estimates. Final schedule is generated by the server on registration.</p>
+                          </div>
+                        )}
+
                         
                         {/* Status Indicator */}
                         <div className="px-5 py-2.5 bg-slate-50 dark:bg-slate-800/80 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">

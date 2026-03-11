@@ -10,10 +10,13 @@ import {
   Calendar,
   CreditCard,
   History,
-  Info,
   GraduationCap,
   BookOpen,
-  Users
+  Users,
+  RotateCcw,
+  Layers,
+  Printer,
+  Loader2,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import BodyLayout from "@/components/layout/BodyLayout"
@@ -22,32 +25,41 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { DateCell } from "@/components/ui/date-cell"
+import { toast } from "sonner"
 import { cn, formatCurrency } from "@/lib/utils"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { usePayments } from "@/hooks/api/use-payments"
 import { PaymentDialog } from "@/components/students/PaymentDialog"
+import { RefundDialog } from "@/components/students/RefundDialog"
+import { BatchRefundDialog } from "@/components/students/BatchRefundDialog"
 import type { PaymentType } from "@/types/payment"
-import { IndianRupee } from "lucide-react"
+import type { Installment } from "@/types/student"
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 
+import { useCertificates } from "@/hooks/api/use-certificates"
+
 const StudentViewPage = () => {
   const { id } = useParams()
   const navigate = useNavigate()
   const { data: student, isLoading } = useStudent(Number(id))
   const { data: payments } = usePayments(Number(id))
+  const { downloadCertificate } = useCertificates()
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false)
   const [selectedPaymentConfig, setSelectedPaymentConfig] = useState<{
     courseId: number;
     courseName: string;
     type: PaymentType;
     remainingAmount: number;
-    defaultAmount?: number;
+    installments: Installment[];
   } | null>(null)
+  const [refundConfig, setRefundConfig] = useState<{ paymentId: number; originalAmount: number } | null>(null)
+  const [batchRefundConfig, setBatchRefundConfig] = useState<{ courseName: string; studentCourseId: number } | null>(null)
+  const [downloadingPaymentId, setDownloadingPaymentId] = useState<number | null>(null)
 
   const breadcrumbs = [
     { label: "Student Management", href: "/students" },
@@ -125,16 +137,10 @@ const StudentViewPage = () => {
                 <User className="h-4 w-4" /> General Details
               </TabsTrigger>
               <TabsTrigger 
-                value="instalment" 
+                value="financials" 
                 className="rounded-none px-4 py-3 border-b-2 border-transparent data-[state=active]:border-b-primary data-[state=active]:border-x-transparent data-[state=active]:border-t-transparent data-[state=active]:bg-primary/5 data-[state=active]:text-primary transition-all text-sm font-bold flex items-center gap-2 hover:text-primary cursor-pointer shadow-none data-[state=active]:shadow-none -mb-[1px]"
               >
-                <CreditCard className="h-4 w-4" /> Instalment Payment
-              </TabsTrigger>
-              <TabsTrigger 
-                value="monthly" 
-                className="rounded-none px-4 py-3 border-b-2 border-transparent data-[state=active]:border-b-primary data-[state=active]:border-x-transparent data-[state=active]:border-t-transparent data-[state=active]:bg-primary/5 data-[state=active]:text-primary transition-all text-sm font-bold flex items-center gap-2 hover:text-primary cursor-pointer shadow-none data-[state=active]:shadow-none -mb-[1px]"
-              >
-                <History className="h-4 w-4" /> Monthly Payment
+                <Layers className="h-4 w-4" /> Financials
               </TabsTrigger>
             </TabsList>
           </div>
@@ -318,206 +324,251 @@ const StudentViewPage = () => {
             </div>
           </TabsContent>
 
-          <TabsContent value="instalment" className="mt-4 outline-none space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-             <div className="grid grid-cols-1 gap-6">
-                {student.batches && student.batches.length > 0 ? student.batches.map((batch: any) => (
-                  <Card key={batch.id} className="shadow-sm border-slate-200 dark:border-slate-800 overflow-hidden rounded-2xl">
-                    <div className="p-6 md:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800">
-                      <div className="flex items-center gap-4">
-                        <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary text-xl font-bold">
-                          {batch.course_name.charAt(0)}
+          <TabsContent value="financials" className="mt-6 outline-none space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            {(() => {
+              const batches = student.batches || []
+              const totalFees = batches.reduce((s: number, b: any) => s + Number(b.total_fees_with_tax || 0), 0)
+              const totalPaid = batches.reduce((s: number, b: any) => s + Number(b.fees_paid || 0), 0)
+              const totalRemaining = batches.reduce((s: number, b: any) => s + Number(b.fees_remaining || 0), 0)
+              return (
+                <>
+                  {/* Section 1: Top-level summary */}
+                  <div className="grid grid-cols-3 gap-4">
+                    {[
+                      { label: "Total Fees", value: totalFees, color: "text-slate-900 dark:text-slate-100" },
+                      { label: "Total Paid", value: totalPaid, color: "text-emerald-600" },
+                      { label: "Remaining", value: totalRemaining, color: "text-rose-600" },
+                    ].map(({ label, value, color }) => (
+                      <div key={label} className="bg-white dark:bg-slate-950 rounded-2xl border border-slate-100 dark:border-slate-800 p-5 text-center shadow-sm">
+                        <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-1">{label}</p>
+                        <p className={`text-2xl font-black ${color}`}>₹{formatCurrency(value)}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Section 2: Course Cards with EMI Schedule */}
+                  {batches.length > 0 ? batches.map((batch: any) => (
+                    <Card key={batch.id} className="shadow-sm border-slate-200 dark:border-slate-800 overflow-hidden rounded-2xl">
+                      <div className="p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800">
+                        <div className="flex items-center gap-4">
+                          <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary text-xl font-bold shrink-0">
+                            {batch.course_name?.charAt(0)}
+                          </div>
+                          <div>
+                            <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">{batch.course_name}</h3>
+                            <p className="text-sm text-slate-500 font-medium">Batch: <span className="text-primary font-bold">{batch.batch_name}</span></p>
+                          </div>
                         </div>
-                        <div>
-                          <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">{batch.course_name}</h3>
-                          <p className="text-sm text-slate-500 font-medium">Batch: <span className="text-primary font-bold">{batch.batch_name}</span></p>
+                        <div className="flex items-center gap-5 flex-wrap">
+                          <div className="text-right">
+                            <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-1">Total</p>
+                            <p className="text-base font-bold text-slate-900 dark:text-slate-100">₹{formatCurrency(batch.total_fees_with_tax)}</p>
+                          </div>
+                          <Separator orientation="vertical" className="h-8 bg-slate-200 dark:bg-slate-700" />
+                          <div className="text-right">
+                            <p className="text-[10px] text-emerald-500 uppercase font-bold tracking-widest mb-1">Paid</p>
+                            <p className="text-base font-bold text-emerald-600">₹{formatCurrency(batch.fees_paid)}</p>
+                          </div>
+                          <Separator orientation="vertical" className="h-8 bg-slate-200 dark:bg-slate-700" />
+                          <div className="text-right">
+                            <p className="text-[10px] text-rose-500 uppercase font-bold tracking-widest mb-1">Remaining</p>
+                            <p className="text-base font-bold text-rose-600">₹{formatCurrency(batch.fees_remaining)}</p>
+                          </div>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span className="inline-block ml-2">
+                                <Button
+                                  onClick={() => {
+                                    setSelectedPaymentConfig({
+                                      courseId: batch.student_course_id,
+                                      courseName: batch.course_name,
+                                      type: (batch.installments?.length > 0 ? "instalment" : "monthly") as PaymentType,
+                                      remainingAmount: Number(batch.fees_remaining),
+                                      installments: batch.installments || [],
+                                    })
+                                    setIsPaymentDialogOpen(true)
+                                  }}
+                                  disabled={Number(batch.fees_remaining) <= 0}
+                                  className="h-10 px-5 rounded-xl shadow-lg shadow-primary/20"
+                                >
+                                  <CreditCard className="mr-2 h-4 w-4" /> Record Payment
+                                </Button>
+                              </span>
+                            </TooltipTrigger>
+                            {Number(batch.fees_remaining) <= 0 && (
+                              <TooltipContent><p>Fees fully paid.</p></TooltipContent>
+                            )}
+                          </Tooltip>
+
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span className="inline-block">
+                                <Button
+                                  variant="outline"
+                                  onClick={() => {
+                                    setBatchRefundConfig({
+                                      courseName: batch.course_name || batch.batch_name || "Course",
+                                      studentCourseId: batch.student_course_id,
+                                    })
+                                  }}
+                                  className="h-10 px-4 rounded-xl shadow-lg shadow-amber-500/10 border-amber-200 text-amber-600 hover:bg-amber-50 dark:border-amber-800 dark:text-amber-400 dark:hover:bg-amber-900/20"
+                                >
+                                  <RotateCcw className="mr-2 h-4 w-4" /> Refund
+                                </Button>
+                              </span>
+                            </TooltipTrigger>
+                            {Number(batch.fees_paid) <= 0 ? (
+                              <TooltipContent><p>No payments made yet</p></TooltipContent>
+                            ) : (
+                              <TooltipContent><p>Issue a refund for this course</p></TooltipContent>
+                            )}
+                          </Tooltip>
                         </div>
                       </div>
-                      <div className="flex items-center gap-6">
-                        <div className="text-right">
-                          <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest leading-none mb-1">Total Fees</p>
-                          <p className="text-lg font-bold text-slate-900 dark:text-slate-100">₹{formatCurrency(batch.total_fees_with_tax)}</p>
-                        </div>
-                        <Separator orientation="vertical" className="h-10 bg-slate-200 dark:bg-slate-800" />
-                        <div className="text-right">
-                          <p className="text-[10px] text-emerald-500 uppercase font-bold tracking-widest leading-none mb-1">Paid</p>
-                          <p className="text-lg font-bold text-emerald-600">₹{formatCurrency(batch.fees_paid)}</p>
-                        </div>
-                        <Separator orientation="vertical" className="h-10 bg-slate-200 dark:bg-slate-800" />
-                        <div className="text-right">
-                          <p className="text-[10px] text-rose-500 uppercase font-bold tracking-widest leading-none mb-1">Remaining</p>
-                          <p className="text-lg font-bold text-rose-600">₹{formatCurrency(batch.fees_remaining)}</p>
-                        </div>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <span className="inline-block ml-4">
-                              <Button 
-                                onClick={() => {
-                                  setSelectedPaymentConfig({
-                                    courseId: batch.student_course_id,
-                                    courseName: batch.course_name,
-                                    type: "instalment",
-                                    remainingAmount: Number(batch.fees_remaining)
-                                  })
-                                  setIsPaymentDialogOpen(true)
-                                }}
-                                disabled={Number(batch.fees_remaining) <= 0}
-                                className="h-11 px-6 rounded-xl shadow-lg shadow-primary/20"
-                              >
-                                <CreditCard className="mr-2 h-4 w-4" /> Record Payment
-                              </Button>
-                            </span>
-                          </TooltipTrigger>
-                          {Number(batch.fees_remaining) <= 0 && (
-                            <TooltipContent>
-                              <p>Fees for this course are fully paid.</p>
-                            </TooltipContent>
-                          )}
-                        </Tooltip>
-                      </div>
-                    </div>
-                    
-                    <CardContent className="p-0">
-                      <div className="p-6 md:p-8">
-                        <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6 flex items-center gap-2">
-                          <History className="h-3.5 w-3.5" /> Instalment History
-                        </h4>
-                        <div className="space-y-4">
-                          {payments?.filter(p => p.student_course_id === batch.student_course_id && p.payment_type === "instalment").length ? (
-                            payments
-                              .filter(p => p.student_course_id === batch.student_course_id && p.payment_type === "instalment")
-                              .map((payment) => (
-                                <div key={payment.id} className="flex items-center justify-between p-4 rounded-xl bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800 hover:border-primary/20 transition-colors group">
-                                  <div className="flex items-center gap-4">
-                                    <div className="h-10 w-10 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center text-emerald-600 group-hover:bg-emerald-100 dark:group-hover:bg-emerald-500/20 transition-colors">
-                                      <IndianRupee className="h-5 w-5" />
-                                    </div>
-                                    <div>
-                                      <p className="text-sm font-bold text-slate-800 dark:text-slate-200">₹{formatCurrency(payment.amount)}</p>
-                                      <p className="text-[10px] text-slate-500 font-medium uppercase tracking-wider"><DateCell date={payment.payment_date} /></p>
-                                    </div>
-                                  </div>
-                                  <div className="flex items-center gap-8">
-                                    <div className="text-right hidden sm:block">
-                                      <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest">Mode</p>
-                                      <p className="text-xs font-bold text-slate-700 dark:text-slate-300">{payment.payment_mode}</p>
-                                    </div>
-                                    {payment.transaction_reference && (
-                                      <div className="text-right hidden sm:block">
-                                        <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest">Reference</p>
-                                        <p className="text-xs font-bold text-slate-700 dark:text-slate-300 font-mono uppercase">{payment.transaction_reference}</p>
-                                      </div>
+
+                      {/* EMI Schedule Table */}
+                      {batch.installments?.length > 0 && (
+                        <div className="px-6 py-5">
+                          <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                            <CreditCard className="h-3.5 w-3.5" /> EMI Schedule
+                          </h4>
+                          <Table paginationRequired={false}>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead className="w-12">#</TableHead>
+                                <TableHead>Due Date</TableHead>
+                                <TableHead>Amount Due</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead>Paid On</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {batch.installments.map((inst: Installment) => (
+                                <TableRow key={inst.id}>
+                                  <TableCell className="font-bold text-slate-500">{inst.installment_number}</TableCell>
+                                  <TableCell><DateCell date={inst.due_date} /></TableCell>
+                                  <TableCell className="font-semibold">
+                                    ₹{formatCurrency(Number(inst.amount_due))}
+                                    {Number(inst.original_amount) > 0 && (
+                                      <span className="text-slate-400 text-xs font-normal"> / ₹{formatCurrency(Number(inst.original_amount))}</span>
                                     )}
-                                    <div className="h-8 w-8 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex items-center justify-center text-slate-400">
-                                      <Info className="h-4 w-4" />
-                                    </div>
-                                  </div>
-                                </div>
-                              ))
-                          ) : (
-                            <div className="text-center py-10 bg-slate-50/50 dark:bg-slate-900/50 rounded-xl border border-dashed border-slate-200 dark:border-slate-800">
-                              <p className="text-sm text-slate-500 font-medium">No instalment payments recorded for this course.</p>
-                            </div>
-                          )}
+                                  </TableCell>
+                                  <TableCell>
+                                    <span className={cn(
+                                      "px-2.5 py-0.5 text-[10px] uppercase font-bold tracking-wider rounded-md",
+                                      inst.status === "paid" && "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
+                                      inst.status === "pending" && "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
+                                      inst.status === "overridden" && "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400",
+                                    )}>
+                                      {inst.status}
+                                    </span>
+                                  </TableCell>
+                                  <TableCell className="text-slate-500">
+                                    {inst.paid_on ? <DateCell date={inst.paid_on} /> : <span className="text-slate-300 dark:text-slate-600">—</span>}
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
                         </div>
+                      )}
+                    </Card>
+                  )) : (
+                    <div className="text-center py-20 bg-white dark:bg-slate-950 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800">
+                      <div className="inline-flex items-center justify-center h-16 w-16 rounded-full bg-slate-50 dark:bg-slate-900 mb-4">
+                        <BookOpen className="h-8 w-8 text-slate-400" />
                       </div>
-                    </CardContent>
-                  </Card>
-                )) : (
-                  <div className="text-center py-20 bg-white dark:bg-slate-950 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800">
-                    <div className="inline-flex items-center justify-center h-16 w-16 rounded-full bg-slate-50 dark:bg-slate-900 mb-4 ring-8 ring-slate-50/50 dark:ring-slate-900/50">
-                      <BookOpen className="h-8 w-8 text-slate-400" />
+                      <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">No Courses Enrolled</h3>
+                      <p className="text-sm text-slate-500 mt-2">This student has not been enrolled in any courses yet.</p>
                     </div>
-                    <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">No Courses Enrolled</h3>
-                    <p className="text-sm text-slate-500 mt-2 max-w-sm mx-auto">This student is not currently enrolled in any courses. Enroll them in a course to manage instalment payments.</p>
-                  </div>
-                )}
-             </div>
-          </TabsContent>
+                  )}
 
-          <TabsContent value="monthly" className="mt-4 outline-none space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-             <div className="grid grid-cols-1 gap-6">
-                {student.batches && student.batches.length > 0 ? student.batches.map((batch: any) => (
-                  <Card key={batch.id} className="shadow-sm border-slate-200 dark:border-slate-800 overflow-hidden rounded-2xl">
-                    <div className="p-6 md:p-8 flex items-center justify-between bg-emerald-50/30 dark:bg-emerald-500/5 border-b border-emerald-100/30 dark:border-emerald-500/10">
-                      <div className="flex items-center gap-4">
-                        <div className="h-12 w-12 rounded-xl bg-emerald-500 text-white flex items-center justify-center text-xl font-bold shadow-lg shadow-emerald-500/20">
-                          {batch.batch_name.charAt(0)}
-                        </div>
-                        <div>
-                          <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">{batch.batch_name}</h3>
-                          <p className="text-sm text-slate-500 font-medium">{batch.course_name}</p>
-                        </div>
-                      </div>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <span className="inline-block">
-                            <Button 
-                              onClick={() => {
-                                setSelectedPaymentConfig({
-                                  courseId: batch.student_course_id,
-                                  courseName: batch.batch_name,
-                                  type: "monthly",
-                                  remainingAmount: Number(batch.fees_remaining),
-                                  defaultAmount: Number(batch.fees_remaining) > 0 ? Number(batch.fees_remaining) : 0
-                                })
-                                setIsPaymentDialogOpen(true)
-                              }}
-                              variant="outline"
-                              disabled={Number(batch.fees_remaining) <= 0}
-                              className="h-11 px-6 rounded-xl border-emerald-200 dark:border-emerald-800 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 transition-all font-bold"
-                            >
-                              <IndianRupee className="mr-2 h-4 w-4" /> Record Monthly Fee
-                            </Button>
-                          </span>
-                        </TooltipTrigger>
-                        {Number(batch.fees_remaining) <= 0 && (
-                          <TooltipContent>
-                            <p>Fees for this course are fully paid.</p>
-                          </TooltipContent>
-                        )}
-                      </Tooltip>
-                    </div>
-
+                  {/* Section 3: Transaction Ledger */}
+                  <Card className="shadow-sm border-slate-200 dark:border-slate-800 overflow-hidden rounded-2xl">
+                    <CardHeader className="py-3 px-6 border-b border-slate-100 dark:border-slate-800/60">
+                      <CardTitle className="text-base font-bold flex items-center gap-2 text-slate-800 dark:text-slate-100">
+                        <History className="h-4 w-4 text-primary" /> Transaction Ledger
+                      </CardTitle>
+                    </CardHeader>
                     <CardContent className="p-0">
-                      <div className="p-6 md:p-8">
-                        <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6 flex items-center gap-2">
-                          <History className="h-3.5 w-3.5" /> Monthly History
-                        </h4>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                          {payments?.filter(p => p.student_course_id === batch.student_course_id && p.payment_type === "monthly").length ? (
-                            payments
-                              .filter(p => p.student_course_id === batch.student_course_id && p.payment_type === "monthly")
-                              .map((payment) => (
-                                <div key={payment.id} className="p-4 rounded-xl bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800 flex flex-col gap-3 group">
-                                  <div className="flex items-center justify-between">
-                                    <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider bg-slate-100 dark:bg-slate-900 px-2 py-0.5 rounded-full"><DateCell date={payment.payment_date} /></span>
-                                    <span className="text-emerald-500 text-xs font-black">PAID</span>
-                                  </div>
-                                  <div className="flex items-center justify-between mt-1">
-                                    <p className="text-lg font-black text-slate-900 dark:text-slate-100">₹{formatCurrency(payment.amount)}</p>
-                                    <p className="text-[10px] text-slate-400 font-bold uppercase">{payment.payment_mode}</p>
-                                  </div>
-                                </div>
-                              ))
-                          ) : (
-                            <div className="col-span-full text-center py-10 bg-slate-50/50 dark:bg-slate-900/50 rounded-xl border border-dashed border-slate-200 dark:border-slate-800">
-                              <p className="text-sm text-slate-500 font-medium">No monthly fees recorded for this batch.</p>
-                            </div>
-                          )}
+                      {payments && payments.length > 0 ? (
+                        <Table paginationRequired={false}>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Date</TableHead>
+                              <TableHead>Amount</TableHead>
+                              <TableHead>Mode</TableHead>
+                              <TableHead>Type</TableHead>
+                              <TableHead>Reference</TableHead>
+                              <TableHead className="text-right">Actions</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {payments.map((payment) => {
+                              const isPositive = Number(payment.amount) >= 0
+                              return (
+                                <TableRow key={payment.id}>
+                                  <TableCell><DateCell date={payment.payment_date} /></TableCell>
+                                  <TableCell className={`font-bold ${isPositive ? "text-emerald-600" : "text-rose-600"}`}>
+                                    {isPositive ? "+" : "-"}₹{formatCurrency(Math.abs(Number(payment.amount)))}
+                                  </TableCell>
+                                  <TableCell className="text-slate-600 dark:text-slate-400">{payment.payment_mode}</TableCell>
+                                  <TableCell>
+                                    <span className="px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                                      {payment.payment_type}
+                                    </span>
+                                  </TableCell>
+                                  <TableCell className="text-slate-400 font-mono text-xs">
+                                    {payment.transaction_reference || <span className="text-slate-300 dark:text-slate-600">—</span>}
+                                  </TableCell>
+                                  <TableCell className="text-right">
+                                    {isPositive && (
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        disabled={downloadingPaymentId === payment.id}
+                                        className="h-8 px-3 rounded-lg text-primary hover:text-primary hover:bg-primary/5 font-bold text-[11px] gap-1.5 transition-all active:scale-95"
+                                        onClick={async () => {
+                                          try {
+                                            setDownloadingPaymentId(payment.id)
+                                            await downloadCertificate(`receipt/${payment.id}`)
+                                            toast.success("Receipt opened successfully")
+                                          } catch (error) {
+                                            toast.error("Failed to generate receipt")
+                                          } finally {
+                                            setDownloadingPaymentId(null)
+                                          }
+                                        }}
+                                      >
+                                        {downloadingPaymentId === payment.id ? (
+                                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                        ) : (
+                                          <>
+                                            <Printer className="h-3.5 w-3.5" />
+                                            Receipt
+                                          </>
+                                        )}
+                                      </Button>
+                                    )}
+                                  </TableCell>
+                                </TableRow>
+                              )
+                            })}
+                          </TableBody>
+                        </Table>
+                      ) : (
+                        <div className="text-center py-12">
+                          <div className="inline-flex items-center justify-center h-12 w-12 rounded-full bg-slate-50 dark:bg-slate-900 mb-3">
+                            <History className="h-5 w-5 text-slate-400" />
+                          </div>
+                          <p className="text-sm font-medium text-slate-500">No transactions yet.</p>
                         </div>
-                      </div>
+                      )}
                     </CardContent>
                   </Card>
-                )) : (
-                  <div className="text-center py-20 bg-white dark:bg-slate-950 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800">
-                    <div className="inline-flex items-center justify-center h-16 w-16 rounded-full bg-emerald-50 dark:bg-emerald-900/20 mb-4 ring-8 ring-emerald-50/50 dark:ring-emerald-900/10">
-                      <History className="h-8 w-8 text-emerald-500" />
-                    </div>
-                    <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">No Courses Enrolled</h3>
-                    <p className="text-sm text-slate-500 mt-2 max-w-sm mx-auto">This student is not currently enrolled in any courses. Enroll them in a course to manage monthly fees.</p>
-                  </div>
-                )}
-             </div>
+                </>
+              )
+            })()}
           </TabsContent>
           </div>
         </Tabs>
@@ -535,12 +586,36 @@ const StudentViewPage = () => {
           courseName={selectedPaymentConfig.courseName}
           paymentType={selectedPaymentConfig.type}
           remainingAmount={selectedPaymentConfig.remainingAmount}
-          defaultAmount={selectedPaymentConfig.defaultAmount}
+          installments={selectedPaymentConfig.installments}
+        />
+      )}
+
+      {refundConfig && (
+        <RefundDialog
+          studentId={Number(id)}
+          paymentId={refundConfig.paymentId}
+          originalAmount={refundConfig.originalAmount}
+          isOpen={!!refundConfig}
+          onClose={() => setRefundConfig(null)}
+        />
+      )}
+
+      {batchRefundConfig && (
+        <BatchRefundDialog
+          isOpen={!!batchRefundConfig}
+          onClose={() => setBatchRefundConfig(null)}
+          courseName={batchRefundConfig.courseName}
+          payments={(payments || []).filter(p => p.student_course_id === batchRefundConfig.studentCourseId)}
+          onRefundSelect={(paymentId, originalAmount) => {
+            setRefundConfig({ paymentId, originalAmount })
+          }}
         />
       )}
     </BodyLayout>
   )
 }
+
+
 
 const ContactItem = ({ icon, label, value }: { icon?: React.ReactNode; label: string; value?: string | null }) => (
   <div className="flex items-start gap-4 transition-all duration-300">

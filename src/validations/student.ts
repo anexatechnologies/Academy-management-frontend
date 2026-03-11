@@ -37,6 +37,11 @@ export const studentSchema = z.object({
 
   // Section 4: Batches
   batch_ids: z.array(z.number()).optional(),
+
+  // Fee & Discount (per registration)
+  fee_mode: z.enum(["one-time", "installment"]).default("one-time"),
+  discount_amount: z.number().min(0).optional().nullable(),
+  discount_percentage: z.number().min(0).max(100).optional().nullable(),
 })
 
 export type StudentFormValues = z.infer<typeof studentSchema>

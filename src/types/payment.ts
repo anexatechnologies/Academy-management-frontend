@@ -42,3 +42,7 @@ export interface PaymentListResponse {
     limit: number
   }
 }
+
+export interface RefundPayload {
+  amount: number
+}

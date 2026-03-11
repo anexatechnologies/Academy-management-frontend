@@ -11,12 +11,14 @@ import { Input } from "@/components/ui/input"
 import { CustomSelect } from "@/components/ui/custom-select"
 import { DatePickerInput } from "@/components/ui/date-picker"
 import { FormFooter } from "@/components/ui/form-footer"
+import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
-import { IndianRupee } from "lucide-react"
+import { IndianRupee, Zap, CheckCircle2 } from "lucide-react"
 import { useRecordPayment } from "@/hooks/api/use-payments"
 import { format } from "date-fns"
-import { formatCurrency } from "@/lib/utils"
+import { cn, formatCurrency } from "@/lib/utils"
 import type { PaymentMode, PaymentType } from "@/types/payment"
+import type { Installment } from "@/types/student"
 
 const paymentSchema = z.object({
   student_course_id: z.number(),
@@ -25,7 +27,6 @@ const paymentSchema = z.object({
   payment_mode: z.enum(["Cash", "Online", "UPI", "Card", "Bank Transfer"]),
   payment_type: z.enum(["instalment", "monthly"]),
   transaction_reference: z.string().optional().or(z.literal("")),
-  due_date: z.date().optional().nullable(),
 })
 
 type PaymentFormValues = z.infer<typeof paymentSchema>
@@ -38,7 +39,7 @@ interface PaymentDialogProps {
   courseName: string
   paymentType: PaymentType
   remainingAmount: number
-  defaultAmount?: number
+  installments?: Installment[]
 }
 
 export const PaymentDialog = ({
@@ -49,7 +50,7 @@ export const PaymentDialog = ({
   courseName,
   paymentType,
   remainingAmount,
-  defaultAmount = 0
+  installments = [],
 }: PaymentDialogProps) => {
   const recordPayment = useRecordPayment(id)
   
@@ -59,20 +60,32 @@ export const PaymentDialog = ({
     watch,
     control,
     reset,
+    setValue,
     formState: { errors },
   } = useForm<PaymentFormValues>({
     resolver: zodResolver(paymentSchema as any),
     defaultValues: {
       student_course_id: studentCourseId,
-      amount: Number(defaultAmount),
+      amount: 0,
       payment_date: new Date(),
       payment_mode: "Cash",
       payment_type: paymentType,
-      due_date: null,
     },
   })
 
   const paymentMode = watch("payment_mode")
+
+  const nextPendingInstallment = installments.find((i) => i.status === "pending")
+
+  const handlePayNextEMI = () => {
+    if (nextPendingInstallment) {
+      setValue("amount", Number(nextPendingInstallment.amount_due))
+    }
+  }
+
+  const handlePayFullBalance = () => {
+    setValue("amount", Number(remainingAmount))
+  }
 
   const onSubmit = async (values: PaymentFormValues) => {
     if (values.amount > remainingAmount) {
@@ -84,7 +97,6 @@ export const PaymentDialog = ({
       const formattedValues = {
         ...values,
         payment_date: format(values.payment_date, "yyyy-MM-dd"),
-        due_date: values.due_date ? format(values.due_date, "yyyy-MM-dd") : undefined,
       }
       await recordPayment.mutateAsync(formattedValues as any)
       toast.success("Payment recorded successfully")
@@ -111,7 +123,7 @@ export const PaymentDialog = ({
             <IndianRupee className="h-7 w-7 text-primary" />
           </div>
           <DialogTitle className="text-center text-2xl font-bold">
-            Record {paymentType === "instalment" ? "Instalment" : "Monthly"} Payment
+            Record Payment
           </DialogTitle>
           <div className="text-center text-slate-500 mt-2 font-medium">
             For Course: <span className="text-slate-900 dark:text-slate-200 font-bold">{courseName}</span>
@@ -123,6 +135,42 @@ export const PaymentDialog = ({
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="px-8 pb-8 space-y-4">
+          {/* Quick-fill buttons */}
+          {(nextPendingInstallment || remainingAmount > 0) && (
+            <div className="flex gap-2">
+              {nextPendingInstallment && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className={cn(
+                    "flex-1 h-9 text-xs font-semibold border-primary/30 text-primary hover:bg-primary/5 transition-all duration-200",
+                    Number(watch("amount")) === Number(nextPendingInstallment.amount_due) && "bg-primary/10 border-primary/60 shadow-inner"
+                  )}
+                  onClick={handlePayNextEMI}
+                  disabled={recordPayment.isPending}
+                >
+                  <Zap className="h-3.5 w-3.5 mr-1.5" />
+                  Pay Next EMI · ₹{formatCurrency(nextPendingInstallment.amount_due)}
+                </Button>
+              )}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className={cn(
+                  "flex-1 h-9 text-xs font-semibold border-emerald-300 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all duration-200",
+                  Number(watch("amount")) === Number(remainingAmount) && "bg-emerald-100 dark:bg-emerald-900/40 border-emerald-500/60 shadow-inner"
+                )}
+                onClick={handlePayFullBalance}
+                disabled={recordPayment.isPending}
+              >
+                <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />
+                Pay Full · ₹{formatCurrency(remainingAmount)}
+              </Button>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 gap-4">
             <Input
               {...register("amount", { valueAsNumber: true })}
@@ -176,20 +224,6 @@ export const PaymentDialog = ({
                 disabled={recordPayment.isPending}
               />
             )}
-
-            <Controller
-              name="due_date"
-              control={control}
-              render={({ field }) => (
-                <DatePickerInput
-                  label="Next Due Date (Optional)"
-                  value={field.value}
-                  onChange={field.onChange}
-                  error={errors.due_date?.message as string}
-                  disabled={recordPayment.isPending}
-                />
-              )}
-            />
           </div>
 
           <FormFooter

@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useAxiosPrivate } from "@/hooks/useAxiosPrivate"
-import type { PaymentListResponse, RecordPaymentPayload } from "@/types/payment"
+import type { PaymentListResponse, RecordPaymentPayload, RefundPayload } from "@/types/payment"
 
 export const usePayments = (studentId?: number) => {
   const axiosPrivate = useAxiosPrivate()
@@ -22,6 +22,22 @@ export const useRecordPayment = (studentId?: number) => {
   return useMutation({
     mutationFn: async (payload: RecordPaymentPayload) => {
       const { data } = await axiosPrivate.post(`/students/${studentId}/payments`, payload)
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["payments", studentId] })
+      queryClient.invalidateQueries({ queryKey: ["students", studentId] })
+    },
+  })
+}
+
+export const useRefundPayment = (studentId?: number) => {
+  const axiosPrivate = useAxiosPrivate()
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({ paymentId, payload }: { paymentId: number; payload: RefundPayload }) => {
+      const { data } = await axiosPrivate.post(`/payments/${paymentId}/refund`, payload)
       return data
     },
     onSuccess: () => {

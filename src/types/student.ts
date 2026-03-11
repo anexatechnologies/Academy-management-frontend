@@ -1,4 +1,15 @@
 
+export interface Installment {
+  id: number
+  student_course_id: number
+  installment_number: number
+  original_amount: number | string
+  amount_due: number | string
+  due_date: string
+  status: "pending" | "paid" | "overridden"
+  paid_on?: string | null
+}
+
 export interface EnrolledBatch {
   id: number
   student_course_id: number
@@ -15,6 +26,7 @@ export interface EnrolledBatch {
   fees_paid: string | number
   fees_remaining: string | number
   is_removable: boolean
+  installments: Installment[]
 }
 
 export interface Student {
