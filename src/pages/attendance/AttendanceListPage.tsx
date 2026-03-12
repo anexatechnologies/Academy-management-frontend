@@ -75,118 +75,115 @@ const AttendanceListPage = () => {
     <BodyLayout
       breadcrumbs={breadcrumbs}
       toolbar={
-        <div className="flex items-center gap-3 px-2 py-2 overflow-x-auto pb-4 sm:pb-2 scrollbar-none">
-          <SearchBar
-            placeholder="Search Biometric ID..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-72 bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 h-10 shrink-0"
-          />
-          
-          <div className="w-px h-6 bg-slate-200 dark:bg-slate-800 hidden sm:block shrink-0" />
+        <div className="flex flex-col gap-2 px-2 py-2">
+          {/* Row 1: Search | Student · Source · Slot */}
+          <div className="flex items-center gap-2">
+            <SearchBar
+              placeholder="Search Biometric ID..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-52 bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 h-9 shrink-0"
+            />
+            <div className="w-px h-6 bg-slate-200 dark:bg-slate-800 shrink-0" />
+            <ComboBox
+              placeholder="Filter Student"
+              value={params.student_id || ""}
+              onValueChange={(val) => setFilter("student_id", val || undefined)}
+              options={studentComboBox.options}
+              onSearch={studentComboBox.onSearch}
+              onLoadMore={studentComboBox.onLoadMore}
+              onReset={studentComboBox.onReset}
+              hasMore={studentComboBox.hasMore}
+              isLoading={studentComboBox.isLoading}
+              isLoadingMore={studentComboBox.isLoadingMore}
+              searchPlaceholder="Search students..."
+              emptyText="No students found."
+              triggerClassName="w-[155px] h-9 bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 shrink-0"
+            />
+            <CustomSelect
+              value={params.source || "all"}
+              onValueChange={(val) => setFilter("source", val === "all" ? undefined : val as any)}
+              triggerClassName="w-[120px] h-9 shrink-0"
+              options={[
+                { value: "all", label: "All Sources" },
+                { value: "biometric", label: "Biometric" },
+                { value: "manual", label: "Manual" }
+              ]}
+            />
+            <CustomSelect
+              value={params.slot || "all"}
+              onValueChange={(val) => setFilter("slot", val === "all" ? undefined : val as any)}
+              triggerClassName="w-[110px] h-9 shrink-0"
+              options={[
+                { value: "all", label: "All Slots" },
+                { value: "ground", label: "Ground" },
+                { value: "lecture", label: "Lecture" }
+              ]}
+            />
+          </div>
 
-          <ComboBox
-            placeholder="Filter Student"
-            value={params.student_id || ""}
-            onValueChange={(val) => setFilter("student_id", val || undefined)}
-            options={studentComboBox.options}
-            onSearch={studentComboBox.onSearch}
-            onLoadMore={studentComboBox.onLoadMore}
-            onReset={studentComboBox.onReset}
-            hasMore={studentComboBox.hasMore}
-            isLoading={studentComboBox.isLoading}
-            isLoadingMore={studentComboBox.isLoadingMore}
-            searchPlaceholder="Search students..."
-            emptyText="No students found."
-            triggerClassName="w-[180px] h-10 bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 whitespace-nowrap"
-          />
-
-          <CustomSelect
-            value={params.source || "all"}
-            onValueChange={(val) => setFilter("source", val === "all" ? undefined : val as any)}
-            triggerClassName="w-[130px] shrink-0"
-            options={[
-              { value: "all", label: "All Sources" },
-              { value: "biometric", label: "Biometric" },
-              { value: "manual", label: "Manual" }
-            ]}
-          />
-
-          <CustomSelect
-            value={params.slot || "all"}
-            onValueChange={(val) => setFilter("slot", val === "all" ? undefined : val as any)}
-            triggerClassName="w-[120px] shrink-0"
-            options={[
-              { value: "all", label: "All Slots" },
-              { value: "ground", label: "Ground" },
-              { value: "lecture", label: "Lecture" }
-            ]}
-          />
-
-          <ComboBox
-            placeholder="All Courses"
-            value={params.course_id || ""}
-            onValueChange={(val) => setFilter("course_id", val || undefined)}
-            options={courseComboBox.options}
-            onSearch={courseComboBox.onSearch}
-            onLoadMore={courseComboBox.onLoadMore}
-            onReset={courseComboBox.onReset}
-            hasMore={courseComboBox.hasMore}
-            isLoading={courseComboBox.isLoading}
-            isLoadingMore={courseComboBox.isLoadingMore}
-            searchPlaceholder="Search courses..."
-            emptyText="No courses found."
-            triggerClassName="w-[180px] h-10 bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 shrink-0"
-          />
-
-          <ComboBox
-            placeholder="All Batches"
-            value={params.batch_id || ""}
-            onValueChange={(val) => setFilter("batch_id", val || undefined)}
-            options={batchComboBox.options}
-            onSearch={batchComboBox.onSearch}
-            onLoadMore={batchComboBox.onLoadMore}
-            onReset={batchComboBox.onReset}
-            hasMore={batchComboBox.hasMore}
-            isLoading={batchComboBox.isLoading}
-            isLoadingMore={batchComboBox.isLoadingMore}
-            searchPlaceholder="Search batches..."
-            emptyText="No batches found."
-            triggerClassName="w-[180px] h-10 bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 shrink-0"
-          />
-
-          <div className="w-px h-6 bg-slate-200 dark:bg-slate-800 hidden sm:block shrink-0" />
-
-          <DatePickerInput
-            value={params.from_date ? new Date(params.from_date) : null}
-            onChange={(date) => setFilter("from_date", date ? date.toISOString().split("T")[0] : undefined)}
-            placeholder="From Date"
-            className="w-[140px] shrink-0"
-          />
-
-          <DatePickerInput
-            value={params.to_date ? new Date(params.to_date) : null}
-            onChange={(date) => setFilter("to_date", date ? date.toISOString().split("T")[0] : undefined)}
-            placeholder="To Date"
-            className="w-[140px] shrink-0"
-          />
-
-          {(search || params.source || params.slot || params.course_id || params.batch_id || params.student_id || params.from_date || params.to_date) && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={resetFilters}
-              className="h-10 w-10 text-slate-500 hover:text-slate-900 dark:hover:text-slate-100 shrink-0 rounded-full"
-              title="Clear filters"
-            >
-               <X className="h-4 w-4" />
-            </Button>
-          )}
+          {/* Row 2: Course · Batch | From Date · To Date · Clear */}
+          <div className="flex items-center gap-2">
+            <ComboBox
+              placeholder="All Courses"
+              value={params.course_id || ""}
+              onValueChange={(val) => setFilter("course_id", val || undefined)}
+              options={courseComboBox.options}
+              onSearch={courseComboBox.onSearch}
+              onLoadMore={courseComboBox.onLoadMore}
+              onReset={courseComboBox.onReset}
+              hasMore={courseComboBox.hasMore}
+              isLoading={courseComboBox.isLoading}
+              isLoadingMore={courseComboBox.isLoadingMore}
+              searchPlaceholder="Search courses..."
+              emptyText="No courses found."
+              triggerClassName="w-[155px] h-9 bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 shrink-0"
+            />
+            <ComboBox
+              placeholder="All Batches"
+              value={params.batch_id || ""}
+              onValueChange={(val) => setFilter("batch_id", val || undefined)}
+              options={batchComboBox.options}
+              onSearch={batchComboBox.onSearch}
+              onLoadMore={batchComboBox.onLoadMore}
+              onReset={batchComboBox.onReset}
+              hasMore={batchComboBox.hasMore}
+              isLoading={batchComboBox.isLoading}
+              isLoadingMore={batchComboBox.isLoadingMore}
+              searchPlaceholder="Search batches..."
+              emptyText="No batches found."
+              triggerClassName="w-[155px] h-9 bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 shrink-0"
+            />
+            <div className="w-px h-6 bg-slate-200 dark:bg-slate-800 shrink-0" />
+            <DatePickerInput
+              value={params.from_date ? new Date(params.from_date) : null}
+              onChange={(date) => setFilter("from_date", date ? date.toISOString().split("T")[0] : undefined)}
+              placeholder="From Date"
+              className="w-[130px] h-9 shrink-0"
+            />
+            <DatePickerInput
+              value={params.to_date ? new Date(params.to_date) : null}
+              onChange={(date) => setFilter("to_date", date ? date.toISOString().split("T")[0] : undefined)}
+              placeholder="To Date"
+              className="w-[130px] h-9 shrink-0"
+            />
+            {(search || params.source || params.slot || params.course_id || params.batch_id || params.student_id || params.from_date || params.to_date) && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={resetFilters}
+                className="h-9 w-9 text-slate-500 hover:text-slate-900 dark:hover:text-slate-100 shrink-0 rounded-full"
+                title="Clear filters"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
         </div>
       }
       actions={
-        <Button 
-          onClick={() => setIsManualModalOpen(true)} 
+        <Button
+          onClick={() => setIsManualModalOpen(true)}
           className="rounded-xl shadow-lg shadow-primary/20 h-10"
         >
           <Plus className="mr-2 h-4 w-4" />
@@ -282,9 +279,9 @@ const AttendanceListPage = () => {
         </Table>
       </div>
 
-      <ManualAttendanceModal 
-        isOpen={isManualModalOpen} 
-        onClose={() => setIsManualModalOpen(false)} 
+      <ManualAttendanceModal
+        isOpen={isManualModalOpen}
+        onClose={() => setIsManualModalOpen(false)}
       />
     </BodyLayout>
   )
