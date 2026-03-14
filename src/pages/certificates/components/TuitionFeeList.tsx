@@ -11,6 +11,12 @@ import { useSearchFilter } from "@/hooks/use-search-filter"
 import { useStudentComboBox, useBatchComboBox, useCourseComboBox } from "@/hooks/use-combobox-data"
 import { useCertificates, useCertificatePayments } from "@/hooks/api/use-certificates"
 import { format } from "date-fns"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 const TuitionFeeList = () => {
   const { page, pageSize, setPage, setPageSize, setTotal } = usePagination()
@@ -228,22 +234,35 @@ const TuitionFeeList = () => {
                       ₹{Number(payment.amount).toLocaleString()}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDownloadReceipt(payment.id)}
-                        disabled={isDownloading !== null}
-                        className="h-8 px-3 rounded-lg text-primary hover:text-primary hover:bg-primary/5 font-bold text-[11px] gap-1.5 transition-all active:scale-95"
-                      >
-                        {isDownloading === `receipt-${payment.id}` ? (
-                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                        ) : (
-                          <>
-                            <Printer className="h-3.5 w-3.5" />
-                            Receipt
-                          </>
-                        )}
-                      </Button>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDownloadReceipt(payment.id)}
+                                disabled={isDownloading !== null || payment.payment_type?.toUpperCase() === "REFUND"}
+                                className="h-8 px-3 rounded-lg text-primary hover:text-primary hover:bg-primary/5 font-bold text-[11px] gap-1.5 transition-all active:scale-95 disabled:opacity-50"
+                              >
+                                {isDownloading === `receipt-${payment.id}` ? (
+                                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                ) : (
+                                  <>
+                                    <Printer className="h-3.5 w-3.5" />
+                                    Receipt
+                                  </>
+                                )}
+                              </Button>
+                            </span>
+                          </TooltipTrigger>
+                          {payment.payment_type?.toUpperCase() === "REFUND" && (
+                            <TooltipContent side="left" className="bg-slate-900 border-slate-800 text-white text-[10px] py-1 px-2">
+                              Receipt is not available for the refund
+                            </TooltipContent>
+                          )}
+                        </Tooltip>
+                      </TooltipProvider>
                     </TableCell>
                   </TableRow>
                 ))}
