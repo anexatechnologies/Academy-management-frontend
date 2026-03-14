@@ -104,6 +104,7 @@ export default function ReportConfigModal({
         "monthly-all-batches": "/reports/attendance/monthly-all-batches",
         "student-timing": "/reports/attendance/student-timing",
         "student-summary": "/reports/attendance/student-summary",
+        "master": "/reports/attendance/master",
       }
 
       const endpoint = endpointMap[reportId]
@@ -119,7 +120,7 @@ export default function ReportConfigModal({
       // Build specific query params based on report type
       const params: Record<string, any> = {}
 
-      if (reportId !== "monthly-all-batches") {
+      if (reportId !== "monthly-all-batches" && reportId !== "master") {
         if (!data.batch_id) {
           toast.error("Please select a batch")
           setIsDownloading(false)
@@ -174,6 +175,15 @@ export default function ReportConfigModal({
           params.month = data.month
           params.year = data.year
           break
+        case "master":
+          params.from_date = data.from_date
+          params.to_date = data.to_date
+          // Build status_filters for master (active/inactive only, no archived)
+          const masterStatuses = []
+          if (data.status_active) masterStatuses.push("active")
+          if (data.status_inactive) masterStatuses.push("inactive")
+          if (masterStatuses.length > 0) params.status_filters = masterStatuses.join(",")
+          break
       }
 
       await downloadPdfReport(endpoint, params)
@@ -188,7 +198,7 @@ export default function ReportConfigModal({
   }
 
   // UI Helper variables to determine what fields to show
-  const showBatch = reportId !== "monthly-all-batches"
+  const showBatch = reportId !== "monthly-all-batches" && reportId !== "master"
   const showStudent = ["student-wise", "student-summary"].includes(reportId)
   const showSingleDate = ["batch-wise", "blank-sheet"].includes(reportId)
   const showDateRange = [
@@ -196,6 +206,7 @@ export default function ReportConfigModal({
     "student-wise",
     "student-timing",
     "student-summary",
+    "master",
   ].includes(reportId)
   const showMonthYear = [
     "blank-monthly",
@@ -209,6 +220,7 @@ export default function ReportConfigModal({
     "blank-sheet",
     "student-timing",
   ].includes(reportId)
+  const showMasterStatusFilters = reportId === "master"
   const showSortBy = reportId === "batch-wise"
 
   // Years for dropdown (Current year +/- 2 years)
@@ -460,6 +472,45 @@ export default function ReportConfigModal({
                 )}
               />
             </div>
+            </div>
+          )}
+
+          {showMasterStatusFilters && (
+            <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-800">
+              <div className="mb-3">
+                <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                  Student Status <span className="text-slate-400 font-normal">(optional)</span>
+                </Label>
+                <p className="text-[11px] text-slate-500 mt-0.5">Filter which students to include in the report.</p>
+              </div>
+              <div className="flex flex-wrap gap-6">
+                <Controller
+                  control={control}
+                  name="status_active"
+                  render={({ field }) => (
+                    <Checkbox
+                      id="master-status-active"
+                      label="Active"
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                      disabled={isDownloading}
+                    />
+                  )}
+                />
+                <Controller
+                  control={control}
+                  name="status_inactive"
+                  render={({ field }) => (
+                    <Checkbox
+                      id="master-status-inactive"
+                      label="Inactive"
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                      disabled={isDownloading}
+                    />
+                  )}
+                />
+              </div>
             </div>
           )}
 
