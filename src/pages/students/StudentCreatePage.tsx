@@ -13,7 +13,12 @@ const StudentCreatePage = () => {
 
   const onSubmit = async (values: StudentFormValues, setError: UseFormSetError<StudentFormValues>) => {
     try {
-      await createStudent.mutateAsync(values)
+      // Ensure name is always a string (not null/undefined)
+      const fullName = values.name || `${values.first_name} ${values.middle_name} ${values.last_name}`.replace(/\s+/g, " ").trim()
+      await createStudent.mutateAsync({
+        ...values,
+        name: fullName,
+      })
       toast.success("Student registered successfully")
       navigate("/students")
     } catch (error) {
