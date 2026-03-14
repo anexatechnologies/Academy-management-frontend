@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useSearchParams } from "react-router-dom"
 import { toast } from "sonner"
 import BodyLayout from "@/components/layout/BodyLayout"
 import { StudentForm } from "@/components/students/StudentForm"
@@ -9,6 +9,8 @@ import type { UseFormSetError } from "react-hook-form"
 
 const StudentCreatePage = () => {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const enquiryId = searchParams.get("enquiry_id") ? Number(searchParams.get("enquiry_id")) : undefined
   const createStudent = useCreateStudent()
 
   const onSubmit = async (values: StudentFormValues, setError: UseFormSetError<StudentFormValues>) => {
@@ -18,6 +20,8 @@ const StudentCreatePage = () => {
       await createStudent.mutateAsync({
         ...values,
         name: fullName,
+        // Include enquiry_id so backend can link and mark enquiry as converted
+        ...(enquiryId ? { enquiry_id: enquiryId } : {}),
       })
       toast.success("Student registered successfully")
       navigate("/students")
@@ -36,9 +40,13 @@ const StudentCreatePage = () => {
       <div className="max-w-2xl space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Add New Student</h1>
-          <p className="text-sm text-muted-foreground">Register a new student and assign batches.</p>
+          <p className="text-sm text-muted-foreground">
+            {enquiryId
+              ? "Converting enquiry to student — form has been pre-filled with enquiry details."
+              : "Register a new student and assign batches."}
+          </p>
         </div>
-        <StudentForm onSubmit={onSubmit} isLoading={createStudent.isPending} />
+        <StudentForm onSubmit={onSubmit} isLoading={createStudent.isPending} enquiryId={enquiryId} />
       </div>
     </BodyLayout>
   )

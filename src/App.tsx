@@ -30,6 +30,10 @@ import RolesListPage from "@/pages/settings/roles/RolesListPage"
 import ReportsPage from "@/pages/reports/ReportsPage"
 import CertificationPage from "@/pages/certificates/CertificationPage"
 import AttendanceListPage from "@/pages/attendance/AttendanceListPage"
+import EnquiryListPage from "@/pages/enquiries/EnquiryListPage"
+import EnquiryCreatePage from "@/pages/enquiries/EnquiryCreatePage"
+import EnquiryEditPage from "@/pages/enquiries/EnquiryEditPage"
+import EnquiryViewPage from "@/pages/enquiries/EnquiryViewPage"
 
 function App() {
   return (
@@ -66,6 +70,11 @@ function App() {
             <Route path="/students/new" element={<StudentCreatePage />} />
             <Route path="/students/edit/:id" element={<StudentEditPage />} />
             <Route path="/students/view/:id" element={<StudentViewPage />} />
+
+            <Route path="/enquiries" element={<EnquiryListPage />} />
+            <Route path="/enquiries/new" element={<EnquiryCreatePage />} />
+            <Route path="/enquiries/edit/:id" element={<EnquiryEditPage />} />
+            <Route path="/enquiries/view/:id" element={<EnquiryViewPage />} />
 
             <Route path="/certificates" element={<CertificationPage />} />
             <Route path="/attendance" element={<AttendanceListPage />} />
