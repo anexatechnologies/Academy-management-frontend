@@ -14,6 +14,7 @@ export const REPORT_TYPES = [
   { id: "monthly-all-batches", label: "Monthly Attendance Report" },
   { id: "student-timing", label: "Student Attendance Timing" },
   { id: "student-summary", label: "Student Attendance Summary" },
+  { id: "master", label: "Master Attendance Report (All Students)" },
 ]
 
 export default function ReportsPage() {
