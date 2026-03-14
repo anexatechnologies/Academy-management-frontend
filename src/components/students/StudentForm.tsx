@@ -9,7 +9,7 @@ import { Upload } from "@/components/ui/upload"
 import { FormFooter } from "@/components/ui/form-footer"
 import { DatePickerInput } from "@/components/ui/date-picker"
 import { ComboBox } from "@/components/ui/combobox"
-import { X, IndianRupee, Calculator, Percent, Camera } from "lucide-react"
+import { X, IndianRupee, Calculator, Percent, Camera, ClipboardList } from "lucide-react"
 import {
   Tooltip,
   TooltipContent,
@@ -18,7 +18,8 @@ import {
 } from "@/components/ui/tooltip"
 import { studentSchema, type StudentFormValues } from "@/validations/student"
 import { GENDER_TYPES, STUDENT_CATEGORIES, RELIGIONS, HEARD_ABOUT_US } from "@/utils/student-constants"
-import { useBatchComboBox } from "@/hooks/use-combobox-data"
+import { useBatchComboBox, useEnquiryComboBox } from "@/hooks/use-combobox-data"
+import { useEnquiry } from "@/hooks/api/use-enquiries"
 import type { EnrolledBatch } from "@/types/student"
 import { useFeeSettings } from "@/hooks/api/use-fee-settings"
 import { useState, useMemo, useEffect, useCallback, useRef } from "react"
@@ -42,6 +43,8 @@ interface StudentFormProps {
   onSubmit: (values: StudentFormValues, setError: UseFormSetError<StudentFormValues>) => void
   isLoading?: boolean
   isEdit?: boolean
+  /** Pre-selected enquiry ID — when provided the form will auto-fetch and pre-fill fields */
+  enquiryId?: number
 }
 
 export const StudentForm = ({
@@ -49,6 +52,7 @@ export const StudentForm = ({
   onSubmit,
   isLoading,
   isEdit,
+  enquiryId,
 }: StudentFormProps) => {
   const {
     register,
@@ -84,7 +88,7 @@ export const StudentForm = ({
         discount_percentage: null,
       } as any
       : {
-        gender: "",
+        gender: "Male",
         category: "Open/General",
         nationality: "Indian",
         batch_ids: [],
@@ -105,6 +109,21 @@ export const StudentForm = ({
     if (type === "flat") setValue("discount_percentage", null)
     else setValue("discount_amount", null)
   }, [setValue])
+
+  // Enquiry ComboBox for pre-fill selector
+  const enquiryComboBox = useEnquiryComboBox()
+  const [selectedEnquiryId, setSelectedEnquiryId] = useState<number | undefined>(enquiryId)
+  const { data: enquiryData } = useEnquiry(selectedEnquiryId ?? 0)
+
+  // Pre-fill student form when enquiry data is loaded
+  useEffect(() => {
+    if (!enquiryData) return
+    setValue("first_name", enquiryData.first_name)
+    setValue("middle_name", enquiryData.middle_name ?? "")
+    setValue("last_name", enquiryData.last_name)
+    setValue("personal_contact", enquiryData.personal_contact)
+    if (enquiryData.email) setValue("email", enquiryData.email)
+  }, [enquiryData, setValue])
 
   // Batch ComboBox for Section 4
   const batchComboBox = useBatchComboBox()
@@ -333,6 +352,54 @@ export const StudentForm = ({
       >
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm relative">
           <div className="p-6 md:p-8 pb-24 md:pb-28 space-y-10">
+
+            {/* Enquiry Pre-fill (only shown when creating new student) */}
+            {!isEdit && (
+              <div className="space-y-4">
+                <div className="flex items-center gap-3 pb-1">
+                  <ClipboardList className="h-4 w-4 text-primary" />
+                  <h2 className="text-[13px] font-bold text-slate-500 uppercase tracking-widest">Pre-fill from Enquiry</h2>
+                </div>
+                {selectedEnquiryId && enquiryData ? (
+                  <div className="flex items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50 dark:bg-emerald-900/20 dark:border-emerald-800 px-4 py-3">
+                    <div className="h-8 w-8 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center text-emerald-700 dark:text-emerald-400 font-bold shrink-0 text-sm">
+                      {enquiryData.first_name.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-emerald-800 dark:text-emerald-300 truncate">
+                        {[enquiryData.first_name, enquiryData.middle_name, enquiryData.last_name].filter(Boolean).join(" ")}
+                      </p>
+                      <p className="text-xs text-emerald-600 dark:text-emerald-500">{enquiryData.personal_contact}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedEnquiryId(undefined)}
+                      className="text-emerald-500 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors shrink-0"
+                      title="Clear enquiry selection"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <ComboBox
+                    value={selectedEnquiryId ? String(selectedEnquiryId) : ""}
+                    onValueChange={(val) => setSelectedEnquiryId(val ? Number(val) : undefined)}
+                    options={enquiryComboBox.options}
+                    onSearch={enquiryComboBox.onSearch}
+                    onLoadMore={enquiryComboBox.onLoadMore}
+                    onReset={enquiryComboBox.onReset}
+                    hasMore={enquiryComboBox.hasMore}
+                    isLoading={enquiryComboBox.isLoading}
+                    isLoadingMore={enquiryComboBox.isLoadingMore}
+                    placeholder="Search active enquiries to pre-fill..."
+                    searchPlaceholder="Search by name or contact..."
+                    emptyText="No active enquiries found."
+                    disabled={isLoading}
+                  />
+                )}
+                <div className="h-px bg-slate-100 dark:bg-slate-800" />
+              </div>
+            )}
 
             {/* Section 1: Personal Information */}
             <div className="space-y-6">

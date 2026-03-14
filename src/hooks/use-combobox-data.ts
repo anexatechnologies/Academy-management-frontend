@@ -4,8 +4,10 @@ import { useStaffList } from "@/hooks/api/use-staff"
 import { useBatches } from "@/hooks/api/use-batches"
 import { useRoles } from "@/hooks/api/use-roles"
 import { useStudents } from "@/hooks/api/use-students"
+import { useEnquiries } from "@/hooks/api/use-enquiries"
 import type { ComboBoxOption } from "@/components/ui/combobox"
 import type { Batch } from "@/types/batch"
+import type { Enquiry } from "@/types/enquiry"
 
 const PAGE_SIZE = 10
 const DEBOUNCE_DELAY = 500
@@ -314,6 +316,90 @@ export function useRoleComboBox(valueKey: "id" | "name" = "id") {
 
   return {
     options: accumulated,
+    isLoading: isLoading && page === 1,
+    isLoadingMore: isLoading && page > 1,
+    hasMore,
+    onSearch: handleSearch,
+    onLoadMore: handleLoadMore,
+    onReset: handleReset,
+  }
+}
+
+export function useEnquiryComboBox() {
+  const [inputValue, setInputValue] = useState("")
+  const [search, setSearch] = useState("")
+  const [page, setPage] = useState(1)
+  const [accumulated, setAccumulated] = useState<ComboBoxOption[]>([])
+  const [rawData, setRawData] = useState<Enquiry[]>([])
+  const lastProcessed = useRef("")
+
+  // Debounce logic
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearch(inputValue)
+      setPage(1)
+      lastProcessed.current = ""
+    }, DEBOUNCE_DELAY)
+    return () => clearTimeout(timer)
+  }, [inputValue])
+
+  const { data, isLoading } = useEnquiries({
+    page,
+    limit: PAGE_SIZE,
+    search: search || undefined,
+    status: "active",
+  })
+
+  useEffect(() => {
+    if (!data?.data) return
+    const key = `${search}-${page}-${data.data.length}`
+    if (key === lastProcessed.current) return
+    lastProcessed.current = key
+
+    const newOptions = data.data.map((e) => ({
+      value: String(e.id),
+      label: [e.first_name, e.middle_name, e.last_name].filter(Boolean).join(" ") + ` (${e.personal_contact})`,
+    }))
+
+    if (page === 1) {
+      setAccumulated(newOptions)
+      setRawData(data.data)
+    } else {
+      setAccumulated((prev) => {
+        const seen = new Set(prev.map((o) => o.value))
+        const unique = newOptions.filter((o) => !seen.has(o.value))
+        return [...prev, ...unique]
+      })
+      setRawData((prev) => {
+        const seen = new Set(prev.map((e) => e.id))
+        const unique = data.data.filter((e) => !seen.has(e.id))
+        return [...prev, ...unique]
+      })
+    }
+  }, [data, search, page])
+
+  const hasMore = data?.pagination ? page < data.pagination.totalPages : false
+
+  const handleSearch = useCallback((query: string) => {
+    setInputValue(query)
+  }, [])
+
+  const handleLoadMore = useCallback(() => {
+    if (!isLoading) {
+      setPage((prev) => prev + 1)
+    }
+  }, [isLoading])
+
+  const handleReset = useCallback(() => {
+    setInputValue("")
+    setSearch("")
+    setPage(1)
+    lastProcessed.current = ""
+  }, [])
+
+  return {
+    options: accumulated,
+    rawData,
     isLoading: isLoading && page === 1,
     isLoadingMore: isLoading && page > 1,
     hasMore,

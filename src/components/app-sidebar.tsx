@@ -14,6 +14,7 @@ import {
   CalendarCheck,
   IndianRupee,
   ChevronRight,
+  ClipboardList,
 } from "lucide-react"
 
 import {
@@ -62,6 +63,11 @@ const items = [
     title: "Student Management",
     url: "/students",
     icon: GraduationCap,
+  },
+  {
+    title: "Enquiry Management",
+    url: "/enquiries",
+    icon: ClipboardList,
   },
   {
     title: "Staff Management",
