@@ -9,6 +9,7 @@ import {
   useSendBirthdayWishes,
   useSendDueFeesReminders
 } from "@/hooks/api/use-dashboard"
+import { usePermissions } from "@/hooks/use-permissions"
 import { Skeleton } from "@/components/ui/skeleton"
 import { usePagination } from "@/hooks/use-pagination"
 import { Button } from "@/components/ui/button"
@@ -17,9 +18,10 @@ import { StudentDemographicsChart } from "./dashboard/components/StudentDemograp
 import { AttendanceOverviewChart } from "./dashboard/components/AttendanceOverviewChart"
 
 export default function Dashboard() {
+  const { canReadFinancials } = usePermissions()
   const { data: studentCount, isLoading: isLoadingStudents } = useStudentCount()
   const { data: attendance, isLoading: isLoadingAttendance } = useAttendanceSummary()
-  const { data: fees, isLoading: isLoadingFees } = useFeesSummary()
+  const { data: fees, isLoading: isLoadingFees } = useFeesSummary({ enabled: canReadFinancials })
 
   const { page: bPage, pageSize: bPageSize, setPage: setBPage, setPageSize: setBPageSize } = usePagination()
   const { page: pPage, pageSize: pPageSize, setPage: setPPage, setPageSize: setPPageSize } = usePagination()
@@ -32,7 +34,7 @@ export default function Dashboard() {
   const { data: payments, isLoading: isLoadingPayments, isFetching: isFetchingPayments } = useDuePayments({
     page: pPage,
     limit: pPageSize,
-  })
+  }, { enabled: canReadFinancials })
 
   const { mutate: sendWishes, isPending: isSendingWishes } = useSendBirthdayWishes()
   const { mutate: sendReminders, isPending: isSendingReminders } = useSendDueFeesReminders()
@@ -78,7 +80,7 @@ export default function Dashboard() {
       ),
       isLoading: isLoadingAttendance,
     },
-    {
+    ...(canReadFinancials ? [{
       title: "Expected Fees",
       value: fees?.total_expected ? `₹${parseFloat(fees.total_expected).toLocaleString()}` : "₹0",
       icon: IndianRupee,
@@ -97,7 +99,7 @@ export default function Dashboard() {
         </div>
       ),
       isLoading: isLoadingFees,
-    },
+    }] : []),
   ]
 
   return (
@@ -197,76 +199,78 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card className="shadow-sm border-slate-200 dark:border-slate-800">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-            <div className="space-y-1">
-              <CardTitle className="text-base font-semibold flex items-center gap-2">
-                <AlertCircle className="h-5 w-5 text-rose-500" />
-                Due Payments
-              </CardTitle>
-              <CardDescription>Pending or overdue payments for today</CardDescription>
-            </div>
-            {payments && payments.count && payments.count > 0 ? (
-              <Button
-                size="sm"
-                onClick={() => sendReminders()}
-                disabled={isSendingReminders}
-                className="h-8"
+        {canReadFinancials && (
+          <Card className="shadow-sm border-slate-200 dark:border-slate-800">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+              <div className="space-y-1">
+                <CardTitle className="text-base font-semibold flex items-center gap-2">
+                  <AlertCircle className="h-5 w-5 text-rose-500" />
+                  Due Payments
+                </CardTitle>
+                <CardDescription>Pending or overdue payments for today</CardDescription>
+              </div>
+              {payments && payments.count && payments.count > 0 ? (
+                <Button
+                  size="sm"
+                  onClick={() => sendReminders()}
+                  disabled={isSendingReminders}
+                  className="h-8"
+                >
+                  <Send className="mr-2 h-4 w-4" />
+                  {isSendingReminders ? "Sending..." : "Send Reminders"}
+                </Button>
+              ) : null}
+            </CardHeader>
+            <CardContent className="px-0 pb-0">
+              <Table
+                page={pPage}
+                pageSize={pPageSize}
+                totalPages={payments?.pagination?.totalPages || 1}
+                totalData={payments?.pagination?.totalData || 0}
+                onPageChange={setPPage}
+                onPageSizeChange={setPPageSize}
+                containerClassName="border-t border-slate-200 dark:border-slate-800"
               >
-                <Send className="mr-2 h-4 w-4" />
-                {isSendingReminders ? "Sending..." : "Send Reminders"}
-              </Button>
-            ) : null}
-          </CardHeader>
-          <CardContent className="px-0 pb-0">
-            <Table
-              page={pPage}
-              pageSize={pPageSize}
-              totalPages={payments?.pagination?.totalPages || 1}
-              totalData={payments?.pagination?.totalData || 0}
-              onPageChange={setPPage}
-              onPageSizeChange={setPPageSize}
-              containerClassName="border-t border-slate-200 dark:border-slate-800"
-            >
-              <TableHeader className="bg-slate-50/50 dark:bg-slate-900/50">
-                <TableRow>
-                  <TableHead className="w-[100px] px-6">ID</TableHead>
-                  <TableHead className="px-6">Student</TableHead>
-                  <TableHead className="px-6">Amount</TableHead>
-                  <TableHead className="px-6 text-right">Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody loading={isLoadingPayments} fetching={isFetchingPayments && !isLoadingPayments} columnCount={4} rowCount={pPageSize}>
-                {!isLoadingPayments && payments?.data?.map((payment) => (
-                  <TableRow key={payment.id}>
-                    <TableCell className="px-6 font-medium text-slate-500">#{payment.id}</TableCell>
-                    <TableCell className="px-6">
-                      <div className="font-semibold">{payment.student_name}</div>
-                      <div className="text-xs text-muted-foreground">{payment.personal_contact}</div>
-                    </TableCell>
-                    <TableCell className="px-6 font-medium">₹{payment.amount}</TableCell>
-                    <TableCell className="px-6 text-right">
-                       <span className={`px-2 py-1 rounded-md text-[10px] font-semibold tracking-wider uppercase ${
-                          payment.status === 'overdue' 
-                            ? 'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-400'
-                            : 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400'
-                        }`}>
-                          {payment.status}
-                        </span>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {!isLoadingPayments && payments?.data?.length === 0 && (
+                <TableHeader className="bg-slate-50/50 dark:bg-slate-900/50">
                   <TableRow>
-                    <TableCell colSpan={4} className="px-6 py-8 text-center text-muted-foreground">
-                      No due payments.
-                    </TableCell>
+                    <TableHead className="w-[100px] px-6">ID</TableHead>
+                    <TableHead className="px-6">Student</TableHead>
+                    <TableHead className="px-6">Amount</TableHead>
+                    <TableHead className="px-6 text-right">Status</TableHead>
                   </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+                </TableHeader>
+                <TableBody loading={isLoadingPayments} fetching={isFetchingPayments && !isLoadingPayments} columnCount={4} rowCount={pPageSize}>
+                  {!isLoadingPayments && payments?.data?.map((payment) => (
+                    <TableRow key={payment.id}>
+                      <TableCell className="px-6 font-medium text-slate-500">#{payment.id}</TableCell>
+                      <TableCell className="px-6">
+                        <div className="font-semibold">{payment.student_name}</div>
+                        <div className="text-xs text-muted-foreground">{payment.personal_contact}</div>
+                      </TableCell>
+                      <TableCell className="px-6 font-medium">₹{payment.amount}</TableCell>
+                      <TableCell className="px-6 text-right">
+                        <span className={`px-2 py-1 rounded-md text-[10px] font-semibold tracking-wider uppercase ${
+                            payment.status === 'overdue' 
+                              ? 'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-400'
+                              : 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400'
+                          }`}>
+                            {payment.status}
+                          </span>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {!isLoadingPayments && payments?.data?.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={4} className="px-6 py-8 text-center text-muted-foreground">
+                        No due payments.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   )

@@ -1,6 +1,6 @@
 import { useAuth } from "@/context/AuthContext"
 
-type Action = "create" | "read" | "update" | "delete"
+type Action = "create" | "read" | "update" | "delete" | "read_financials"
 
 export const usePermissions = () => {
   const { auth } = useAuth()
@@ -43,5 +43,6 @@ export const usePermissions = () => {
     canReadEnquiries: hasPermission("enquiries", "read"),
     canUpdateEnquiry: hasPermission("enquiries", "update"),
     canDeleteEnquiry: hasPermission("enquiries", "delete"),
+    canReadFinancials: hasPermission("dashboard", "read_financials"),
   }
 }

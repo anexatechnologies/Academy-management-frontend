@@ -45,7 +45,7 @@ export const useStudentCount = () => {
   })
 }
 
-export const useFeesSummary = () => {
+export const useFeesSummary = (options?: { enabled?: boolean }) => {
   const axiosPrivate = useAxiosPrivate()
   return useQuery({
     queryKey: dashboardKeys.feesSummary(),
@@ -55,6 +55,7 @@ export const useFeesSummary = () => {
       )
       return data.data
     },
+    ...options
   })
 }
 
@@ -111,7 +112,7 @@ export const useSendDueFeesReminders = () => {
   })
 }
 
-export const useDuePayments = (params: { page?: number; limit?: number }) => {
+export const useDuePayments = (params: { page?: number; limit?: number }, options?: { enabled?: boolean }) => {
   const axiosPrivate = useAxiosPrivate()
   return useQuery({
     queryKey: dashboardKeys.duePayments(params),
@@ -123,5 +124,6 @@ export const useDuePayments = (params: { page?: number; limit?: number }) => {
       return data
     },
     placeholderData: keepPreviousData,
+    ...options
   })
 }

@@ -16,6 +16,7 @@ import {
   ChevronRight,
   ClipboardList,
 } from "lucide-react"
+import { usePermissions } from "@/hooks/use-permissions"
 
 import {
   Sidebar,
@@ -117,6 +118,7 @@ const settingsItems = [
 
 export function AppSidebar() {
   const location = useLocation()
+  const { hasPermission } = usePermissions()
 
   const isUnderSettings = location.pathname.startsWith("/settings")
   const [settingsOpen, setSettingsOpen] = useState(isUnderSettings)
@@ -135,8 +137,28 @@ export function AppSidebar() {
           <SidebarGroupLabel>Main Menu</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {items.map((item) => (
-                <SidebarMenuItem key={item.title}>
+              {items.map((item) => {
+                // Determine module name from URL or add it to items array
+                const moduleMap: Record<string, string> = {
+                  "/": "dashboard",
+                  "/users": "users",
+                  "/courses": "courses",
+                  "/batches": "batches",
+                  "/students": "students",
+                  "/staff": "staff",
+                  "/certificates": "certificates",
+                  "/attendance": "attendance",
+                  "/reports": "reports",
+                  "/configure": "configure",
+                  "/roles": "roles",
+                }
+                const moduleName = moduleMap[item.url]
+                if (moduleName && !hasPermission(moduleName, "read")) {
+                  return null
+                }
+
+                return (
+                  <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
                     asChild
                     tooltip={item.title}
@@ -148,7 +170,7 @@ export function AppSidebar() {
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
-              ))}
+              )})}
 
               {/* Settings collapsible item */}
               <Collapsible
@@ -159,16 +181,17 @@ export function AppSidebar() {
                 <SidebarMenuItem>
                   {/* In icon-only mode: click gear icon goes directly to the active settings sub-page */}
                   <CollapsibleTrigger asChild>
-                    <SidebarMenuButton
-                      tooltip="Settings"
-                      isActive={isUnderSettings}
-                      className="w-full cursor-pointer"
-                    >
-                      <Settings />
-                      <span>Settings</span>
-                      {/* Chevron hidden in icon-only collapsed mode */}
-                      <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90 group-data-[collapsible=icon]:hidden" />
-                    </SidebarMenuButton>
+                    {hasPermission("settings", "read") || hasPermission("fee-settings", "read") ? (
+                      <SidebarMenuButton
+                        tooltip="Settings"
+                        isActive={isUnderSettings}
+                        className="w-full cursor-pointer"
+                      >
+                        <Settings />
+                        <span>Settings</span>
+                        <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90 group-data-[collapsible=icon]:hidden" />
+                      </SidebarMenuButton>
+                    ) : null}
                   </CollapsibleTrigger>
                   {/* Sub-menu hidden entirely when sidebar is icon-only collapsed */}
                   <CollapsibleContent className="transition-all duration-200 group-data-[collapsible=icon]:hidden">
@@ -180,6 +203,17 @@ export function AppSidebar() {
                       {settingsItems.map((sub) => {
                         // Exact match only — prevents parent routes matching child routes
                         const isActive = location.pathname === sub.url
+                        
+                        // Check permission for sub-items
+                        const subModuleMap: Record<string, string> = {
+                          "/settings": "settings",
+                          "/settings/fees": "fee-settings",
+                        }
+                        const subModuleName = subModuleMap[sub.url]
+                        if (subModuleName && !hasPermission(subModuleName, "read")) {
+                          return null
+                        }
+
                         return (
                           <Link
                             key={sub.title}
