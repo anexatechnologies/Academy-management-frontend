@@ -57,6 +57,9 @@ export interface BatchStudentsResponse {
 export interface AssignBatchStudentPayload {
   student_ids: number[]
   force?: boolean
+  fee_mode?: "one-time" | "installment"
+  discount_amount?: number | null
+  discount_percentage?: number | null
 }
 
 export interface BatchAssignmentConflict {
