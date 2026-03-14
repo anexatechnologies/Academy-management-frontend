@@ -18,6 +18,8 @@ export const studentSchema = z.object({
   gender: z.string().min(1, "Gender is required"),
   date_of_birth: z.string().min(1, "Date of birth is required"),
   registration_date: z.string().min(1, "Registration date is required"),
+  registration_no: z.string().min(1, "Registration number is required"),
+  attendance_id: z.string().nullish(),
   nationality: z.string().nullish(),
   category: z.string().nullish(),
   religion: z.string().nullish(),

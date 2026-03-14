@@ -84,7 +84,7 @@ export const StudentForm = ({
         discount_percentage: null,
       } as any
       : {
-        gender: "Male",
+        gender: "",
         category: "Open/General",
         nationality: "Indian",
         batch_ids: [],
@@ -435,6 +435,25 @@ export const StudentForm = ({
                       disabled={isLoading}
                     />
                   )}
+                />
+
+                <Input
+                  {...register("registration_no")}
+                  label="Registration No."
+                  required={true}
+                  placeholder="Enter registration number"
+                  className="rounded-lg text-sm"
+                  error={errors.registration_no?.message}
+                  disabled={isLoading}
+                />
+
+                <Input
+                  {...register("attendance_id")}
+                  label="Attendance ID"
+                  placeholder="Enter attendance ID"
+                  className="rounded-lg text-sm"
+                  error={errors.attendance_id?.message}
+                  disabled={isLoading}
                 />
 
                 <Input
@@ -1011,8 +1030,8 @@ export const StudentForm = ({
                             ))}
                           </div>
                           <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-2 text-center italic">
-                              EMI amounts reflect the final payable amount including all taxes.
-                            </p>
+                            EMI amounts reflect the final payable amount including all taxes.
+                          </p>
                         </div>
                       )}
 
