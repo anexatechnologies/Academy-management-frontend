@@ -42,6 +42,8 @@ export interface Student {
   gender: string
   date_of_birth: string
   registration_date: string
+  registration_no: string
+  attendance_id: string
   nationality: string
   category: string
   religion: string
@@ -78,6 +80,8 @@ export interface CreateStudentPayload {
   gender?: string | null
   date_of_birth?: string | null
   registration_date?: string | null
+  registration_no?: string | null
+  attendance_id?: string | null
   nationality?: string | null
   category?: string | null
   religion?: string | null

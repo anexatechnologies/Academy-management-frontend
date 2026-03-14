@@ -16,7 +16,12 @@ const StudentEditPage = () => {
 
   const onSubmit = async (values: StudentFormValues, setError: UseFormSetError<StudentFormValues>) => {
     try {
-      await updateStudent.mutateAsync(values)
+      // Ensure name is string | undefined (not null)
+      const fullName = values.name || `${values.first_name} ${values.middle_name} ${values.last_name}`.replace(/\s+/g, " ").trim()
+      await updateStudent.mutateAsync({
+        ...values,
+        name: fullName || undefined,
+      })
       toast.success("Student updated successfully")
       navigate("/students")
     } catch (error) {
