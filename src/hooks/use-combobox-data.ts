@@ -122,7 +122,7 @@ export function useStaffComboBox() {
 
     const newOptions = data.data.map((s) => ({
       value: String(s.id),
-      label: s.full_name,
+      label: s.full_name + (s.staff_id ? ` (${s.staff_id})` : ""),
     }))
 
     if (page === 1) {
@@ -451,7 +451,7 @@ export function useStudentComboBox(batchId?: string, valueKey: "id" | "student_i
 
     const newOptions = data.data.map((s) => ({
       value: String(s[valueKey]),
-      label: s.name,
+      label: s.name + (s.student_id ? ` (${s.student_id})` : ""),
     }))
 
     if (page === 1) {

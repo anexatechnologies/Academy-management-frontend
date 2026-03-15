@@ -21,7 +21,7 @@ export interface ApiErrorResponse {
  */
 export const handleApiError = <T extends FieldValues>(
   error: unknown,
-  setError: UseFormSetError<T>
+  setError?: UseFormSetError<T>
 ) => {
   if (isAxiosError(error) && error.response?.data) {
     const data = error.response.data as ApiErrorResponse
@@ -31,13 +31,15 @@ export const handleApiError = <T extends FieldValues>(
     if (isError && data.errors && Array.isArray(data.errors)) {
       data.errors.forEach((err) => {
         // We cast the field to Path<T> assuming the backend fields match the form fields
-        setError(err.field as Path<T>, {
-          type: "server",
-          message: err.message,
-        })
+        if (setError) {
+          setError(err.field as Path<T>, {
+            type: "server",
+            message: err.message,
+          })
+        }
       })
       // Optionally show a generic toast that validation failed
-      toast.error("Please correct the errors in the form.")
+      toast.error(data.message || "Please correct the errors in the form.")
       return
     }
 

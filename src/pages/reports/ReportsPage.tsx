@@ -4,7 +4,7 @@ import ReportConfigModal from "./components/ReportConfigModal"
 import BodyLayout from "@/components/layout/BodyLayout"
 import { FormFooter } from "@/components/ui/form-footer"
 
-export const REPORT_TYPES = [
+export const STUDENT_REPORT_TYPES = [
   { id: "batch-wise", label: "Batch Wise Attendance Report" },
   { id: "date-wise", label: "Date Wise Attendance Report" },
   { id: "student-wise", label: "Student attendance report" },
@@ -17,7 +17,15 @@ export const REPORT_TYPES = [
   { id: "master", label: "Master Attendance Report (All Students)" },
 ]
 
+export const STAFF_REPORT_TYPES = [
+  { id: "staff-monthly", label: "Staff Monthly Attendance Grid" },
+  { id: "staff-timing", label: "Staff Detailed Timing Log" },
+]
+
+export const ALL_REPORT_TYPES = [...STUDENT_REPORT_TYPES, ...STAFF_REPORT_TYPES]
+
 export default function ReportsPage() {
+  const [reportCategory, setReportCategory] = useState<"student" | "staff">("student")
   const [selectedReport, setSelectedReport] = useState<string>("batch-wise")
   const [isModalOpen, setIsModalOpen] = useState(false)
 
@@ -30,6 +38,8 @@ export default function ReportsPage() {
     { label: "Reports" },
   ], [])
 
+  const currentReportTypes = reportCategory === "student" ? STUDENT_REPORT_TYPES : STAFF_REPORT_TYPES
+
   return (
     <BodyLayout breadcrumbs={breadcrumbs}>
       <div className="max-w-2xl space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -40,26 +50,50 @@ export default function ReportsPage() {
 
         <form onSubmit={handleGo} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm relative">
           <div className="p-6 md:p-8 space-y-8 pb-24 md:pb-28">
-            <div className="flex items-center gap-3">
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-primary text-[10px] font-bold">1</span>
-              <h2 className="text-[13px] font-bold text-slate-500 uppercase tracking-widest">Select Report Type</h2>
+            {/* Step 1: Category Selection */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-primary text-[10px] font-bold">1</span>
+                <h2 className="text-[13px] font-bold text-slate-500 uppercase tracking-widest">Select Report Category</h2>
+              </div>
+              <RadioGroup
+                value={reportCategory}
+                onValueChange={(val) => {
+                  setReportCategory(val as "student" | "staff")
+                  setSelectedReport(val === "student" ? "batch-wise" : "staff-monthly")
+                }}
+                className="flex flex-row gap-8 pl-2"
+              >
+                <RadioGroupItem value="student" id="cat-student" label="Student Reports" />
+                <RadioGroupItem value="staff" id="cat-staff" label="Staff Reports" />
+              </RadioGroup>
             </div>
 
-            <RadioGroup
-              value={selectedReport}
-              onValueChange={setSelectedReport}
-              className="flex flex-col space-y-4 pl-2"
-            >
-              {REPORT_TYPES.map((report) => (
-                <RadioGroupItem
-                  key={report.id}
-                  value={report.id}
-                  id={report.id}
-                  label={report.label}
-                  labelClassName="text-sm font-medium leading-[1.3] text-slate-700 dark:text-slate-300"
-                />
-              ))}
-            </RadioGroup>
+            <div className="h-px bg-slate-100 dark:bg-slate-800" />
+
+            {/* Step 2: Report Selection */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-primary text-[10px] font-bold">2</span>
+                <h2 className="text-[13px] font-bold text-slate-500 uppercase tracking-widest">Select Report Type</h2>
+              </div>
+
+              <RadioGroup
+                value={selectedReport}
+                onValueChange={setSelectedReport}
+                className="flex flex-col space-y-3 pl-2"
+              >
+                {currentReportTypes.map((report) => (
+                  <RadioGroupItem
+                    key={report.id}
+                    value={report.id}
+                    id={report.id}
+                    label={report.label}
+                    labelClassName="text-sm font-medium leading-[1.3] text-slate-700 dark:text-slate-300"
+                  />
+                ))}
+              </RadioGroup>
+            </div>
           </div>
 
           {/* Improved Sticky Footer */}

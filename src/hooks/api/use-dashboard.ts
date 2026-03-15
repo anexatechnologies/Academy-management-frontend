@@ -7,6 +7,7 @@ import type {
   FeesSummary,
   BirthdayStudent,
   DuePayment,
+  MonthlyPerformance,
   PaginatedResponse,
 } from "@/types/dashboard"
 
@@ -17,6 +18,7 @@ const dashboardKeys = {
   feesSummary: () => [...dashboardKeys.all, "fees-summary"] as const,
   birthdays: (params: { page?: number; limit?: number }) => [...dashboardKeys.all, "birthdays", params] as const,
   duePayments: (params: { page?: number; limit?: number }) => [...dashboardKeys.all, "due-payments", params] as const,
+  monthlyPerformance: (params: { page?: number; limit?: number }) => [...dashboardKeys.all, "monthly-performance", params] as const,
 }
 
 export const useAttendanceSummary = () => {
@@ -45,7 +47,7 @@ export const useStudentCount = () => {
   })
 }
 
-export const useFeesSummary = () => {
+export const useFeesSummary = (options?: { enabled?: boolean }) => {
   const axiosPrivate = useAxiosPrivate()
   return useQuery({
     queryKey: dashboardKeys.feesSummary(),
@@ -55,6 +57,7 @@ export const useFeesSummary = () => {
       )
       return data.data
     },
+    ...options
   })
 }
 
@@ -111,7 +114,7 @@ export const useSendDueFeesReminders = () => {
   })
 }
 
-export const useDuePayments = (params: { page?: number; limit?: number }) => {
+export const useDuePayments = (params: { page?: number; limit?: number }, options?: { enabled?: boolean }) => {
   const axiosPrivate = useAxiosPrivate()
   return useQuery({
     queryKey: dashboardKeys.duePayments(params),
@@ -123,5 +126,22 @@ export const useDuePayments = (params: { page?: number; limit?: number }) => {
       return data
     },
     placeholderData: keepPreviousData,
+    ...options
+  })
+}
+
+export const useMonthlyPerformance = (params: { page?: number; limit?: number }, options?: { enabled?: boolean }) => {
+  const axiosPrivate = useAxiosPrivate()
+  return useQuery({
+    queryKey: dashboardKeys.monthlyPerformance(params),
+    queryFn: async () => {
+      const { data } = await axiosPrivate.get<PaginatedResponse<MonthlyPerformance>>(
+        "/dashboard/monthly-fees-performance",
+        { params }
+      )
+      return data
+    },
+    placeholderData: keepPreviousData,
+    ...options
   })
 }

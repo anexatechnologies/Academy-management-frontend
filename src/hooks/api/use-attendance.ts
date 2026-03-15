@@ -3,7 +3,9 @@ import { useAxiosPrivate } from "../useAxiosPrivate"
 import type { 
   AttendanceListResponse, 
   AttendanceFilters, 
-  ManualAttendancePayload 
+  ManualAttendancePayload,
+  StaffAttendanceFilters,
+  StaffAttendanceListResponse
 } from "@/types/attendance"
 
 export function useAttendanceLogs(filters: AttendanceFilters = {}) {
@@ -13,6 +15,20 @@ export function useAttendanceLogs(filters: AttendanceFilters = {}) {
     queryKey: ["attendance-logs", filters],
     queryFn: async () => {
       const { data } = await axiosPrivate.get<AttendanceListResponse>("/attendance", {
+        params: filters,
+      })
+      return data
+    },
+  })
+}
+
+export function useStaffAttendanceLogs(filters: StaffAttendanceFilters = {}) {
+  const axiosPrivate = useAxiosPrivate()
+  
+  return useQuery({
+    queryKey: ["staff-attendance-logs", filters],
+    queryFn: async () => {
+      const { data } = await axiosPrivate.get<StaffAttendanceListResponse>("/attendance/staff-logs", {
         params: filters,
       })
       return data
@@ -31,6 +47,7 @@ export function useMarkManualAttendance() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["attendance-logs"] })
+      queryClient.invalidateQueries({ queryKey: ["staff-attendance-logs"] })
     },
   })
 }

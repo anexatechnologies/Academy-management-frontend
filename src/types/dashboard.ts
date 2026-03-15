@@ -54,3 +54,10 @@ export interface PaginatedResponse<T> {
   }
   data: T[]
 }
+
+export interface MonthlyPerformance {
+  month: string
+  expected: string | number
+  collected: string | number
+  gap: string | number
+}

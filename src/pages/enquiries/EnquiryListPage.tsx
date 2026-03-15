@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, Link } from "react-router-dom"
 import { Plus, X, UserCheck } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -215,7 +215,7 @@ const EnquiryListPage = () => {
               <TableHead>Enquiry Date</TableHead>
               <TableHead className="w-[130px]">Status</TableHead>
               <TableHead>Next Follow-up</TableHead>
-              <TableHead className="w-[130px] text-center">Actions</TableHead>
+              <TableHead className="w-[130px] text-left">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody
@@ -241,11 +241,14 @@ const EnquiryListPage = () => {
                         <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold shrink-0">
                           {enquiry.first_name.charAt(0).toUpperCase()}
                         </div>
-                        <span className="font-semibold text-slate-900 dark:text-slate-100">
+                        <Link 
+                          to={`/enquiries/view/${enquiry.id}`}
+                          className="font-semibold text-slate-900 dark:text-slate-100 hover:text-primary dark:hover:text-primary hover:underline transition-colors w-fit"
+                        >
                           {[enquiry.first_name, enquiry.middle_name, enquiry.last_name]
                             .filter(Boolean)
                             .join(" ")}
-                        </span>
+                        </Link>
                       </div>
                     </TableCell>
                     <TableCell>{enquiry.personal_contact}</TableCell>
@@ -275,7 +278,7 @@ const EnquiryListPage = () => {
                       )}
                     </TableCell>
                     <TableCell>
-                      <div className="flex justify-center gap-1">
+                      <div className="flex justify-start gap-1">
                         <ViewButton
                           title="Enquiry"
                           onView={() => navigate(`/enquiries/view/${enquiry.id}`)}

@@ -410,6 +410,23 @@ export const StudentForm = ({
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                 <Input
+                  {...register("registration_no")}
+                  label="Registration No."
+                  required={true}
+                  placeholder="e.g. 1000001"
+                  className="rounded-lg text-sm font-mono"
+                  error={errors.registration_no?.message}
+                  disabled={isLoading}
+                />
+                <Input
+                  {...register("attendance_id")}
+                  label="Attendance ID"
+                  placeholder="e.g. 1000001"
+                  className="rounded-lg text-sm font-mono"
+                  error={errors.attendance_id?.message}
+                  disabled={isLoading}
+                />
+                <Input
                   {...register("first_name")}
                   label="First Name"
                   required={true}
@@ -504,24 +521,6 @@ export const StudentForm = ({
                   )}
                 />
 
-                <Input
-                  {...register("registration_no")}
-                  label="Registration No."
-                  required={true}
-                  placeholder="Enter registration number"
-                  className="rounded-lg text-sm"
-                  error={errors.registration_no?.message}
-                  disabled={isLoading}
-                />
-
-                <Input
-                  {...register("attendance_id")}
-                  label="Attendance ID"
-                  placeholder="Enter attendance ID"
-                  className="rounded-lg text-sm"
-                  error={errors.attendance_id?.message}
-                  disabled={isLoading}
-                />
 
                 <Input
                   {...register("nationality")}

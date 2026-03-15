@@ -15,8 +15,9 @@ import { DatePickerInput } from "@/components/ui/date-picker"
 import { ComboBox } from "@/components/ui/combobox"
 import { useStudentComboBox } from "@/hooks/use-combobox-data"
 import { useMarkManualAttendance } from "@/hooks/api/use-attendance"
-import { toast } from "sonner"
 import { Controller } from "react-hook-form"
+import { handleApiError } from "@/utils/api-error"
+import { toast } from "sonner"
 
 const schema = z.object({
   student_id: z.string().min(1, "Student is required"),
@@ -27,18 +28,19 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>
 
-interface ManualAttendanceModalProps {
+interface ManualStudentAttendanceModalProps {
   isOpen: boolean
   onClose: () => void
 }
 
-const ManualAttendanceModal = ({ isOpen, onClose }: ManualAttendanceModalProps) => {
+const ManualStudentAttendanceModal = ({ isOpen, onClose }: ManualStudentAttendanceModalProps) => {
   const markAttendance = useMarkManualAttendance()
   
   const {
     handleSubmit,
     control,
     reset,
+    setError,
     formState: { isSubmitting, errors },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -54,12 +56,22 @@ const ManualAttendanceModal = ({ isOpen, onClose }: ManualAttendanceModalProps) 
 
   const onSubmit = async (data: FormData) => {
     try {
-      await markAttendance.mutateAsync(data)
+      // Backend expects biometric student_id. Our ComboBox returns row ID as value.
+      // We need to find the biometric ID from the options label: "Name (BiometricID)"
+      const selectedOption = studentComboBox.options.find(o => o.value === data.student_id)
+      const biometricId = selectedOption?.label.split('(')[1]?.replace(')', '') || data.student_id
+
+      const payload = {
+        ...data,
+        student_id: biometricId,
+      }
+
+      await markAttendance.mutateAsync(payload as any)
       toast.success("Attendance marked successfully")
       onClose()
       reset()
     } catch (err: any) {
-      toast.error(err.response?.data?.message || "Failed to mark attendance")
+      handleApiError(err, setError)
     }
   }
 
@@ -67,7 +79,7 @@ const ManualAttendanceModal = ({ isOpen, onClose }: ManualAttendanceModalProps) 
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Mark Manual Attendance</DialogTitle>
+          <DialogTitle>Mark Manual Student Attendance</DialogTitle>
         </DialogHeader>
         
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 py-4">
@@ -153,4 +165,4 @@ const ManualAttendanceModal = ({ isOpen, onClose }: ManualAttendanceModalProps) 
   )
 }
 
-export default ManualAttendanceModal
+export default ManualStudentAttendanceModal
