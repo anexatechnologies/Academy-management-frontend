@@ -29,7 +29,8 @@ import ConfigurePage from "@/pages/configure/ConfigurePage"
 import RolesListPage from "@/pages/settings/roles/RolesListPage"
 import ReportsPage from "@/pages/reports/ReportsPage"
 import CertificationPage from "@/pages/certificates/CertificationPage"
-import AttendanceListPage from "@/pages/attendance/AttendanceListPage"
+import StudentAttendancePage from "@/pages/attendance/StudentAttendancePage"
+import StaffAttendancePage from "@/pages/attendance/StaffAttendancePage"
 import EnquiryListPage from "@/pages/enquiries/EnquiryListPage"
 import EnquiryCreatePage from "@/pages/enquiries/EnquiryCreatePage"
 import EnquiryEditPage from "@/pages/enquiries/EnquiryEditPage"
@@ -77,7 +78,9 @@ function App() {
             <Route path="/enquiries/view/:id" element={<EnquiryViewPage />} />
 
             <Route path="/certificates" element={<CertificationPage />} />
-            <Route path="/attendance" element={<AttendanceListPage />} />
+            <Route path="/attendance" element={<Navigate to="/attendance/students" replace />} />
+            <Route path="/attendance/students" element={<StudentAttendancePage />} />
+            <Route path="/attendance/staff" element={<StaffAttendancePage />} />
             <Route path="/reports" element={<ReportsPage />} />
 
             <Route path="/configure" element={<ConfigurePage />} />

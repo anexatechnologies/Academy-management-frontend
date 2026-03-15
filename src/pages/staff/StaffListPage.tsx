@@ -15,6 +15,7 @@ import { useSearchFilter } from "@/hooks/use-search-filter"
 import { useStaffList, useDeleteStaff, useToggleStaffStatus } from "@/hooks/api/use-staff"
 import { STAFF_TYPES } from "@/utils/staff-constants"
 import { toast } from "sonner"
+import { handleApiError } from "@/utils/api-error"
 import { EditButton } from "@/components/ui/edit-button"
 import { DeleteButton } from "@/components/ui/delete-button"
 import { ViewButton } from "@/components/ui/view-button"
@@ -67,8 +68,8 @@ const StaffListPage = () => {
     try {
       await deleteStaff.mutateAsync(id)
       toast.success("Staff deleted successfully")
-    } catch {
-      toast.error("Failed to delete staff")
+    } catch (error) {
+      handleApiError(error)
     } finally {
       setDeletingId(null)
     }

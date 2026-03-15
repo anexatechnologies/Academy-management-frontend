@@ -29,6 +29,9 @@ const staffSchema = z.object({
   education: z.enum(["SSC", "HSC", "Diploma", "Graduate", "Post Graduate", "PhD", "Other"]),
   experience_years: z.coerce.number().min(0, "Experience cannot be negative"),
   last_employer: z.string().nullish(),
+  // System IDs (Optional for auto-generation)
+  registration_no: z.string().regex(/^(?:SREG-[0-9]{7}|[0-9]{7})$/, "Numeric 7-digit ID only").optional().or(z.literal("")),
+  attendance_id: z.string().regex(/^(?:SAT-[0-9]{7}|[0-9]{7})$/, "Numeric 7-digit ID only").optional().or(z.literal("")),
 })
 
 export type StaffFormValues = z.infer<typeof staffSchema>
@@ -117,6 +120,24 @@ export const StaffForm = ({
                 placeholder="Enter full name"
                 className="h-10 rounded-lg text-sm"
                 error={errors.full_name?.message}
+                disabled={isLoading}
+              />
+
+              <Input
+                {...register("registration_no")}
+                label="Registration No"
+                placeholder="e.g. 2000001"
+                className="h-10 rounded-lg text-sm font-mono"
+                error={errors.registration_no?.message}
+                disabled={isLoading}
+              />
+
+              <Input
+                {...register("attendance_id")}
+                label="Attendance ID"
+                placeholder="e.g. 2000001"
+                className="h-10 rounded-lg text-sm font-mono"
+                error={errors.attendance_id?.message}
                 disabled={isLoading}
               />
 
@@ -293,6 +314,9 @@ export const StaffForm = ({
               />
             </div>
           </div>
+
+          <div className="h-px bg-slate-100 dark:bg-slate-800" />
+
         </div>
 
         {/* Improved Sticky Footer */}

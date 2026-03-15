@@ -19,6 +19,9 @@ export interface Staff {
   experience_years: number
   last_employer?: string
   status: StaffStatus
+  staff_id?: string
+  registration_no?: string
+  attendance_id?: string
   created_at: string
   updated_at: string
 }
@@ -38,6 +41,9 @@ export interface CreateStaffPayload {
   education: StaffEducation
   experience_years: number
   last_employer?: string | null
+  staff_id?: string
+  registration_no?: string
+  attendance_id?: string
 }
 
 export type UpdateStaffPayload = Partial<CreateStaffPayload>

@@ -16,7 +16,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { CustomSelect } from "@/components/ui/custom-select"
 import { useBatchComboBox, useStudentComboBox } from "@/hooks/use-combobox-data"
 import { useDownloadReport } from "@/hooks/api/use-reports"
-import { REPORT_TYPES } from "../ReportsPage"
+import { ALL_REPORT_TYPES } from "../ReportsPage"
 import { toast } from "sonner"
 
 interface ReportConfigModalProps {
@@ -37,6 +37,7 @@ interface FormValues {
   status_inactive: boolean
   status_archived: boolean
   sort_by: string
+  staff_type: string
 }
 
 export default function ReportConfigModal({
@@ -60,6 +61,7 @@ export default function ReportConfigModal({
       status_inactive: true,
       status_archived: true,
       sort_by: "asc",
+      staff_type: "all",
     },
   })
 
@@ -85,11 +87,12 @@ export default function ReportConfigModal({
         status_inactive: true,
         status_archived: true,
         sort_by: "asc",
+        staff_type: "all",
       })
     }
   }, [isOpen, reportId, reset])
 
-  const reportConfig = REPORT_TYPES.find((r) => r.id === reportId)
+  const reportConfig = ALL_REPORT_TYPES.find((r) => r.id === reportId)
 
   const onSubmit = async (data: FormValues) => {
     setIsDownloading(true)
@@ -105,6 +108,8 @@ export default function ReportConfigModal({
         "student-timing": "/reports/attendance/student-timing",
         "student-summary": "/reports/attendance/student-summary",
         "master": "/reports/attendance/master",
+        "staff-monthly": "/reports/attendance/staff-monthly",
+        "staff-timing": "/reports/attendance/staff-timing",
       }
 
       const endpoint = endpointMap[reportId]
@@ -120,7 +125,9 @@ export default function ReportConfigModal({
       // Build specific query params based on report type
       const params: Record<string, any> = {}
 
-      if (reportId !== "monthly-all-batches" && reportId !== "master") {
+      const isStaffReport = reportId.startsWith("staff-")
+
+      if (reportId !== "monthly-all-batches" && reportId !== "master" && !isStaffReport) {
         if (!data.batch_id) {
           toast.error("Please select a batch")
           setIsDownloading(false)
@@ -172,8 +179,12 @@ export default function ReportConfigModal({
         case "blank-monthly":
         case "blank-monthly-reg-wise":
         case "monthly-all-batches":
+        case "staff-monthly":
           params.month = data.month
           params.year = data.year
+          if (isStaffReport && data.staff_type !== "all") {
+            params.staff_type = data.staff_type === "teaching" ? "Teaching" : "Non-Teaching"
+          }
           break
         case "master":
           params.from_date = data.from_date
@@ -184,11 +195,17 @@ export default function ReportConfigModal({
           if (data.status_inactive) masterStatuses.push("inactive")
           if (masterStatuses.length > 0) params.status_filters = masterStatuses.join(",")
           break
+        case "staff-timing":
+          params.from_date = data.from_date
+          params.to_date = data.to_date
+          if (data.staff_type !== "all") {
+            params.staff_type = data.staff_type === "teaching" ? "Teaching" : "Non-Teaching"
+          }
+          break
       }
 
       await downloadPdfReport(endpoint, params)
       toast.success("Report opened successfully!")
-    // onClose() // User can keep downloading or close manually
     } catch (error: any) {
       console.error(error)
       toast.error("Failed to generate report")
@@ -198,7 +215,7 @@ export default function ReportConfigModal({
   }
 
   // UI Helper variables to determine what fields to show
-  const showBatch = reportId !== "monthly-all-batches" && reportId !== "master"
+  const showBatch = reportId !== "monthly-all-batches" && reportId !== "master" && !reportId.startsWith("staff-")
   const showStudent = ["student-wise", "student-summary"].includes(reportId)
   const showSingleDate = ["batch-wise", "blank-sheet"].includes(reportId)
   const showDateRange = [
@@ -207,11 +224,13 @@ export default function ReportConfigModal({
     "student-timing",
     "student-summary",
     "master",
+    "staff-timing",
   ].includes(reportId)
   const showMonthYear = [
     "blank-monthly",
     "blank-monthly-reg-wise",
     "monthly-all-batches",
+    "staff-monthly",
   ].includes(reportId)
   const showStatusFilters = [
     "batch-wise",
@@ -222,6 +241,7 @@ export default function ReportConfigModal({
   ].includes(reportId)
   const showMasterStatusFilters = reportId === "master"
   const showSortBy = reportId === "batch-wise"
+  const showStaffType = reportId.startsWith("staff-")
 
   // Years for dropdown (Current year +/- 2 years)
   const currentYear = new Date().getFullYear()
@@ -420,6 +440,30 @@ export default function ReportConfigModal({
                       value={field.value}
                       onValueChange={field.onChange}
                       options={years.map(y => ({ value: y, label: y }))}
+                      disabled={isDownloading}
+                      triggerClassName="h-10 bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 shadow-sm"
+                    />
+                  )}
+                />
+              </div>
+            )}
+
+            {showStaffType && (
+              <div className="md:col-span-2">
+                <Controller
+                  control={control}
+                  name="staff_type"
+                  render={({ field }) => (
+                    <CustomSelect
+                      label="Staff Type"
+                      placeholder="All Staff Types"
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      options={[
+                        { value: "all", label: "All Types" },
+                        { value: "teaching", label: "Teaching" },
+                        { value: "non-teaching", label: "Non-Teaching" },
+                      ]}
                       disabled={isDownloading}
                       triggerClassName="h-10 bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 shadow-sm"
                     />
