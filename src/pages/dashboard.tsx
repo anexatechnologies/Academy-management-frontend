@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { StudentDemographicsChart } from "./dashboard/components/StudentDemographicsChart"
 import { AttendanceOverviewChart } from "./dashboard/components/AttendanceOverviewChart"
+import { MonthlyFeesPerformanceTable } from "./dashboard/components/MonthlyFeesPerformanceTable"
 
 export default function Dashboard() {
   const { canReadFinancials } = usePermissions()
@@ -272,6 +273,12 @@ export default function Dashboard() {
           </Card>
         )}
       </div>
+
+      {canReadFinancials && (
+        <div className="grid gap-6">
+          <MonthlyFeesPerformanceTable />
+        </div>
+      )}
     </div>
   )
 }

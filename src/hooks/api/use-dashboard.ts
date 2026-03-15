@@ -7,6 +7,7 @@ import type {
   FeesSummary,
   BirthdayStudent,
   DuePayment,
+  MonthlyPerformance,
   PaginatedResponse,
 } from "@/types/dashboard"
 
@@ -17,6 +18,7 @@ const dashboardKeys = {
   feesSummary: () => [...dashboardKeys.all, "fees-summary"] as const,
   birthdays: (params: { page?: number; limit?: number }) => [...dashboardKeys.all, "birthdays", params] as const,
   duePayments: (params: { page?: number; limit?: number }) => [...dashboardKeys.all, "due-payments", params] as const,
+  monthlyPerformance: (params: { page?: number; limit?: number }) => [...dashboardKeys.all, "monthly-performance", params] as const,
 }
 
 export const useAttendanceSummary = () => {
@@ -119,6 +121,22 @@ export const useDuePayments = (params: { page?: number; limit?: number }, option
     queryFn: async () => {
       const { data } = await axiosPrivate.get<PaginatedResponse<DuePayment>>(
         "/dashboard/due-payments",
+        { params }
+      )
+      return data
+    },
+    placeholderData: keepPreviousData,
+    ...options
+  })
+}
+
+export const useMonthlyPerformance = (params: { page?: number; limit?: number }, options?: { enabled?: boolean }) => {
+  const axiosPrivate = useAxiosPrivate()
+  return useQuery({
+    queryKey: dashboardKeys.monthlyPerformance(params),
+    queryFn: async () => {
+      const { data } = await axiosPrivate.get<PaginatedResponse<MonthlyPerformance>>(
+        "/dashboard/monthly-fees-performance",
         { params }
       )
       return data
