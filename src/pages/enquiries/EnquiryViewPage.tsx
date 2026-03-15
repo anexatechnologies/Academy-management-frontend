@@ -10,6 +10,8 @@ import {
   MessageSquarePlus,
   Clock,
   Loader2,
+  User,
+  History,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -213,13 +215,19 @@ const EnquiryViewPage = () => {
         </div>
 
         {/* Tabs Content */}
-        <Tabs defaultValue="personal">
-          <TabsList className="w-full md:w-auto">
-            <TabsTrigger value="personal" className="flex-1 md:flex-none">
-              Personal Info
+        <Tabs defaultValue="personal" className="w-full">
+          <TabsList className="bg-transparent border-b border-slate-200 dark:border-slate-800 p-0 h-auto rounded-none w-full justify-start gap-8 shadow-none mb-6">
+            <TabsTrigger
+              value="personal"
+              className="rounded-none px-4 py-3 border-b-2 border-transparent data-[state=active]:border-b-primary data-[state=active]:border-x-transparent data-[state=active]:border-t-transparent data-[state=active]:bg-primary/5 data-[state=active]:text-primary transition-all text-sm font-bold flex items-center gap-2 hover:text-primary cursor-pointer shadow-none data-[state=active]:shadow-none -mb-[1px]"
+            >
+              <User className="h-4 w-4" /> Personal Info
             </TabsTrigger>
-            <TabsTrigger value="followup" className="flex-1 md:flex-none">
-              Follow-up & Logs
+            <TabsTrigger
+              value="followup"
+              className="rounded-none px-4 py-3 border-b-2 border-transparent data-[state=active]:border-b-primary data-[state=active]:border-x-transparent data-[state=active]:border-t-transparent data-[state=active]:bg-primary/5 data-[state=active]:text-primary transition-all text-sm font-bold flex items-center gap-2 hover:text-primary cursor-pointer shadow-none data-[state=active]:shadow-none -mb-[1px]"
+            >
+              <History className="h-4 w-4" /> Follow-up & Logs
               {logs.length > 0 && (
                 <span className="ml-2 h-5 min-w-5 rounded-full bg-primary/15 text-primary text-[10px] font-bold flex items-center justify-center px-1">
                   {logs.length}
