@@ -215,7 +215,7 @@ const EnquiryListPage = () => {
               <TableHead>Enquiry Date</TableHead>
               <TableHead className="w-[130px]">Status</TableHead>
               <TableHead>Next Follow-up</TableHead>
-              <TableHead className="w-[130px] text-center">Actions</TableHead>
+              <TableHead className="w-[130px] text-left">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody
@@ -275,7 +275,7 @@ const EnquiryListPage = () => {
                       )}
                     </TableCell>
                     <TableCell>
-                      <div className="flex justify-center gap-1">
+                      <div className="flex justify-start gap-1">
                         <ViewButton
                           title="Enquiry"
                           onView={() => navigate(`/enquiries/view/${enquiry.id}`)}
