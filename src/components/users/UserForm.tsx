@@ -7,6 +7,7 @@ import { ComboBox } from "@/components/ui/combobox"
 import { Label } from "@/components/ui/label"
 import { useRoleComboBox } from "@/hooks/use-combobox-data"
 import { FormFooter } from "@/components/ui/form-footer"
+import { useAuth } from "@/context/AuthContext"
 
 const userSchema = z.object({
   full_name: z.string().min(2, "Full name must be at least 2 characters"),
@@ -33,6 +34,13 @@ interface UserFormProps {
 
 export const UserForm = ({ initialValues, onSubmit, isLoading, isEdit }: UserFormProps) => {
   const roleComboBox = useRoleComboBox("id")
+  const { auth } = useAuth()
+
+  // Check if current user is super admin
+  const isSuperAdmin = auth.user?.role === "super_admin" || auth.user?.role === "SUPER_ADMIN"
+
+  // For non-super admin users, only password field should be editable
+  const canEditOtherFields = isSuperAdmin
 
   const {
     register,
@@ -74,7 +82,7 @@ export const UserForm = ({ initialValues, onSubmit, isLoading, isEdit }: UserFor
           placeholder="Enter full name"
           {...register("full_name")}
           error={errors.full_name?.message}
-          disabled={isLoading}
+          disabled={isLoading || !canEditOtherFields}
         />
         <Input
           label="Username"
@@ -82,7 +90,7 @@ export const UserForm = ({ initialValues, onSubmit, isLoading, isEdit }: UserFor
           placeholder="Enter username"
           {...register("username")}
           error={errors.username?.message}
-          disabled={isLoading}
+          disabled={isLoading || !canEditOtherFields}
         />
         <Input
           label="Email Address"
@@ -91,7 +99,7 @@ export const UserForm = ({ initialValues, onSubmit, isLoading, isEdit }: UserFor
           type="email"
           {...register("email")}
           error={errors.email?.message}
-          disabled={isLoading}
+          disabled={isLoading || !canEditOtherFields}
         />
         <Input
           label="Phone Number"
@@ -103,11 +111,11 @@ export const UserForm = ({ initialValues, onSubmit, isLoading, isEdit }: UserFor
             e.currentTarget.value = e.currentTarget.value.replace(/\D/g, '').slice(0, 10);
           }}
           error={errors.phone?.message}
-          disabled={isLoading}
+          disabled={isLoading || !canEditOtherFields}
         />
-        
+
         <div className="space-y-2">
-          <Label 
+          <Label
             className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 ml-0.5"
             required={true}
           >
@@ -124,7 +132,7 @@ export const UserForm = ({ initialValues, onSubmit, isLoading, isEdit }: UserFor
             hasMore={roleComboBox.hasMore}
             isLoading={roleComboBox.isLoading}
             isLoadingMore={roleComboBox.isLoadingMore}
-            disabled={isLoading}
+            disabled={isLoading || !canEditOtherFields}
             triggerClassName="w-full h-11 rounded-lg bg-white dark:bg-slate-900/50 border-slate-200 border shadow-[0_1px_2px_rgba(0,0,0,0.05)] hover:border-primary/40 hover:shadow-sm focus:border-primary focus:ring-[3px] focus:ring-primary/20 transition-all px-3.5 text-base md:text-sm"
           />
           {errors.role_id && (
