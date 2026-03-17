@@ -30,6 +30,8 @@ import { ComboBox } from "@/components/ui/combobox"
 import { cn } from "@/lib/utils"
 import type { AnnouncementTargetType } from "@/types/announcement"
 
+import { useRef } from "react"
+
 const TARGET_TYPES: { value: AnnouncementTargetType; label: string; icon: any }[] = [
   { value: "batch", label: "Batches", icon: Layers },
   { value: "course", label: "Courses", icon: Monitor },
@@ -54,6 +56,9 @@ const AnnouncementPage = () => {
   const [placeholderData, setPlaceholderData] = useState<Record<string, string>>({})
   const [isSending, setIsSending] = useState(false)
   const [sendResult, setSendResult] = useState<any>(null)
+
+  // --- Refs ---
+  const templateDataRef = useRef<HTMLDivElement>(null)
 
   // --- API Hooks ---
   const { data: targetData, isLoading: isLoadingTargets } = useAnnouncementTargets()
@@ -196,6 +201,7 @@ const AnnouncementPage = () => {
     const missing = requiredPlaceholders.filter(p => !placeholderData[p])
     if (missing.length > 0) {
       toast.error(`Please fill placeholders: ${missing.join(", ")}`)
+      templateDataRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })
       return
     }
 
@@ -258,12 +264,14 @@ const AnnouncementPage = () => {
                   return (
                     <button
                       key={type.value}
+                      disabled={isSending}
                       onClick={() => setTargetType(type.value)}
                       className={cn(
-                        "flex items-center gap-2.5 px-4 py-2.5 rounded-xl border-2 transition-all",
+                        "flex items-center gap-2.5 px-4 py-2.5 rounded-xl border-2 transition-all cursor-pointer",
                         isActive 
                           ? "bg-primary/5 border-primary text-primary shadow-sm"
-                          : "bg-transparent border-slate-100 dark:border-slate-800 text-slate-500 hover:border-slate-200 dark:hover:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-900"
+                          : "bg-transparent border-slate-100 dark:border-slate-800 text-slate-500 hover:border-slate-200 dark:hover:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-900",
+                        isSending && "opacity-50 cursor-not-allowed"
                       )}
                     >
                       <Icon className={cn("h-4 w-4", isActive ? "text-primary" : "text-slate-400")} />
@@ -283,8 +291,9 @@ const AnnouncementPage = () => {
                     <Button 
                       variant="ghost" 
                       size="sm" 
+                      disabled={isSending}
                       onClick={handleSelectAllTargets}
-                      className="text-xs h-7 text-primary hover:text-primary hover:bg-primary/5"
+                      className="text-xs h-7 text-primary hover:text-primary hover:bg-primary/5 cursor-pointer"
                     >
                       {selectedTargetIds.length === 0 ? "Select All" : "Deselect All"}
                     </Button>
@@ -306,16 +315,18 @@ const AnnouncementPage = () => {
                       )?.map((item: any) => (
                         <div
                           key={item.id}
-                          onClick={() => handleToggleTarget(item.id)}
+                          onClick={() => !isSending && handleToggleTarget(item.id)}
                           className={cn(
                             "group flex items-center gap-3 p-4 rounded-xl border transition-all cursor-pointer",
                             selectedTargetIds.includes(item.id)
                               ? "bg-primary/5 border-primary/30 shadow-sm ring-1 ring-primary/10"
-                              : "bg-white dark:bg-slate-950 border-slate-100 dark:border-slate-800 hover:border-primary/20 hover:bg-slate-50 dark:hover:bg-slate-900"
+                              : "bg-white dark:bg-slate-950 border-slate-100 dark:border-slate-800 hover:border-primary/20 hover:bg-slate-50 dark:hover:bg-slate-900",
+                            isSending && "opacity-50 cursor-not-allowed pointer-events-none"
                           )}
                         >
                           <Checkbox
                             checked={selectedTargetIds.includes(item.id)}
+                            disabled={isSending}
                             onCheckedChange={() => handleToggleTarget(item.id)}
                             className="h-4.5 w-4.5 rounded shadow-none data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                           />
@@ -342,23 +353,26 @@ const AnnouncementPage = () => {
               {/* Single Student Search */}
               {targetType === "single_student" && (
                 <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
-                  <ComboBox
-                    label="Search Student"
-                    required
-                    value={selectedTargetIds.length > 0 ? String(selectedTargetIds[0]) : ""}
-                    onValueChange={handleStudentSelect}
-                    options={studentComboBox.options}
-                    onSearch={studentComboBox.onSearch}
-                    onLoadMore={studentComboBox.onLoadMore}
-                    onReset={studentComboBox.onReset}
-                    hasMore={studentComboBox.hasMore}
-                    isLoading={studentComboBox.isLoading}
-                    isLoadingMore={studentComboBox.isLoadingMore}
-                    placeholder="Search by name or student ID..."
-                    searchPlaceholder="Type name..."
-                    emptyText="No students found."
-                    triggerClassName="rounded-xl h-11"
-                  />
+                  <div className="max-w-md">
+                    <ComboBox
+                      label="Search Student"
+                      required
+                      disabled={isSending}
+                      value={selectedTargetIds.length > 0 ? String(selectedTargetIds[0]) : ""}
+                      onValueChange={handleStudentSelect}
+                      options={studentComboBox.options}
+                      onSearch={studentComboBox.onSearch}
+                      onLoadMore={studentComboBox.onLoadMore}
+                      onReset={studentComboBox.onReset}
+                      hasMore={studentComboBox.hasMore}
+                      isLoading={studentComboBox.isLoading}
+                      isLoadingMore={studentComboBox.isLoadingMore}
+                      placeholder="Search by name or student ID..."
+                      searchPlaceholder="Type name..."
+                      emptyText="No students found."
+                      triggerClassName="rounded-xl h-11"
+                    />
+                  </div>
                   {selectedTargetIds.length > 0 && (
                      <div className="p-4 rounded-xl bg-primary/5 border border-primary/20 flex items-center gap-3">
                         <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
@@ -373,7 +387,8 @@ const AnnouncementPage = () => {
                         <Button 
                           variant="ghost" 
                           size="icon" 
-                          className="h-8 w-8 hover:bg-primary/10 text-slate-400 hover:text-primary"
+                          disabled={isSending}
+                          className="h-8 w-8 hover:bg-primary/10 text-slate-400 hover:text-primary cursor-pointer"
                           onClick={() => setSelectedTargetIds([])}
                         >
                           <X className="h-4 w-4" />
@@ -477,7 +492,7 @@ const AnnouncementPage = () => {
 
           {/* Dynamic Placeholders */}
           {requiredPlaceholders.length > 0 && (
-            <Card className="p-6 border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
+            <Card ref={templateDataRef} className="p-6 border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
               <div className="flex items-center gap-2">
                 <Layout className="h-4 w-4 text-primary" />
                 <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider">
@@ -516,6 +531,7 @@ const AnnouncementPage = () => {
               <ComboBox
                 label="Message Template"
                 required
+                disabled={isSending}
                 options={filteredTemplates.map(t => ({ value: String(t.id), label: t.template_name }))}
                 value={selectedTemplateId}
                 onValueChange={setSelectedTemplateId}
@@ -563,16 +579,18 @@ const AnnouncementPage = () => {
               {CHANNELS.map((ch) => (
                 <div
                   key={ch.id}
-                  onClick={() => handleChannelToggle(ch.id)}
+                  onClick={() => !isSending && handleChannelToggle(ch.id)}
                   className={cn(
                     "flex items-center gap-3 p-4 rounded-xl border-2 transition-all cursor-pointer",
                     selectedChannels.includes(ch.id)
                       ? "bg-primary/5 border-primary shadow-sm"
-                      : "bg-white dark:bg-slate-950 border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-900"
+                      : "bg-white dark:bg-slate-950 border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-900",
+                    isSending && "opacity-50 cursor-not-allowed pointer-events-none"
                   )}
                 >
                   <Checkbox
                     checked={selectedChannels.includes(ch.id)}
+                    disabled={isSending}
                     onCheckedChange={() => handleChannelToggle(ch.id)}
                     className="h-5 w-5 rounded-md shadow-none data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                   />
