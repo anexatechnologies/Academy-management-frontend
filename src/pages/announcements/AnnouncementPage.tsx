@@ -25,6 +25,7 @@ import BodyLayout from "@/components/layout/BodyLayout"
 import { useAnnouncementTargets, useTemplates, useSendAnnouncement } from "@/hooks/api/use-announcements"
 import { useEnquiries } from "@/hooks/api/use-enquiries"
 import { useStudentComboBox } from "@/hooks/use-combobox-data"
+import { usePermissions } from "@/hooks/use-permissions"
 import { handleApiError } from "@/utils/api-error"
 import { ComboBox } from "@/components/ui/combobox"
 import { cn } from "@/lib/utils"
@@ -59,6 +60,9 @@ const AnnouncementPage = () => {
 
   // --- Refs ---
   const templateDataRef = useRef<HTMLDivElement>(null)
+
+  // --- Permissions ---
+  const { canSendAnnouncements } = usePermissions()
 
   // --- API Hooks ---
   const { data: targetData, isLoading: isLoadingTargets } = useAnnouncementTargets()
@@ -219,7 +223,10 @@ const AnnouncementPage = () => {
       setSendResult(response)
       
       if (response.errors && response.errors.length > 0) {
-        toast.warning(`Sent with ${response.errors.length} errors`)
+        const errorCount = response.errors.length;
+        toast.warning(
+          `Sent with ${errorCount} ${errorCount === 1 ? "error" : "errors"}`
+        )
       } else {
         toast.success("Announcement processed successfully")
       }
@@ -445,7 +452,9 @@ const AnnouncementPage = () => {
                     {sendResult.errors.map((err: any, idx: number) => (
                       <div key={idx} className="p-3 rounded-lg bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/20 flex items-center justify-between">
                         <div>
-                           <p className="text-[11px] font-bold text-red-700 dark:text-red-400">{err.recipient}</p>
+                           <p className="text-[11px] font-bold text-red-700 dark:text-red-400">
+                             {err.recipient || err.phone || "Unknown Recipient"}
+                           </p>
                            <p className="text-[10px] text-red-500 font-medium">{err.error}</p>
                         </div>
                         <div className="h-6 w-6 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
@@ -606,7 +615,7 @@ const AnnouncementPage = () => {
 
           {/* Execution Button */}
           <Button 
-            disabled={isSending || isLoadingTargets}
+            disabled={isSending || isLoadingTargets || !canSendAnnouncements}
             onClick={handleSend}
             className="w-full h-16 rounded-2xl shadow-xl shadow-primary/20 text-lg font-bold gap-3 transition-all active:scale-[0.98]"
           >
@@ -618,10 +627,16 @@ const AnnouncementPage = () => {
             ) : (
               <>
                 <Send className="h-6 w-6" />
-                Broadcast Announcement
+                {canSendAnnouncements ? "Broadcast Announcement" : "Access Denied"}
               </>
             )}
           </Button>
+
+          {!canSendAnnouncements && (
+            <p className="text-[11px] text-red-500 font-bold text-center uppercase tracking-wider animate-pulse">
+              You do not have permission to send broadcasts
+            </p>
+          )}
 
           <div className="flex items-start gap-3 p-4 rounded-xl bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/30">
             <AlertCircle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />

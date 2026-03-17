@@ -82,11 +82,13 @@ function App() {
             <Route path="/attendance" element={<Navigate to="/attendance/students" replace />} />
             <Route path="/attendance/students" element={<StudentAttendancePage />} />
             <Route path="/attendance/staff" element={<StaffAttendancePage />} />
-            <Route path="/announcements" element={<AnnouncementPage />} />
+            <Route element={<ProtectedRoute requiredPermissions={["announcements:read"]} />}>
+              <Route path="/announcements" element={<AnnouncementPage />} />
+            </Route>
             <Route path="/reports" element={<ReportsPage />} />
 
-            <Route path="/configure" element={<ConfigurePage />} />
-            <Route path="/settings/fees" element={<FeeSettingsPage />} />
+            <Route path="/configure" element={<Navigate to="/settings" replace />} />
+            <Route path="/settings/fees" element={<Navigate to="/settings" replace />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/roles" element={<RolesListPage />} />
           </Route>

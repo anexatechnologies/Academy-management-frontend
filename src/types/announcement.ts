@@ -12,7 +12,10 @@ export interface AnnouncementTemplate {
   category: string
   channel: string
   template_name: string
+  subject?: string
   body: string
+  is_active: boolean
+  dlt_template_id?: string
 }
 
 export interface TargetCountItem {
@@ -44,7 +47,8 @@ export interface AnnouncementResponse {
   message: string
   sent_count: number
   errors?: {
-    recipient: string
+    recipient?: string
+    phone?: string
     error: string
   }[]
 }

@@ -97,11 +97,6 @@ const items = [
     icon: Megaphone,
   },
   {
-    title: "Configure",
-    url: "/configure",
-    icon: Building,
-  },
-  {
     title: "Roles & Permissions",
     url: "/roles",
     icon: Shield,
@@ -111,14 +106,9 @@ const items = [
 // Settings sub-menu items
 const settingsItems = [
   {
-    title: "Settings",
+    title: "Application Settings",
     url: "/settings",
     icon: Settings,
-  },
-  {
-    title: "Fee Settings",
-    url: "/settings/fees",
-    icon: IndianRupee,
   },
 ]
 
