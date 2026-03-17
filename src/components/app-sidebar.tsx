@@ -15,6 +15,7 @@ import {
   IndianRupee,
   ChevronRight,
   ClipboardList,
+  Megaphone,
 } from "lucide-react"
 import { usePermissions } from "@/hooks/use-permissions"
 
@@ -91,6 +92,11 @@ const items = [
     icon: FileText,
   },
   {
+    title: "Announcements",
+    url: "/announcements",
+    icon: Megaphone,
+  },
+  {
     title: "Configure",
     url: "/configure",
     icon: Building,
@@ -149,6 +155,7 @@ export function AppSidebar() {
                   "/certificates": "certificates",
                   "/attendance": "attendance",
                   "/reports": "reports",
+                  "/announcements": "announcements",
                   "/configure": "configure",
                   "/roles": "roles",
                 }
