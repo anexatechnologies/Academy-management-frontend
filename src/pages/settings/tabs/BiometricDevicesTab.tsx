@@ -44,9 +44,9 @@ const BiometricDevicesTab = () => {
   const form = useForm<BiometricDeviceFormValues>({
     resolver: zodResolver(biometricDeviceSchema) as any,
     defaultValues: {
-      device_name: "",
+      name: "",
       ip_address: "",
-      port: 80,
+      port: 4370,
       password: "",
       is_active: true,
     },
@@ -55,7 +55,7 @@ const BiometricDevicesTab = () => {
   const handleOpenEdit = (device: BiometricDevice) => {
     setEditingDevice(device)
     form.reset({
-      device_name: device.device_name,
+      name: device.name,
       ip_address: device.ip_address,
       port: device.port,
       password: device.password || "",
@@ -67,9 +67,9 @@ const BiometricDevicesTab = () => {
   const handleOpenAdd = () => {
     setEditingDevice(null)
     form.reset({
-      device_name: "",
+      name: "",
       ip_address: "",
-      port: 80,
+      port: 4370,
       password: "",
       is_active: true,
     })
@@ -104,7 +104,8 @@ const BiometricDevicesTab = () => {
 
   const handleToggleActive = async (device: BiometricDevice) => {
     try {
-      await updateDevice.mutateAsync({ ...device, is_active: !device.is_active })
+      const { id, ...rest } = device
+      await updateDevice.mutateAsync({ id, ...rest, is_active: !device.is_active })
       toast.success(`Device ${!device.is_active ? "activated" : "deactivated"}`)
     } catch (error) {
       handleApiError(error)
@@ -168,7 +169,7 @@ const BiometricDevicesTab = () => {
                         <Cpu className="h-6 w-6" />
                       </div>
                       <div className="space-y-0.5">
-                        <span className="font-bold text-slate-900 dark:text-slate-100 block">{dev.device_name}</span>
+                        <span className="font-bold text-slate-900 dark:text-slate-100 block">{dev.name}</span>
                         <span className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Standard UDP Interface</span>
                       </div>
                     </div>
@@ -240,12 +241,12 @@ const BiometricDevicesTab = () => {
 
             <div className="flex-1 overflow-y-auto px-8 py-2 space-y-6 min-h-0">
               <Input 
-                {...form.register("device_name")}
+                {...form.register("name")}
                 label="Friendly Name" 
                 required 
                 className="h-12 rounded-xl bg-slate-50 dark:bg-slate-900" 
                 placeholder="e.g. Front Gate Scanner"
-                error={form.formState.errors.device_name?.message}
+                error={form.formState.errors.name?.message}
               />
               <div className="grid grid-cols-3 gap-4">
                 <div className="col-span-2">
@@ -263,7 +264,7 @@ const BiometricDevicesTab = () => {
                   label="Port" 
                   required 
                   className="h-12 rounded-xl bg-slate-50 dark:bg-slate-900 font-mono" 
-                  placeholder="80"
+                  placeholder="4370"
                   error={form.formState.errors.port?.message}
                 />
               </div>

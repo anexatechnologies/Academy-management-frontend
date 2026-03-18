@@ -24,7 +24,7 @@ export interface BankAccount {
 
 export interface BiometricDevice {
   id: number;
-  device_name: string;
+  name: string;
   ip_address: string;
   port: number;
   password?: string;
