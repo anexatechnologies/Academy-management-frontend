@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form"
 import * as z from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
-import { Loader2 } from "lucide-react"
+import { Loader2, ShieldCheck, Info } from "lucide-react"
 
 import {
   Dialog,
@@ -21,6 +21,8 @@ import {
   useRolePermissions,
 } from "@/hooks/api/use-roles"
 import PermissionsGrid from "./PermissionsGrid"
+import { FormFooter } from "@/components/ui/form-footer"
+import { handleApiError } from "@/utils/api-error"
 
 const roleSchema = z.object({
   name: z.string().min(1, "Role name is required"),
@@ -112,8 +114,7 @@ const RoleFormModal = ({ isOpen, onClose, roleId }: RoleFormModalProps) => {
       }
       onClose()
     } catch (error: any) {
-      const errMessage = error.response?.data?.message || "Failed to save role"
-      toast.error(errMessage)
+      handleApiError(error, form.setError)
     }
   }
 
@@ -122,14 +123,17 @@ const RoleFormModal = ({ isOpen, onClose, roleId }: RoleFormModalProps) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col p-0 gap-0 overflow-hidden bg-white dark:bg-slate-950">
+      <DialogContent className="max-w-4xl max-h-[85vh] flex flex-col p-0 gap-0 rounded-xl overflow-hidden bg-white dark:bg-slate-950">
         <div className="p-6 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 shrink-0">
           <DialogHeader>
-            <DialogTitle className="text-xl">
-              {isEdit ? "Edit Role" : "Create New Role"}
+            <DialogTitle className="text-2xl font-black text-slate-900 dark:text-slate-100 flex items-center gap-3">
+               <div className="h-11 w-11 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
+                  <ShieldCheck className="h-6 w-6" />
+               </div>
+               {isEdit ? "Edit Access Control" : "Define New Security Role"}
             </DialogTitle>
-            <DialogDescription>
-              Define the role details and assign specific module permissions.
+            <DialogDescription className="font-medium text-slate-400 mt-1">
+              Configure system-wide privileges and operational boundaries for this persona.
             </DialogDescription>
           </DialogHeader>
         </div>
@@ -142,83 +146,87 @@ const RoleFormModal = ({ isOpen, onClose, roleId }: RoleFormModalProps) => {
           <form
             id="role-form"
             onSubmit={form.handleSubmit(onSubmit)}
-            className="flex-1 overflow-y-auto"
+            className="flex-1 overflow-y-auto min-h-0"
           >
-            <div className="p-6 md:p-8 space-y-8">
+            <div className="p-6 md:p-8 space-y-10">
               {/* Basic Info Section */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Input
-                  {...form.register("name")}
-                  label="Role Name"
-                  required
-                  placeholder="e.g. Counselor, Finance Admin"
-                  error={form.formState.errors.name?.message}
-                  disabled={isSaving}
-                  className="bg-slate-50 dark:bg-slate-900 rounded-lg"
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="h-1.5 w-1.5 rounded-full bg-primary" />
+                    <h4 className="text-[10px] font-black uppercase tracking-[2px] text-slate-400">Identity Details</h4>
+                  </div>
+                  <Input
+                    {...form.register("name")}
+                    label="Internal Role Name"
+                    required
+                    placeholder="e.g. Master Administrator"
+                    error={form.formState.errors.name?.message}
+                    disabled={isSaving}
+                    className="h-12 bg-slate-50 dark:bg-slate-900 rounded-xl border-slate-100 dark:border-slate-800"
+                  />
+                </div>
                 
-                <Input
-                  {...form.register("description")}
-                  label="Description (Optional)"
-                  placeholder="Brief context about this role's purpose"
-                  error={form.formState.errors.description?.message}
-                  disabled={isSaving}
-                  className="bg-slate-50 dark:bg-slate-900 rounded-lg"
-                />
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="h-1.5 w-1.5 rounded-full bg-slate-400" />
+                    <h4 className="text-[10px] font-black uppercase tracking-[2px] text-slate-400">Contextual Info</h4>
+                  </div>
+                  <Input
+                    {...form.register("description")}
+                    label="Operational Description"
+                    placeholder="Describe limits or intent of this role"
+                    error={form.formState.errors.description?.message}
+                    disabled={isSaving}
+                    className="h-12 bg-slate-50 dark:bg-slate-900 rounded-xl border-slate-100 dark:border-slate-800"
+                  />
+                </div>
               </div>
 
               {/* Permissions Grid Section */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
-                    Permissions Access
-                  </h3>
-                  <span className="text-sm font-medium text-slate-500 bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded-full">
-                    {selectedPermissionIds.length} Selected
-                  </span>
+              <div className="space-y-6">
+                <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
+                  <div className="space-y-1">
+                    <h3 className="text-lg font-black text-slate-900 dark:text-slate-100">
+                      Module Access Matrices
+                    </h3>
+                    <p className="text-xs font-medium text-slate-400">Grant or revoke specific functional capabilities across the platform.</p>
+                  </div>
+                  <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary/5 border border-primary/10">
+                    <span className="text-xs font-black text-primary uppercase tracking-widest leading-none">
+                      {selectedPermissionIds.length} Selected
+                    </span>
+                  </div>
                 </div>
                 
                 {allPermissionsData?.grouped ? (
-                  <PermissionsGrid
-                    groupedPermissions={allPermissionsData.grouped}
-                    selectedIds={selectedPermissionIds}
-                    onToggle={handleTogglePermission}
-                    onToggleModule={handleSelectAllModule}
-                    disabled={isSaving}
-                  />
+                  <div className="bg-slate-50/30 dark:bg-slate-900/10 rounded-3xl border border-slate-100 dark:border-slate-800 p-1">
+                    <PermissionsGrid
+                      groupedPermissions={allPermissionsData.grouped}
+                      selectedIds={selectedPermissionIds}
+                      onToggle={handleTogglePermission}
+                      onToggleModule={handleSelectAllModule}
+                      disabled={isSaving}
+                    />
+                  </div>
                 ) : (
-                  <p className="text-sm text-slate-500 italic">No permissions available to configure.</p>
+                  <div className="flex flex-col items-center justify-center p-12 border-2 border-dashed border-slate-100 dark:border-slate-800 rounded-3xl gap-4">
+                     <Info className="h-8 w-8 text-slate-400" />
+                     <p className="text-sm font-black text-slate-400 uppercase tracking-widest text-center">No functional permissions available for mapping.</p>
+                  </div>
                 )}
               </div>
             </div>
           </form>
         )}
 
-        <div className="p-4 md:p-6 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-950 shrink-0 flex items-center justify-end gap-3">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onClose}
-            disabled={isSaving}
-            className="rounded-xl h-11 px-8"
-          >
-            Cancel
-          </Button>
-          <Button
-            type="submit"
-            form="role-form"
-            disabled={isSaving || isLoadingData}
-            className="rounded-xl h-11 px-8 shadow-lg shadow-primary/20"
-          >
-            {isSaving ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Saving...
-              </>
-            ) : (
-              "Save Role"
-            )}
-          </Button>
+        <div className="p-6 pt-5 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-950 shrink-0">
+          <FormFooter 
+            isLoading={isSaving}
+            onCancel={onClose}
+            submitLabel={isEdit ? "Update Privileges" : "Finalize Role"}
+            className="border-none shadow-none p-0 bg-transparent"
+          />
         </div>
       </DialogContent>
     </Dialog>

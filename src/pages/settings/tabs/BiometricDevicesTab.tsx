@@ -1,14 +1,19 @@
 import { useState } from "react"
-import { Plus, Cpu, Trash2, Pencil, Loader2, Globe, Lock } from "lucide-react"
+import { Monitor, Plus, Settings, Trash2, Smartphone, Edit2, Loader2, Cpu, Globe, Lock, Pencil } from "lucide-react"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { 
+  useBiometricDevices, 
+  useCreateBiometricDevice, 
+  useUpdateBiometricDevice, 
+  useDeleteBiometricDevice 
+} from "@/hooks/api/use-settings"
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog"
 import {
   Table,
@@ -18,9 +23,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
-import { useBiometricDevices, useCreateBiometricDevice, useUpdateBiometricDevice, useDeleteBiometricDevice } from "@/hooks/api/use-settings"
+import { FormFooter } from "@/components/ui/form-footer"
 import { handleApiError } from "@/utils/api-error"
+import { biometricDeviceSchema, type BiometricDeviceFormValues } from "@/validations/biometric-device"
 import type { BiometricDevice } from "@/types/settings"
 import { cn } from "@/lib/utils"
 
@@ -32,28 +40,21 @@ const BiometricDevicesTab = () => {
 
   const [isOpen, setIsOpen] = useState(false)
   const [editingDevice, setEditingDevice] = useState<BiometricDevice | null>(null)
-  const [formData, setFormData] = useState<Omit<BiometricDevice, "id">>({
-    device_name: "",
-    ip_address: "",
-    port: 4370,
-    password: "",
-    is_active: true,
-  })
 
-  const resetForm = () => {
-    setFormData({
+  const form = useForm<BiometricDeviceFormValues>({
+    resolver: zodResolver(biometricDeviceSchema) as any,
+    defaultValues: {
       device_name: "",
       ip_address: "",
-      port: 4370,
+      port: 80,
       password: "",
       is_active: true,
-    })
-    setEditingDevice(null)
-  }
+    },
+  })
 
   const handleOpenEdit = (device: BiometricDevice) => {
     setEditingDevice(device)
-    setFormData({
+    form.reset({
       device_name: device.device_name,
       ip_address: device.ip_address,
       port: device.port,
@@ -63,20 +64,31 @@ const BiometricDevicesTab = () => {
     setIsOpen(true)
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleOpenAdd = () => {
+    setEditingDevice(null)
+    form.reset({
+      device_name: "",
+      ip_address: "",
+      port: 80,
+      password: "",
+      is_active: true,
+    })
+    setIsOpen(true)
+  }
+
+  const onSubmit = async (values: BiometricDeviceFormValues) => {
     try {
       if (editingDevice) {
-        await updateDevice.mutateAsync({ id: editingDevice.id, ...formData })
-        toast.success("Device updated")
+        await updateDevice.mutateAsync({ id: editingDevice.id, ...values })
+        toast.success("Device updated successfully")
       } else {
-        await createDevice.mutateAsync(formData)
-        toast.success("Device added")
+        await createDevice.mutateAsync(values)
+        toast.success("Device linked successfully")
       }
       setIsOpen(false)
-      resetForm()
+      form.reset()
     } catch (error) {
-      handleApiError(error)
+      handleApiError(error, form.setError)
     }
   }
 
@@ -84,7 +96,7 @@ const BiometricDevicesTab = () => {
     if (!confirm("Are you sure you want to delete this biometric device?")) return
     try {
       await deleteDevice.mutateAsync(id)
-      toast.success("Device deleted")
+      toast.success("Device deleted successfully")
     } catch (error) {
       handleApiError(error)
     }
@@ -109,8 +121,8 @@ const BiometricDevicesTab = () => {
 
   return (
     <div className="max-w-6xl space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="flex flex-col md:flex-row md:items-center justify-end gap-6">
-        <Button onClick={() => { resetForm(); setIsOpen(true); }} className="h-12 px-6 rounded-2xl flex items-center gap-2 font-bold shadow-lg shadow-primary/20 hover:scale-105 transition-all">
+      <div className="flex flex-col md:flex-row md:items-center justify-end gap-6 text-end">
+        <Button onClick={handleOpenAdd} className="h-12 px-6 rounded-2xl flex items-center gap-2 font-bold shadow-lg shadow-primary/20 hover:scale-105 transition-all">
           <Plus className="h-5 w-5" /> Integrate Hardware
         </Button>
       </div>
@@ -138,7 +150,7 @@ const BiometricDevicesTab = () => {
                         <p className="text-lg font-bold text-slate-900 dark:text-slate-100">No Hardware Linked</p>
                         <p className="text-sm font-medium text-slate-400">Add your first ZKTeco/ESSL device to start automated attendance.</p>
                      </div>
-                     <Button variant="outline" onClick={() => setIsOpen(true)} className="rounded-xl mt-2">
+                     <Button variant="outline" onClick={handleOpenAdd} className="rounded-xl mt-2">
                         Quick Setup Device
                      </Button>
                    </div>
@@ -213,61 +225,75 @@ const BiometricDevicesTab = () => {
       </div>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="max-w-md rounded-3xl p-8 border-none shadow-2xl">
-          <DialogHeader className="mb-6">
-            <DialogTitle className="text-2xl font-black text-slate-900 dark:text-slate-100 flex items-center gap-3">
-               <div className="h-11 w-11 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
-                  <Cpu className="h-6 w-6" />
-               </div>
-               {editingDevice ? "Edit hardware" : "Link hardware"}
-            </DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 gap-6">
+        <DialogContent className="max-w-md rounded-xl p-0 border-none shadow-3xl bg-white dark:bg-slate-950 overflow-hidden flex flex-col max-h-[85vh]">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col min-h-0 h-full">
+            <div className="p-8 pb-4 shrink-0">
+              <DialogHeader>
+                <DialogTitle className="text-2xl font-black text-slate-900 dark:text-slate-100 flex items-center gap-3">
+                   <div className="h-11 w-11 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
+                      <Settings className="h-5 w-5" />
+                   </div>
+                   {editingDevice ? "Device Settings" : "Link New Hardware"}
+                </DialogTitle>
+              </DialogHeader>
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-8 py-2 space-y-6 min-h-0">
               <Input 
-                label="Identifier (Alias)" 
+                {...form.register("device_name")}
+                label="Friendly Name" 
                 required 
-                className="h-12 rounded-xl"
-                value={formData.device_name} 
-                onChange={e => setFormData(prev => ({ ...prev, device_name: e.target.value }))} 
-                placeholder="e.g. Lobby Entrance"
+                className="h-12 rounded-xl bg-slate-50 dark:bg-slate-900" 
+                placeholder="e.g. Front Gate Scanner"
+                error={form.formState.errors.device_name?.message}
               />
-              <div className="grid grid-cols-3 gap-6">
+              <div className="grid grid-cols-3 gap-4">
                 <div className="col-span-2">
                   <Input 
-                    label="IPv4 Address" 
+                    {...form.register("ip_address")}
+                    label="IP Address" 
                     required 
-                    className="h-12 rounded-xl font-mono"
-                    value={formData.ip_address} 
-                    onChange={e => setFormData(prev => ({ ...prev, ip_address: e.target.value }))} 
-                    placeholder="192.168.1.100"
+                    className="h-12 rounded-xl bg-slate-50 dark:bg-slate-900 font-mono" 
+                    placeholder="192.168.1.1"
+                    error={form.formState.errors.ip_address?.message}
                   />
                 </div>
                 <Input 
-                  label="Net Port" 
-                  type="number" 
+                  {...form.register("port", { valueAsNumber: true })}
+                  label="Port" 
                   required 
-                  className="h-12 rounded-xl font-mono"
-                  value={formData.port} 
-                  onChange={e => setFormData(prev => ({ ...prev, port: parseInt(e.target.value) }))} 
+                  className="h-12 rounded-xl bg-slate-50 dark:bg-slate-900 font-mono" 
+                  placeholder="80"
+                  error={form.formState.errors.port?.message}
                 />
               </div>
               <Input 
-                label="CommKey (Encryption)" 
-                type="password"
-                leftIcon={<Lock className="h-4 w-4" />}
-                className="h-12 rounded-xl"
-                value={formData.password} 
-                onChange={e => setFormData(prev => ({ ...prev, password: e.target.value }))} 
-                placeholder="Leave blank for null key"
+                {...form.register("password")}
+                label="Connection Key (Optional)" 
+                type="password" 
+                className="h-12 rounded-xl bg-slate-50 dark:bg-slate-900" 
+                placeholder="••••••••"
+                error={form.formState.errors.password?.message}
+              />
+              
+              <div className="flex items-center gap-3 p-4 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
+                <Checkbox 
+                  id="device-active" 
+                  checked={form.watch("is_active")} 
+                  onCheckedChange={(checked) => form.setValue("is_active", !!checked)}
+                />
+                <label htmlFor="device-active" className="text-sm font-black text-slate-600 dark:text-slate-400">Initialize device immediately</label>
+              </div>
+            </div>
+
+            <div className="p-8 pt-6 border-t border-slate-100 dark:border-slate-800 shrink-0 bg-slate-50/30 dark:bg-slate-900/30">
+              <FormFooter 
+                isLoading={createDevice.isPending || updateDevice.isPending}
+                onCancel={() => setIsOpen(false)}
+                submitLabel={editingDevice ? "Update Settings" : "Link Hardware"}
+                className="border-none shadow-none p-0 bg-transparent mt-0"
               />
             </div>
-            <DialogFooter className="pt-6 border-t border-slate-100 dark:border-slate-800 gap-3">
-              <Button type="button" variant="ghost" onClick={() => setIsOpen(false)} className="rounded-xl h-12 font-bold uppercase tracking-widest text-[10px]">Back</Button>
-              <Button type="submit" className="rounded-xl px-8 h-12 font-bold shadow-lg shadow-primary/20" disabled={createDevice.isPending || updateDevice.isPending}>
-                {createDevice.isPending || updateDevice.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : editingDevice ? "Synchronize" : "Finalize link"}
-              </Button>
-            </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>

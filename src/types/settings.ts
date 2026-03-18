@@ -16,7 +16,7 @@ export interface BankAccount {
   bank_name: string;
   account_number: string;
   ifsc_code: string;
-  branch: string;
+  address: string;
   is_active: boolean;
   opening_balance: string;
   remark?: string;

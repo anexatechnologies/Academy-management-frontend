@@ -1,80 +1,147 @@
-import { useState, useMemo } from "react"
-import { Filter, Pencil, Loader2, MessageSquare, Info, Variable, Hash, Plus, X } from "lucide-react"
+import { useState } from "react"
+import { Plus, MessageSquare, LayoutTemplate, Smartphone, Mail, Trash2, Edit2, Loader2, Sparkles } from "lucide-react"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
+import { 
+  useAnnouncementTemplates, 
+  useCreateAnnouncementTemplate, 
+  useUpdateAnnouncementTemplate, 
+  useDeleteAnnouncementTemplate 
+} from "@/hooks/api/use-announcements"
 import {
   Dialog,
   DialogContent,
+  DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Card } from "@/components/ui/card"
-import { useTemplates, useUpdateTemplate } from "@/hooks/api/use-templates"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { Textarea } from "@/components/ui/textarea"
+import { CustomSelect } from "@/components/ui/custom-select"
+import { FormFooter } from "@/components/ui/form-footer"
 import { handleApiError } from "@/utils/api-error"
+import { templateSchema, type TemplateFormValues } from "@/validations/template"
 import type { AnnouncementTemplate } from "@/types/announcement"
 import { cn } from "@/lib/utils"
 
-import { SearchBar } from "@/components/ui/search-bar"
-import { CustomSelect } from "@/components/ui/custom-select"
+const TEMPLATE_CATEGORIES = [
+  { label: "Fees & Finance", value: "fees" },
+  { label: "Attendance & Leaves", value: "attendance" },
+  { label: "Exams & Results", value: "exams" },
+  { label: "Enquiry & Admission", value: "enquiry" },
+  { label: "General Notice", value: "general" },
+]
+
+const CHANNELS = [
+  { label: "SMS Gateway", value: "sms", icon: Smartphone },
+  { label: "Email Service", value: "email", icon: Mail },
+  { label: "App Notification", value: "app", icon: MessageSquare },
+]
 
 const PLACEHOLDERS = [
-  { tag: "[StudentName]", description: "Full name of the student" },
-  { tag: "[Amount]", description: "Total fee amount" },
-  { tag: "[Date]", description: "Transaction date or Due date" },
-  { tag: "[CourseName]", description: "Name of the enrolled course" },
-  { tag: "[AcademyName]", description: "Your institute name" },
+  { label: "Full Name", value: "{name}" },
+  { label: "Course Name", value: "{course}" },
+  { label: "Batch Name", value: "{batch}" },
+  { label: "Total Fees", value: "{total_fees}" },
+  { label: "Paid Fees", value: "{paid_fees}" },
+  { label: "Balance", value: "{balance}" },
+  { label: "Due Date", value: "{due_date}" },
 ]
 
 const TemplatesTab = () => {
-  const [params, setParams] = useState({ category: "all", channel: "all", search: "" })
-  const { data: templates, isLoading } = useTemplates({
-    category: params.category === "all" ? undefined : params.category,
-    channel: params.channel === "all" ? undefined : params.channel,
-    search: params.search || undefined,
-  })
-  const updateTemplate = useUpdateTemplate()
+  const { data: templates, isLoading } = useAnnouncementTemplates()
+  const createTemplate = useCreateAnnouncementTemplate()
+  const updateTemplate = useUpdateAnnouncementTemplate()
+  const deleteTemplate = useDeleteAnnouncementTemplate()
 
   const [isOpen, setIsOpen] = useState(false)
   const [editingTemplate, setEditingTemplate] = useState<AnnouncementTemplate | null>(null)
-  const [formData, setFormData] = useState({
-    body: "",
-    template_id: "", // DLT Template ID
+  
+  const [selectedCategory, setSelectedCategory] = useState("general")
+  const [selectedChannel, setSelectedChannel] = useState("sms")
+  const [templateName, setTemplateName] = useState("")
+
+  const form = useForm<TemplateFormValues>({
+    resolver: zodResolver(templateSchema) as any,
+    defaultValues: {
+      body: "",
+      template_id: "",
+    },
   })
+
+  const resetLocalState = () => {
+    setTemplateName("")
+    setSelectedCategory("general")
+    setSelectedChannel("sms")
+    setEditingTemplate(null)
+    form.reset({
+      body: "",
+      template_id: "",
+    })
+  }
 
   const handleOpenEdit = (template: AnnouncementTemplate) => {
     setEditingTemplate(template)
-    setFormData({
+    setTemplateName(template.template_name)
+    setSelectedCategory(template.category)
+    setSelectedChannel(template.channel)
+    form.reset({
       body: template.body,
-      template_id: "", // Assuming this might be added to type later or handled separately
+      template_id: template.dlt_template_id || "",
     })
     setIsOpen(true)
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!editingTemplate) return
+  const handleOpenAdd = () => {
+    resetLocalState()
+    setIsOpen(true)
+  }
+
+  const onSubmit = async (values: TemplateFormValues) => {
+    if (!templateName.trim()) {
+      toast.error("Template name is required")
+      return
+    }
+
     try {
-      await updateTemplate.mutateAsync({ 
-        id: editingTemplate.id, 
-        body: formData.body,
-        // template_id: formData.template_id 
-      })
-      toast.success("Template updated successfully")
+      const payload = {
+        template_name: templateName,
+        category: selectedCategory,
+        channel: selectedChannel,
+        body: values.body,
+        dlt_template_id: values.template_id,
+        is_active: true,
+      }
+
+      if (editingTemplate) {
+        await updateTemplate.mutateAsync({ id: editingTemplate.id, ...payload })
+        toast.success("Template updated successfully")
+      } else {
+        await createTemplate.mutateAsync(payload)
+        toast.success("Template created successfully")
+      }
       setIsOpen(false)
+      resetLocalState()
+    } catch (error) {
+      handleApiError(error, form.setError)
+    }
+  }
+
+  const handleDelete = async (id: number) => {
+    if (!confirm("Are you sure you want to delete this template?")) return
+    try {
+      await deleteTemplate.mutateAsync(id)
+      toast.success("Template deleted successfully")
     } catch (error) {
       handleApiError(error)
     }
   }
 
-  const filteredTemplates = useMemo(() => {
-    if (!templates) return []
-    return templates.filter(t => 
-      t.template_name.toLowerCase().includes(params.search.toLowerCase()) ||
-      t.category.toLowerCase().includes(params.search.toLowerCase())
-    )
-  }, [templates, params.search])
+  const insertPlaceholder = (placeholder: string) => {
+    const currentBody = form.getValues("body")
+    form.setValue("body", currentBody + placeholder)
+  }
 
   if (isLoading) {
     return (
@@ -85,209 +152,212 @@ const TemplatesTab = () => {
   }
 
   return (
-    <div className="max-w-7xl animate-in fade-in slide-in-from-bottom-4 duration-500 pb-12">
-      {/* Sticky Filter Bar */}
-      <div className="sticky top-[80px] z-20 bg-white dark:bg-slate-950 py-3 border-b border-slate-200 dark:border-slate-800 transition-all">
-        <div className="flex flex-col md:flex-row items-center gap-4">
-          <div className="flex items-center gap-3 w-full md:w-auto overflow-x-auto py-2 px-2 scrollbar-none">
-            <SearchBar
-              placeholder="Search templates..." 
-              className="w-full md:w-64 bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700"
-              value={params.search}
-              onChange={(e) => setParams(p => ({ ...p, search: e.target.value }))}
-            />
-            
-            <div className="w-px h-6 bg-slate-200 dark:bg-slate-800 shrink-0" />
-
-            <CustomSelect
-              value={params.category}
-              onValueChange={(v) => setParams(p => ({ ...p, category: v }))}
-              triggerClassName="w-[150px] bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 shrink-0"
-              options={[
-                { value: "all", label: "All Categories" },
-                { value: "announcement", label: "Announcement" },
-                { value: "fee_reminder", label: "Fee Reminder" },
-                { value: "birthday", label: "Birthday" },
-                { value: "payment_receipt", label: "Payment Receipt" },
-              ]}
-            />
-
-            <CustomSelect
-              value={params.channel}
-              onValueChange={(v) => setParams(p => ({ ...p, channel: v }))}
-              triggerClassName="w-[130px] bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 shrink-0"
-              options={[
-                { value: "all", label: "All Channels" },
-                { value: "sms", label: "SMS" },
-                { value: "whatsapp", label: "WhatsApp" },
-              ]}
-            />
-
-            {(params.search || params.category !== "all" || params.channel !== "all") && (
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="h-11 w-11 rounded-full text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800 shrink-0" 
-                onClick={() => setParams({ search: "", category: "all", channel: "all" })}
-                title="Clear Filters"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            )}
-
-            <div className="flex md:hidden lg:flex items-center gap-2 border-l border-slate-200 dark:border-slate-800 pl-4">
-              <Filter className="h-3.5 w-3.5 text-slate-400" />
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest tabular-nums font-mono whitespace-nowrap">
-                {filteredTemplates.length} Found
-              </span>
-            </div>
-          </div>
+    <div className="max-w-6xl space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-2">
+        <div className="space-y-1.5">
+          <h2 className="text-xl font-black text-slate-900 dark:text-slate-100 flex items-center gap-3">
+            Message Templates
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-primary text-[10px] font-black">
+              {templates?.length || 0}
+            </span>
+          </h2>
+          <p className="text-sm font-medium text-slate-400">Design reusable messages for automated notifications.</p>
         </div>
+        <Button onClick={handleOpenAdd} className="h-12 px-6 rounded-2xl flex items-center gap-2 font-black shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all">
+          <Plus className="h-5 w-5" /> New Template
+        </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
-        {filteredTemplates.map((template) => (
-          <Card key={template.id} className="group overflow-hidden border-slate-200 dark:border-slate-800 hover:shadow-lg transition-all flex flex-col">
-            <div className="p-5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-800/20">
-               <div className="flex items-start justify-between gap-2">
-                  <div className="space-y-1">
-                    <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-primary transition-colors">{template.template_name}</h3>
-                    <div className="flex gap-2">
-                      <span className="text-[10px] font-bold uppercase tracking-wider bg-primary/10 text-primary px-2 py-0.5 rounded-full">{template.category}</span>
-                      <span className={cn(
-                        "text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full",
-                        template.channel === 'whatsapp' ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" : "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
-                      )}>{template.channel}</span>
-                    </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-2">
+        {templates?.length === 0 ? (
+          <div className="col-span-full h-80 rounded-[2.5rem] bg-slate-50/50 dark:bg-slate-900/50 border-2 border-dashed border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center gap-6 group hover:bg-slate-50 transition-colors">
+            <div className="h-20 w-20 rounded-full bg-white dark:bg-slate-900 flex items-center justify-center text-slate-200 dark:text-slate-700 shadow-sm transition-transform group-hover:scale-110">
+              <MessageSquare className="h-10 w-10" />
+            </div>
+            <div className="text-center space-y-1">
+              <p className="text-xl font-black text-slate-900 dark:text-slate-100">No Templates Found</p>
+              <p className="text-sm font-medium text-slate-400">Click the button above to create your first notification template.</p>
+            </div>
+          </div>
+        ) : (
+          templates?.map((tpl) => (
+            <div key={tpl.id} className="group relative bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-200 dark:border-slate-800 p-7 hover:shadow-2xl hover:shadow-primary/5 transition-all duration-300 overflow-hidden flex flex-col">
+              <div className="flex items-center justify-between mb-5">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                    {(() => {
+                        const channel = CHANNELS.find(c => c.value === tpl.channel)
+                        const Icon = channel ? channel.icon : MessageSquare
+                        return <Icon className="h-5 w-5" />
+                      })()}
                   </div>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg" onClick={() => handleOpenEdit(template)}>
-                    <Pencil className="h-4 w-4" />
+                  <div>
+                    <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100 leading-tight truncate max-w-[140px] uppercase">{tpl.template_name}</h3>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{tpl.category}</span>
+                  </div>
+                </div>
+                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Button variant="ghost" size="icon" onClick={() => handleOpenEdit(tpl)} className="h-8 w-8 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500">
+                    <Edit2 className="h-3.5 w-3.5" />
                   </Button>
-               </div>
-            </div>
-            <div className="p-4 flex-1 relative">
-               <p className="text-[12px] text-slate-600 dark:text-slate-400 font-medium leading-relaxed italic line-clamp-3">
-                 "{template.body}"
-               </p>
-               <div className="absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-white dark:from-slate-950 to-transparent opacity-50 group-hover:opacity-0 transition-opacity" />
-            </div>
-            <div className="p-3 bg-slate-50/50 dark:bg-slate-900/50 flex items-center justify-between">
-              <div className="flex items-center gap-1.5 text-slate-400">
-                <Variable className="h-3 w-3" />
-                <span className="text-[9px] font-bold uppercase tracking-tight">Standardized</span>
+                  <Button variant="ghost" size="icon" onClick={() => handleDelete(tpl.id)} className="h-8 w-8 rounded-lg hover:bg-rose-50 text-rose-500">
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
               </div>
-              <Button variant="link" size="sm" className="h-6 text-[10px] font-bold uppercase tracking-widest p-0" onClick={() => handleOpenEdit(template)}>
-                Edit Content
-              </Button>
+              
+              <div className="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-4 flex-1 border border-slate-200/50 dark:border-slate-700/50">
+                <p className="text-xs text-slate-600 dark:text-slate-400 font-medium line-clamp-4 leading-relaxed italic">
+                  "{tpl.body}"
+                </p>
+              </div>
+
+              {tpl.dlt_template_id && (
+                <div className="mt-4 flex items-center gap-2">
+                   <div className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-[9px] font-bold text-slate-500 uppercase tracking-tight">
+                     DLT: {tpl.dlt_template_id}
+                   </div>
+                </div>
+              )}
             </div>
-          </Card>
-        ))}
+          ))
+        )}
       </div>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="max-w-3xl rounded-[2.5rem] p-0 overflow-hidden outline-none border-none shadow-3xl bg-white dark:bg-slate-950">
-          <form onSubmit={handleSubmit} className="flex flex-col h-full max-h-[90vh]">
-            {/* Header */}
+        <DialogContent className="max-w-3xl rounded-xl p-0 overflow-hidden outline-none border-none shadow-3xl bg-white dark:bg-slate-950 flex flex-col max-h-[85vh]">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col min-h-0 h-full">
             <div className="p-8 pb-4 border-b border-slate-100 dark:border-slate-800/50 flex items-center justify-between bg-white dark:bg-slate-950 relative z-10">
               <div className="flex items-center gap-4">
-                <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-inner">
-                  <MessageSquare className="h-6 w-6" />
+                <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-inner">
+                  <LayoutTemplate className="h-7 w-7" />
                 </div>
-                <div>
-                  <DialogTitle className="text-xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
-                    Template Designer
+                <div className="space-y-0.5">
+                  <DialogTitle className="text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
+                    {editingTemplate ? "Modify Template" : "New Template"}
                   </DialogTitle>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className="px-2 py-0.5 rounded-md bg-slate-50 dark:bg-slate-800 text-[9px] font-bold text-slate-500 border border-slate-100 dark:border-slate-700 uppercase tracking-widest leading-none flex items-center h-4">{editingTemplate?.template_name}</span>
-                    <span className="h-1 w-1 rounded-full bg-primary/40" />
-                    <span className="text-[9px] font-bold text-primary uppercase tracking-widest leading-none flex items-center h-4">{editingTemplate?.category}</span>
-                  </div>
+                  <p className="text-sm font-medium text-slate-400">Draft your message with dynamic placeholders.</p>
                 </div>
               </div>
-              <Button type="button" variant="ghost" size="icon" className="h-10 w-10 rounded-full" onClick={() => setIsOpen(false)}>
-                <X className="h-5 w-5" />
-              </Button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-8 pt-6 space-y-8">
-              {/* Message Content Section */}
+            <div className="flex-1 overflow-y-auto p-8 pt-6 space-y-8 min-h-0">
               <div className="space-y-4">
                 <div className="flex items-center justify-between px-1">
-                  <Label className="text-[10px] font-black text-slate-400 uppercase tracking-[2px]">Message Body</Label>
-                  <div className="flex items-center gap-3">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md border border-slate-200/50 dark:border-slate-700/50 tabular-nums">
-                      {formData.body.length} Characters
+                  <label className="text-sm font-black text-slate-900 dark:text-slate-100 uppercase tracking-widest flex items-center gap-2">
+                    Message Body
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md">
+                      {form.watch("body")?.length || 0} Chars
                     </span>
                   </div>
                 </div>
-                <Textarea 
-                  required
-                  rows={6}
-                  className="rounded-[1.5rem] resize-none text-[14px] font-medium leading-relaxed bg-slate-50/50 dark:bg-slate-900/50 border-slate-200/60 focus:ring-primary/20 p-6 min-h-[180px] shadow-sm transition-all focus:bg-white dark:focus:bg-slate-950"
-                  value={formData.body}
-                  placeholder="Draft your communication here..."
-                  onChange={(e) => setFormData(p => ({ ...p, body: e.target.value }))}
-                />
+                <div className="relative group">
+                  <Textarea 
+                    {...form.register("body")}
+                    required 
+                    className="min-h-[220px] rounded-3xl bg-slate-50 dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800 focus:border-primary/30 focus:ring-0 transition-all p-6 text-base leading-relaxed resize-none shadow-inner"
+                    placeholder="Enter message text here... use placeholders for dynamic data."
+                    error={form.formState.errors.body?.message}
+                  />
+                  <div className="absolute right-4 bottom-4">
+                    <div className="h-10 w-10 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex items-center justify-center shadow-sm">
+                       <Sparkles className="h-4 w-4 text-primary animate-pulse" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-slate-50 dark:bg-slate-900/50 rounded-2xl p-4 border border-slate-100 dark:border-slate-800/50">
+                  <div className="flex flex-wrap gap-2">
+                    {PLACEHOLDERS.map((ph) => (
+                      <button
+                        key={ph.value}
+                        type="button"
+                        onClick={() => insertPlaceholder(ph.value)}
+                        className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-[11px] font-bold text-slate-600 dark:text-slate-400 hover:border-primary hover:text-primary transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
+                      >
+                        <Plus className="h-3 w-3" />
+                        {ph.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
 
-              {/* Placeholder Section */}
-              <div className="space-y-4">
-                <div className="flex items-center gap-2 px-1">
-                  <Variable className="h-3 w-3 text-primary" />
-                  <Label className="text-[10px] font-black text-slate-400 uppercase tracking-[2px]">Variable Injection</Label>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {PLACEHOLDERS.map((p) => (
-                    <button 
-                      key={p.tag} 
-                      type="button"
-                      className="group flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 hover:border-primary/50 hover:bg-white dark:hover:bg-slate-850 transition-all shadow-sm active:scale-95 text-left"
-                      onClick={() => {
-                        setFormData(prev => ({ ...prev, body: prev.body + " " + p.tag }))
-                        toast.success(`Injected ${p.tag}`)
-                      }}
-                    >
-                      <div className="flex flex-col">
-                        <code className="text-[11px] font-black text-primary leading-tight">{p.tag}</code>
-                        <span className="text-[9px] text-slate-400 font-bold uppercase tracking-tighter opacity-70 group-hover:opacity-100">{p.description}</span>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-4">
+                   <h4 className="text-[10px] font-black uppercase tracking-[2px] text-slate-400 px-1">Identity & Classification</h4>
+                   <div className="space-y-4">
+                      <Input 
+                        label="Template Name" 
+                        required 
+                        className="h-12 rounded-xl bg-slate-50 dark:bg-slate-900" 
+                        placeholder="e.g. Fee Reminder - June"
+                        value={templateName}
+                        onChange={e => setTemplateName(e.target.value)}
+                      />
+                      <div className="space-y-1.5">
+                        <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 ml-0.5">Template Category</label>
+                        <CustomSelect 
+                          options={TEMPLATE_CATEGORIES} 
+                          value={selectedCategory} 
+                          onValueChange={setSelectedCategory}
+                          triggerClassName="h-12 rounded-xl bg-slate-50 dark:bg-slate-900 border-slate-100"
+                        />
                       </div>
-                      <Plus className="h-3 w-3 text-slate-300 group-hover:text-primary transition-colors" />
-                    </button>
-                  ))}
+                   </div>
                 </div>
-              </div>
-
-              {/* Gateway Section */}
-              <div className="space-y-4">
-                <Input 
-                  label="DLT Compliance ID"
-                  placeholder="19-digit DLT ID"
-                  value={formData.template_id}
-                  onChange={(e) => setFormData(p => ({ ...p, template_id: e.target.value }))}
-                  leftIcon={<Hash className="h-5 w-5" />}
-                />
-                <p className="text-[11px] text-slate-400 font-medium leading-relaxed italic px-1">
-                  Essential for SMS delivery status and regulatory tracking in compliance with TRAI regulations.
-                </p>
-              </div>
-
-              {/* Warning box */}
-              <div className="p-4 rounded-2xl bg-amber-500/5 dark:bg-amber-500/10 border border-amber-500/10 flex items-center gap-4">
-                <Info className="h-4 w-4 text-amber-500 shrink-0" />
-                <p className="text-[10px] text-amber-700/80 dark:text-amber-500/70 font-semibold leading-relaxed italic">
-                   Note: Parameters must remain within square brackets `[...]` to follow regulatory protocols.
-                </p>
+                
+                <div className="space-y-4">
+                   <h4 className="text-[10px] font-black uppercase tracking-[2px] text-slate-400 px-1">Delivery Channel</h4>
+                   <div className="space-y-4">
+                      <div className="grid grid-cols-3 gap-2">
+                        {CHANNELS.map((ch) => {
+                          const Icon = ch.icon
+                          const isActive = selectedChannel === ch.value
+                          return (
+                            <button
+                              key={ch.value}
+                              type="button"
+                              onClick={() => setSelectedChannel(ch.value)}
+                              className={cn(
+                                "flex flex-col items-center justify-center gap-2 p-3 rounded-2xl border-2 transition-all",
+                                isActive 
+                                  ? "bg-primary/5 border-primary shadow-lg shadow-primary/10 text-primary" 
+                                  : "bg-white dark:bg-slate-950 border-slate-100 dark:border-slate-900 text-slate-400"
+                              )}
+                            >
+                              <Icon className={cn("h-5 w-5", isActive && "animate-bounce")} />
+                              <span className="text-[9px] font-black uppercase tracking-tight">{ch.label}</span>
+                            </button>
+                          )
+                        })}
+                      </div>
+                      
+                      {selectedChannel === 'sms' && (
+                        <div className="animate-in slide-in-from-top-2 duration-300">
+                          <Input 
+                            {...form.register("template_id")}
+                            label="DLT Template ID" 
+                            className="h-12 rounded-xl bg-slate-50 dark:bg-slate-900 font-mono" 
+                            placeholder="Enter DLT ID if required"
+                            error={form.formState.errors.template_id?.message}
+                          />
+                        </div>
+                      )}
+                   </div>
+                </div>
               </div>
             </div>
 
-            {/* Footer */}
-            <div className="p-8 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3 bg-slate-50/50 dark:bg-slate-900/50 backdrop-blur-md">
-               <Button type="button" variant="ghost" className="rounded-xl px-6 h-11 font-black uppercase tracking-widest text-[10px] text-slate-400" onClick={() => setIsOpen(false)}>
-                 Cancel
-               </Button>
-               <Button type="submit" className="rounded-xl px-10 h-11 font-black uppercase tracking-widest text-[10px] shadow-lg shadow-primary/20" disabled={updateTemplate.isPending}>
-                 {updateTemplate.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Authorize & Sync"}
-               </Button>
+            <div className="p-8 pt-6 border-t border-slate-100 dark:border-slate-800 shrink-0 bg-slate-50/30 dark:bg-slate-900/30">
+              <FormFooter 
+                isLoading={createTemplate.isPending || updateTemplate.isPending}
+                onCancel={() => setIsOpen(false)}
+                submitLabel={editingTemplate ? "Publish Changes" : "Create Template"}
+                className="border-none shadow-none p-0 bg-transparent mt-0"
+              />
             </div>
           </form>
         </DialogContent>
