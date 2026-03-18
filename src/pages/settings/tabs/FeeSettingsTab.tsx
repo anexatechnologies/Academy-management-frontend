@@ -72,11 +72,11 @@ const FeeSettingsTab = () => {
   }
 
   return (
-    <div className="max-w-5xl space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-16">
+    <div className="max-w-5xl space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
         <div className="lg:col-span-7 space-y-8">
           <form onSubmit={handleSubmit(onSubmit)}>
-            <div className="bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border border-slate-200/60 dark:border-slate-800/60 rounded-3xl shadow-2xl overflow-hidden shadow-primary/5">
+            <div className="bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border border-slate-200/60 dark:border-slate-800/60 rounded-3xl shadow-2xl shadow-primary/5">
               <div className="p-8 bg-gradient-to-r from-amber-500/5 via-transparent to-transparent border-b border-slate-100/50 dark:border-slate-800/50">
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 uppercase tracking-tight">Revenue Configuration</h3>
@@ -84,7 +84,7 @@ const FeeSettingsTab = () => {
                 </div>
               </div>
 
-              <div className="p-8 space-y-10">
+              <div className="p-8 pb-24 md:pb-28 space-y-10">
                 <div className="space-y-5">
                   <Label 
                     className="text-[13px] font-bold text-slate-400 uppercase tracking-[2px]"
@@ -167,8 +167,8 @@ const FeeSettingsTab = () => {
                 </div>
               </div>
 
-              <div className="border-t border-slate-100 dark:border-slate-800 px-8 py-5 bg-slate-50/50 dark:bg-slate-800/50 flex items-center justify-end">
-                <FormFooter isLoading={updateSettings.isPending} submitLabel="Update Billing Logic" className="border-none shadow-none p-0 bg-transparent" />
+              <div className="sticky -bottom-6 left-0 right-0 border-t border-slate-100 dark:border-slate-800 px-8 py-5 pb-10 bg-slate-50/95 dark:bg-slate-800/95 backdrop-blur-md flex items-center justify-end z-40 rounded-b-3xl">
+                <FormFooter isLoading={updateSettings.isPending} submitLabel="Update Billing Logic" className="border-none shadow-none p-0 bg-transparent mt-0" />
               </div>
             </div>
           </form>

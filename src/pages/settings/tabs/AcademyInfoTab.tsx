@@ -111,9 +111,9 @@ const AcademyInfoTab = () => {
   }
 
   return (
-    <div className="max-w-4xl space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-16">
+    <div className="max-w-2xl space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <div className="bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border border-slate-200/60 dark:border-slate-800/60 rounded-3xl shadow-2xl overflow-hidden shadow-primary/5">
+        <div className="bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border border-slate-200/60 dark:border-slate-800/60 rounded-3xl shadow-2xl shadow-primary/5">
           <div className="p-8 bg-gradient-to-r from-primary/5 via-transparent to-transparent border-b border-slate-100/50 dark:border-slate-800/50">
             <div className="flex items-center justify-between">
               <div className="space-y-1">
@@ -127,7 +127,7 @@ const AcademyInfoTab = () => {
             </div>
           </div>
 
-          <div className="p-8 space-y-10">
+          <div className="p-8 pb-24 md:pb-28 space-y-10">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8">
               <div className="md:col-span-2 group">
                 <Input 
@@ -213,7 +213,8 @@ const AcademyInfoTab = () => {
             </div>
           </div>
           
-          <div className="px-8 py-5 bg-slate-50/80 dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+          {/* Sticky Footer */}
+          <div className="sticky -bottom-6 left-0 right-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 px-8 py-4 pb-10 flex items-center justify-between z-40 rounded-b-3xl">
              <div className="flex items-center gap-2 text-[10px] text-slate-400 font-bold uppercase tracking-widest hidden md:flex">
                 <ShieldCheck className="h-3.5 w-3.5" /> Secure Authentication Required
              </div>
@@ -222,7 +223,7 @@ const AcademyInfoTab = () => {
                 cancelLabel="Reset Form"
                 onCancel={handleClear}
                 isLoading={updateConfigure.isPending}
-                className="border-none shadow-none p-0 bg-transparent"
+                className="border-none shadow-none p-0 bg-transparent mt-0"
               />
           </div>
         </div>

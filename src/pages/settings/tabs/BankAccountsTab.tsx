@@ -105,7 +105,7 @@ const BankAccountsTab = () => {
   }
 
   return (
-    <div className="max-w-6xl space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-16">
+    <div className="max-w-6xl space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="flex flex-col md:flex-row md:items-center justify-end gap-6">
         <Button onClick={() => { resetForm(); setIsOpen(true); }} className="h-12 px-6 rounded-2xl flex items-center gap-2 font-bold shadow-lg shadow-primary/20 hover:scale-105 transition-all">
           <Plus className="h-5 w-5" /> Add New Account

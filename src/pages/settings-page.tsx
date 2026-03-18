@@ -23,7 +23,7 @@ const SettingsPage = () => {
 
   return (
     <BodyLayout breadcrumbs={breadcrumbs}>
-      <div className="max-w-7xl animate-in fade-in duration-500 pb-12">
+      <div className="max-w-7xl animate-in fade-in duration-500">
         <Tabs defaultValue="academy" className="w-full">
           {/* Sticky Header & Navigation */}
           <div className="sticky -top-6 z-30 bg-white dark:bg-slate-950 pt-2 transition-all duration-300 shadow-none border-b border-slate-200 dark:border-slate-800">

@@ -51,7 +51,7 @@ const MessagingTab = () => {
   const masterEnabled = isEnabled("messaging_master_enabled", "master")
 
   return (
-    <div className="max-w-5xl space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
+    <div className="max-w-5xl space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
         <div className="lg:col-span-8 space-y-10">
           {/* Master Switch Card */}
