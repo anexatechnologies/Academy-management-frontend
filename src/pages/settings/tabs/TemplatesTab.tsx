@@ -4,15 +4,14 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
 import { 
-  useAnnouncementTemplates, 
-  useCreateAnnouncementTemplate, 
-  useUpdateAnnouncementTemplate, 
-  useDeleteAnnouncementTemplate 
-} from "@/hooks/api/use-announcements"
+  useTemplates as useAnnouncementTemplates, 
+  useCreateTemplate as useCreateAnnouncementTemplate, 
+  useUpdateTemplate as useAnnouncementUpdateTemplate, 
+  useDeleteTemplate as useDeleteAnnouncementTemplate 
+} from "@/hooks/api/use-templates"
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
@@ -52,7 +51,7 @@ const PLACEHOLDERS = [
 const TemplatesTab = () => {
   const { data: templates, isLoading } = useAnnouncementTemplates()
   const createTemplate = useCreateAnnouncementTemplate()
-  const updateTemplate = useUpdateAnnouncementTemplate()
+  const updateTemplate = useAnnouncementUpdateTemplate()
   const deleteTemplate = useDeleteAnnouncementTemplate()
 
   const [isOpen, setIsOpen] = useState(false)
