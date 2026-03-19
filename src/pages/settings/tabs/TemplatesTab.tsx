@@ -25,6 +25,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { handleApiError } from "@/utils/api-error"
 import { templateSchema, type TemplateFormValues } from "@/validations/template"
 import type { AnnouncementTemplate } from "@/types/announcement"
+import { usePermissions } from "@/hooks/use-permissions"
 import { cn } from "@/lib/utils"
 
 const TEMPLATE_CATEGORIES = [
@@ -64,6 +65,11 @@ const STATUS_OPTIONS = [
 ]
 
 const TemplatesTab = () => {
+  const { hasPermission } = usePermissions()
+  const canCreate = hasPermission("templates", "create")
+  const canUpdate = hasPermission("templates", "update")
+  const canDelete = hasPermission("templates", "delete")
+  
   const { data: templates, isLoading } = useAnnouncementTemplates()
   const createTemplate = useCreateAnnouncementTemplate()
   const updateTemplate = useAnnouncementUpdateTemplate()
@@ -185,9 +191,11 @@ const TemplatesTab = () => {
           </h2>
           <p className="text-sm font-medium text-slate-400 font-mono tracking-tight">Standardized content for automated triggers.</p>
         </div>
-        <Button onClick={handleOpenAdd} className="h-12 px-8 rounded-full flex items-center gap-2 font-black shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all bg-primary">
-          <Plus className="h-5 w-5" /> Add New Template
-        </Button>
+        {canCreate && (
+          <Button onClick={handleOpenAdd} className="h-12 px-8 rounded-full flex items-center gap-2 font-black shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all bg-primary">
+            <Plus className="h-5 w-5" /> Add New Template
+          </Button>
+        )}
       </div>
 
       {/* Filter Bar */}
@@ -302,10 +310,12 @@ const TemplatesTab = () => {
                        </div>
                     )}
                  </div>
-                 <div className="flex items-center gap-2">
-                    <EditButton title="Template" onEdit={() => handleOpenEdit(tpl)} />
-                    <DeleteButton title="Template" onDelete={() => handleDelete(tpl.id)} />
-                 </div>
+                 {(canUpdate || canDelete) && (
+                   <div className="flex items-center gap-2">
+                      {canUpdate && <EditButton title="Template" onEdit={() => handleOpenEdit(tpl)} />}
+                      {canDelete && <DeleteButton title="Template" onDelete={() => handleDelete(tpl.id)} />}
+                   </div>
+                 )}
               </div>
 
               {tpl.dlt_template_id && (

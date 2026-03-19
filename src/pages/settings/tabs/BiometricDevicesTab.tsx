@@ -33,9 +33,12 @@ import { handleApiError } from "@/utils/api-error"
 import { usePagination } from "@/hooks/use-pagination"
 import { biometricDeviceSchema, type BiometricDeviceFormValues } from "@/validations/biometric-device"
 import type { BiometricDevice } from "@/types/settings"
+import { usePermissions } from "@/hooks/use-permissions"
 import { cn } from "@/lib/utils"
 
 const BiometricDevicesTab = () => {
+  const { hasPermission } = usePermissions()
+  const canUpdate = hasPermission("settings", "update")
   const { data: rawDevices, isLoading } = useBiometricDevices()
   const createDevice = useCreateBiometricDevice()
   const updateDevice = useUpdateBiometricDevice()
@@ -141,9 +144,11 @@ const BiometricDevicesTab = () => {
   return (
     <div className="max-w-6xl space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="flex flex-col md:flex-row md:items-center justify-end gap-6 text-end">
-        <Button onClick={handleOpenAdd} className="h-12 px-6 rounded-2xl flex items-center gap-2 font-bold shadow-lg shadow-primary/20 hover:scale-105 transition-all">
-          <Plus className="h-5 w-5" /> Integrate Hardware
-        </Button>
+        {canUpdate && (
+          <Button onClick={handleOpenAdd} className="h-12 px-6 rounded-2xl flex items-center gap-2 font-bold shadow-lg shadow-primary/20 hover:scale-105 transition-all">
+            <Plus className="h-5 w-5" /> Integrate Hardware
+          </Button>
+        )}
       </div>
 
       <div className="bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border border-slate-200/60 dark:border-slate-800/60 rounded-[2rem] overflow-hidden shadow-2xl shadow-primary/5">
@@ -162,13 +167,13 @@ const BiometricDevicesTab = () => {
               <TableHead className="font-bold uppercase text-[10px] tracking-[2px] py-5">Network address</TableHead>
               <TableHead className="font-bold uppercase text-[10px] tracking-[2px] py-5">Logic State</TableHead>
               <TableHead className="font-bold uppercase text-[10px] tracking-[2px] py-5">Heartbeat</TableHead>
-              <TableHead className="text-right font-bold uppercase text-[10px] tracking-[2px] px-8 py-5">Actions</TableHead>
+              {canUpdate && <TableHead className="text-right font-bold uppercase text-[10px] tracking-[2px] px-8 py-5">Actions</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
             {devices.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="h-64 text-center text-slate-500 border-none">
+                <TableCell colSpan={canUpdate ? 6 : 5} className="h-64 text-center text-slate-500 border-none">
                    <div className="flex flex-col items-center justify-center gap-4 animate-in fade-in zoom-in duration-500">
                      <div className="h-20 w-20 rounded-full bg-slate-50 dark:bg-slate-800/50 flex items-center justify-center">
                         <Cpu className="h-10 w-10 text-slate-200 dark:text-slate-700" />
@@ -177,9 +182,11 @@ const BiometricDevicesTab = () => {
                         <p className="text-lg font-bold text-slate-900 dark:text-slate-100">No Hardware Linked</p>
                         <p className="text-sm font-medium text-slate-400">Add your first ZKTeco/ESSL device to start automated attendance.</p>
                      </div>
-                     <Button variant="outline" onClick={handleOpenAdd} className="rounded-xl mt-2">
-                        Quick Setup Device
-                     </Button>
+                     {canUpdate && (
+                       <Button variant="outline" onClick={handleOpenAdd} className="rounded-xl mt-2">
+                          Quick Setup Device
+                       </Button>
+                     )}
                    </div>
                 </TableCell>
               </TableRow>
@@ -217,6 +224,7 @@ const BiometricDevicesTab = () => {
                          checked={dev.is_active} 
                          onCheckedChange={() => handleToggleActive(dev)}
                          className="h-5 w-5 rounded-md"
+                         disabled={!canUpdate}
                        />
                        <span className={cn(
                          "text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full",
@@ -239,12 +247,14 @@ const BiometricDevicesTab = () => {
                       </div>
                     )}
                   </TableCell>
-                  <TableCell className="text-right px-8 py-6">
-                    <div className="flex items-center justify-end gap-2 transition-all">
-                      <EditButton title="Device" onEdit={() => handleOpenEdit(dev)} />
-                      <DeleteButton title="Device" onDelete={() => handleDelete(dev.id)} />
-                    </div>
-                  </TableCell>
+                  {canUpdate && (
+                    <TableCell className="text-right px-8 py-6">
+                      <div className="flex items-center justify-end gap-2 transition-all">
+                        <EditButton title="Device" onEdit={() => handleOpenEdit(dev)} />
+                        <DeleteButton title="Device" onDelete={() => handleDelete(dev.id)} />
+                      </div>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))
             )}

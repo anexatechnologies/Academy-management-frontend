@@ -16,12 +16,15 @@ import { FormFooter } from "@/components/ui/form-footer"
 import { useFeeSettings, useUpdateFeeSettings } from "@/hooks/api/use-fee-settings"
 import { feeSettingsSchema, type FeeSettingsFormValues } from "@/validations/fee-settings"
 import { handleApiError } from "@/utils/api-error"
+import { usePermissions } from "@/hooks/use-permissions"
 import type { FeeMode } from "@/types/fee-settings"
 import type { UseFormSetError } from "react-hook-form"
 import { cn } from "@/lib/utils"
 import { Card } from "@/components/ui/card"
 
 const FeeSettingsTab = () => {
+  const { hasPermission } = usePermissions()
+  const canUpdate = hasPermission("fee-settings", "update")
   const { data: settings } = useFeeSettings()
   const updateSettings = useUpdateFeeSettings()
 
@@ -96,7 +99,7 @@ const FeeSettingsTab = () => {
                     value={feeMode}
                     onValueChange={(value) => setValue("fee_mode", value as FeeMode, { shouldDirty: true })}
                     className="grid grid-cols-2 gap-6 pt-1"
-                    disabled={updateSettings.isPending}
+                    disabled={updateSettings.isPending || !canUpdate}
                   >
                     <label 
                       htmlFor="fee-one-time" 
@@ -151,7 +154,7 @@ const FeeSettingsTab = () => {
                       step="0.01"
                       className="h-12 rounded-xl"
                       error={errors.tax_percentage?.message}
-                      disabled={updateSettings.isPending}
+                      disabled={updateSettings.isPending || !canUpdate}
                     />
                     <Input
                       {...register("monthly_tax_percentage")}
@@ -161,15 +164,17 @@ const FeeSettingsTab = () => {
                       step="0.01"
                       className="h-12 rounded-xl"
                       error={errors.monthly_tax_percentage?.message}
-                      disabled={updateSettings.isPending}
+                      disabled={updateSettings.isPending || !canUpdate}
                     />
                   </div>
                 </div>
               </div>
 
-              <div className="sticky -bottom-6 left-0 right-0 border-t border-slate-100 dark:border-slate-800 px-8 py-5 pb-10 bg-slate-50/95 dark:bg-slate-800/95 backdrop-blur-md flex items-center justify-end z-40 rounded-b-3xl">
-                <FormFooter isLoading={updateSettings.isPending} submitLabel="Update Billing Logic" className="border-none shadow-none p-0 bg-transparent mt-0" />
-              </div>
+              {canUpdate && (
+                <div className="sticky -bottom-6 left-0 right-0 border-t border-slate-100 dark:border-slate-800 px-8 py-5 pb-10 bg-slate-50/95 dark:bg-slate-800/95 backdrop-blur-md flex items-center justify-end z-40 rounded-b-3xl">
+                  <FormFooter isLoading={updateSettings.isPending} submitLabel="Update Billing Logic" className="border-none shadow-none p-0 bg-transparent mt-0" />
+                </div>
+              )}
             </div>
           </form>
         </div>

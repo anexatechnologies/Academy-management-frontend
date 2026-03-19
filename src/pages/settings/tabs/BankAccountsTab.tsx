@@ -29,8 +29,11 @@ import { handleApiError } from "@/utils/api-error"
 import { usePagination } from "@/hooks/use-pagination"
 import { bankAccountSchema, type BankAccountFormValues } from "@/validations/bank-account"
 import type { BankAccount } from "@/types/settings"
+import { usePermissions } from "@/hooks/use-permissions"
 
 const BankAccountsTab = () => {
+  const { hasPermission } = usePermissions()
+  const canUpdate = hasPermission("settings", "update")
   const { data: rawAccounts, isLoading } = useBankAccounts()
   const createAccount = useCreateBankAccount()
   const updateAccount = useUpdateBankAccount()
@@ -131,9 +134,11 @@ const BankAccountsTab = () => {
   return (
     <div className="max-w-6xl space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="flex flex-col md:flex-row md:items-center justify-end gap-6">
-        <Button onClick={handleOpenAdd} className="h-12 px-6 rounded-2xl flex items-center gap-2 font-bold shadow-lg shadow-primary/20 hover:scale-105 transition-all">
-          <Plus className="h-5 w-5" /> Add New Account
-        </Button>
+        {canUpdate && (
+          <Button onClick={handleOpenAdd} className="h-12 px-6 rounded-2xl flex items-center gap-2 font-bold shadow-lg shadow-primary/20 hover:scale-105 transition-all">
+            <Plus className="h-5 w-5" /> Add New Account
+          </Button>
+        )}
       </div>
 
       <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
@@ -151,13 +156,13 @@ const BankAccountsTab = () => {
               <TableHead className="w-[250px] font-bold uppercase text-[10px] tracking-[2px] px-8 py-5">Bank Name</TableHead>
               <TableHead className="font-bold uppercase text-[10px] tracking-[2px] py-5">Bank Address</TableHead>
               <TableHead className="font-bold uppercase text-[10px] tracking-[2px] py-5">Account No</TableHead>
-              <TableHead className="text-right font-bold uppercase text-[10px] tracking-[2px] px-8 py-5">Actions</TableHead>
+              {canUpdate && <TableHead className="text-right font-bold uppercase text-[10px] tracking-[2px] px-8 py-5">Actions</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
             {accounts.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="h-64 text-center text-slate-500 border-none">
+                <TableCell colSpan={canUpdate ? 5 : 4} className="h-64 text-center text-slate-500 border-none">
                    <div className="flex flex-col items-center justify-center gap-4">
                       <div className="h-20 w-20 rounded-full bg-slate-50 dark:bg-slate-800/50 flex items-center justify-center">
                         <Building2 className="h-10 w-10 text-slate-200 dark:text-slate-700" />
@@ -197,12 +202,14 @@ const BankAccountsTab = () => {
                       <p className="text-[11px] text-slate-400 font-medium uppercase tracking-widest">{acc.ifsc_code}</p>
                     </div>
                   </TableCell>
-                  <TableCell className="text-right px-8 py-6">
-                    <div className="flex items-center justify-end gap-2 transition-all">
-                      <EditButton title="Account" onEdit={() => handleOpenEdit(acc)} />
-                      <DeleteButton title="Account" onDelete={() => handleDelete(acc.id)} />
-                    </div>
-                  </TableCell>
+                  {canUpdate && (
+                    <TableCell className="text-right px-8 py-6">
+                      <div className="flex items-center justify-end gap-2 transition-all">
+                        <EditButton title="Account" onEdit={() => handleOpenEdit(acc)} />
+                        <DeleteButton title="Account" onDelete={() => handleDelete(acc.id)} />
+                      </div>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))
             )}

@@ -6,9 +6,12 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { useMessagingSettings, useUpdateMessagingSettings } from "@/hooks/api/use-settings"
 import { useTemplates } from "@/hooks/api/use-templates"
 import { handleApiError } from "@/utils/api-error"
+import { usePermissions } from "@/hooks/use-permissions"
 import { cn } from "@/lib/utils"
 
 const MessagingTab = () => {
+  const { hasPermission } = usePermissions()
+  const canUpdate = hasPermission("settings", "update")
   const { data: settings, isLoading: settingsLoading } = useMessagingSettings()
   const { data: templates, isLoading: templatesLoading } = useTemplates()
   const updateSettings = useUpdateMessagingSettings()
@@ -86,7 +89,7 @@ const MessagingTab = () => {
                 checked={masterEnabled} 
                 onCheckedChange={(checked) => handleToggle("messaging_master_enabled", !!checked)}
                 className="h-10 w-10 rounded-2xl shrink-0"
-                disabled={updateSettings.isPending}
+                disabled={updateSettings.isPending || !canUpdate}
               />
             </div>
           </div>
@@ -113,7 +116,7 @@ const MessagingTab = () => {
                     <Checkbox 
                       checked={isEnabled("sms_enabled", "alerts")}
                       onCheckedChange={(checked) => handleToggle("sms_enabled", !!checked)}
-                      disabled={updateSettings.isPending}
+                      disabled={updateSettings.isPending || !canUpdate}
                       className="rounded-xl h-6 w-6"
                     />
                   </div>
@@ -134,7 +137,7 @@ const MessagingTab = () => {
                     <Checkbox 
                       checked={isEnabled("whatsapp_enabled", "alerts")}
                       onCheckedChange={(checked) => handleToggle("whatsapp_enabled", !!checked)}
-                      disabled={updateSettings.isPending}
+                      disabled={updateSettings.isPending || !canUpdate}
                       className="rounded-xl h-6 w-6"
                     />
                   </div>
@@ -178,7 +181,7 @@ const MessagingTab = () => {
                             <Checkbox 
                               checked={isEnabled(`${category}_sms_enabled`, "triggers")}
                               onCheckedChange={(checked) => handleToggle(`${category}_sms_enabled`, !!checked)}
-                              disabled={updateSettings.isPending}
+                              disabled={updateSettings.isPending || !canUpdate}
                               className="mx-auto rounded-lg h-5 w-5"
                             />
                           </td>
@@ -186,7 +189,7 @@ const MessagingTab = () => {
                             <Checkbox 
                               checked={isEnabled(`${category}_whatsapp_enabled`, "triggers")}
                               onCheckedChange={(checked) => handleToggle(`${category}_whatsapp_enabled`, !!checked)}
-                              disabled={updateSettings.isPending}
+                              disabled={updateSettings.isPending || !canUpdate}
                               className="mx-auto rounded-lg h-5 w-5"
                             />
                           </td>

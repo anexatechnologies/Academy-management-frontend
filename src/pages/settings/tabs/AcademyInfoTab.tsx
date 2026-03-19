@@ -12,6 +12,7 @@ import { Upload } from "@/components/ui/upload"
 import { Label } from "@/components/ui/label"
 import { useConfigure, useUpdateConfigure } from "@/hooks/api/use-configure"
 import { handleApiError } from "@/utils/api-error"
+import { usePermissions } from "@/hooks/use-permissions"
 
 const configureSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -25,6 +26,8 @@ const configureSchema = z.object({
 type ConfigureFormValues = z.infer<typeof configureSchema>
 
 const AcademyInfoTab = () => {
+  const { hasPermission } = usePermissions()
+  const canUpdate = hasPermission("configure", "update")
   const { data: configData, isLoading: isFetching } = useConfigure()
   const updateConfigure = useUpdateConfigure()
   const [logoPreview, setLogoPreview] = useState<string | null>(null)
@@ -137,7 +140,7 @@ const AcademyInfoTab = () => {
                   placeholder="e.g. Excellence Academy Group" 
                   className="h-12 rounded-xl text-sm border-slate-200/80 focus:ring-primary/20 transition-all font-medium" 
                   error={form.formState.errors.name?.message as string}
-                  disabled={updateConfigure.isPending}
+                  disabled={updateConfigure.isPending || !canUpdate}
                 />
               </div>
 
@@ -149,7 +152,7 @@ const AcademyInfoTab = () => {
                   placeholder="Street, City, Zip Code..." 
                   className="min-h-[100px] rounded-xl resize-none text-sm border-slate-200/80 focus:ring-primary/20 transition-all font-medium leading-relaxed" 
                   error={form.formState.errors.address?.message as string}
-                  disabled={updateConfigure.isPending}
+                  disabled={updateConfigure.isPending || !canUpdate}
                 />
               </div>
 
@@ -161,7 +164,7 @@ const AcademyInfoTab = () => {
                 placeholder="+91 XXXXX XXXXX" 
                 className="h-12 rounded-xl text-sm border-slate-200/80" 
                 error={form.formState.errors.phone?.message as string}
-                disabled={updateConfigure.isPending}
+                disabled={updateConfigure.isPending || !canUpdate}
               />
 
               <Input 
@@ -171,7 +174,7 @@ const AcademyInfoTab = () => {
                 placeholder="Enter GST number" 
                 className="h-12 rounded-xl text-sm border-slate-200/80 uppercase" 
                 error={form.formState.errors.service_tax_reg_no?.message as string}
-                disabled={updateConfigure.isPending}
+                disabled={updateConfigure.isPending || !canUpdate}
               />
 
               <Input 
@@ -181,7 +184,7 @@ const AcademyInfoTab = () => {
                 placeholder="Enter CIN number" 
                 className="h-12 rounded-xl text-sm border-slate-200/80 uppercase" 
                 error={form.formState.errors.cin_no?.message as string}
-                disabled={updateConfigure.isPending}
+                disabled={updateConfigure.isPending || !canUpdate}
               />
 
               <div className="md:col-span-2 space-y-3">
@@ -200,6 +203,7 @@ const AcademyInfoTab = () => {
                       }
                     }}
                     onRemove={() => {
+                      if (!canUpdate) return;
                       form.setValue("logo", null)
                       setLogoPreview(null)
                     }}
@@ -214,18 +218,20 @@ const AcademyInfoTab = () => {
           </div>
           
           {/* Sticky Footer */}
-          <div className="sticky -bottom-6 left-0 right-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 px-8 py-4 pb-10 flex items-center justify-between z-40 rounded-b-3xl">
-             <div className="flex items-center gap-2 text-[10px] text-slate-400 font-bold uppercase tracking-widest hidden md:flex">
-                <ShieldCheck className="h-3.5 w-3.5" /> Secure Authentication Required
-             </div>
-             <FormFooter 
-                submitLabel="Apply Global Changes" 
-                cancelLabel="Reset Form"
-                onCancel={handleClear}
-                isLoading={updateConfigure.isPending}
-                className="border-none shadow-none p-0 bg-transparent mt-0"
-              />
-          </div>
+          {canUpdate && (
+            <div className="sticky -bottom-6 left-0 right-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 px-8 py-4 pb-10 flex items-center justify-between z-40 rounded-b-3xl">
+               <div className="flex items-center gap-2 text-[10px] text-slate-400 font-bold uppercase tracking-widest hidden md:flex">
+                  <ShieldCheck className="h-3.5 w-3.5" /> Secure Authentication Required
+               </div>
+               <FormFooter 
+                  submitLabel="Apply Global Changes" 
+                  cancelLabel="Reset Form"
+                  onCancel={handleClear}
+                  isLoading={updateConfigure.isPending}
+                  className="border-none shadow-none p-0 bg-transparent mt-0"
+                />
+            </div>
+          )}
         </div>
       </form>
     </div>
