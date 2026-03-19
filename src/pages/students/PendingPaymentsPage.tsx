@@ -11,6 +11,7 @@ import {
   RotateCcw,
   Zap,
   CheckCircle2,
+  X,
 } from "lucide-react"
 import { SearchBar } from "@/components/ui/search-bar"
 import BodyLayout from "@/components/layout/BodyLayout"
@@ -437,8 +438,8 @@ const STATUS_OPTIONS = [
 ]
 
 const SORT_OPTIONS = [
-  { label: "Oldest Due (Default)", value: "oldest" },
-  { label: "Recently Added Students", value: "newest" },
+  { label: "Recently Added (Default)", value: "newest" },
+  { label: "Overdue First", value: "overdue" },
 ]
 
 export default function PendingPaymentsPage() {
@@ -450,19 +451,26 @@ export default function PendingPaymentsPage() {
 
   const [search, setSearch] = useState("")
   const [status, setStatus] = useState<"" | "pending" | "overdue">("")
-  const [sort, setSort] = useState<"oldest" | "newest">("oldest")
+  const [sort, setSort] = useState<"newest" | "overdue">("newest")
   const [page, setPage] = useState(1)
-  const [limit, setLimit] = useState(10)
+  const [limit, setLimit] = useState(20)
 
   const [detailRecord, setDetailRecord] = useState<PendingPayment | null>(null)
   const [quickPayRecord, setQuickPayRecord] = useState<PendingPayment | null>(null)
+
+  const resetFilters = () => {
+    setSearch("")
+    setStatus("")
+    setSort("newest")
+    setPage(1)
+  }
 
   const { data, isLoading, isFetching } = usePendingPayments({ 
     page, 
     limit, 
     search: search || undefined, 
     status: status || undefined,
-    sort: sort === "oldest" ? undefined : sort
+    sort: sort === "newest" ? undefined : sort
   })
 
   const breadcrumbs = useMemo(() => [
@@ -500,10 +508,22 @@ export default function PendingPaymentsPage() {
           />
           <CustomSelect
             options={SORT_OPTIONS}
-            value={sort === "" ? "" : sort}
+            value={sort}
             onValueChange={(v) => { setSort(v as any); setPage(1) }}
             triggerClassName="w-[200px]"
           />
+
+          {(search || status !== "" || sort !== "newest") && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={resetFilters}
+              className="h-10 w-10 text-slate-500 hover:text-slate-900 dark:hover:text-slate-100 shrink-0 rounded-full"
+              title="Clear filters"
+            >
+               <X className="h-4 w-4" />
+            </Button>
+          )}
         </div>
       }
     >
