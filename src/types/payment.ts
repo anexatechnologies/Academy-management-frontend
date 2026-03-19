@@ -46,3 +46,30 @@ export interface PaymentListResponse {
 export interface RefundPayload {
   amount: number
 }
+
+export interface PendingPayment {
+  id: number
+  student_id: number
+  student_name: string
+  student_roll_no: string
+  student_contact: string
+  student_course_id: number
+  course_name: string
+  installment_number: number
+  amount_due: string
+  total_fees_remaining: string
+  due_date: string
+  status: "pending" | "overdue"
+  payment_type: PaymentType
+}
+
+export interface PendingPaymentsResponse {
+  status: string
+  pagination: {
+    totalData: number
+    totalPages: number
+    currentPage: number
+    limit: number
+  }
+  data: PendingPayment[]
+}

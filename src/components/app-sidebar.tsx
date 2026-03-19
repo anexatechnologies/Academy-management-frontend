@@ -14,6 +14,7 @@ import {
   ChevronRight,
   ClipboardList,
   Megaphone,
+  IndianRupee,
 } from "lucide-react"
 import { usePermissions } from "@/hooks/use-permissions"
 
@@ -120,7 +121,9 @@ export function AppSidebar() {
   const { hasPermission } = usePermissions()
 
   const isUnderSettings = location.pathname.startsWith("/settings")
+  const isUnderStudents = location.pathname.startsWith("/students")
   const [settingsOpen, setSettingsOpen] = useState(isUnderSettings)
+  const [studentsOpen, setStudentsOpen] = useState(isUnderStudents)
 
   return (
     <Sidebar variant="sidebar" collapsible="icon">
@@ -155,6 +158,72 @@ export function AppSidebar() {
                 const moduleName = moduleMap[item.url]
                 if (moduleName && !hasPermission(moduleName, "read")) {
                   return null
+                }
+
+                if (moduleName === "students") {
+                  if (!hasPermission("students", "read")) return null
+                  return (
+                    <Collapsible
+                      key={item.title}
+                      open={studentsOpen}
+                      onOpenChange={setStudentsOpen}
+                      className="group/collapsible"
+                    >
+                      <SidebarMenuItem>
+                        <CollapsibleTrigger asChild>
+                          <SidebarMenuButton
+                            tooltip={item.title}
+                            isActive={isUnderStudents}
+                            className="w-full cursor-pointer"
+                          >
+                            <item.icon />
+                            <span>{item.title}</span>
+                            <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90 group-data-[collapsible=icon]:hidden" />
+                          </SidebarMenuButton>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent className="transition-all duration-200 group-data-[collapsible=icon]:hidden">
+                          <div className="relative ml-[22px] mt-0.5 mb-1">
+                            <span className="absolute left-0 top-0 bottom-0 w-px bg-slate-200 dark:bg-slate-700" />
+                            <Link
+                              to="/students"
+                              className={`relative flex items-center gap-2 py-1.5 pl-5 pr-2 text-sm rounded-md transition-colors
+                                ${location.pathname === "/students"
+                                  ? "text-primary font-semibold"
+                                  : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+                                }`}
+                            >
+                              <span className={`absolute left-[-4.5px] top-1/2 -translate-y-1/2 h-2 w-2 rounded-full border-2 transition-all
+                                ${location.pathname === "/students"
+                                  ? "bg-primary border-primary scale-110"
+                                  : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700"
+                                }`}
+                              />
+                              <span>Student List</span>
+                            </Link>
+                            {hasPermission("payments", "read") && (
+                              <Link
+                                to="/students/pending-payments"
+                                className={`relative flex items-center gap-2 py-1.5 pl-5 pr-2 text-sm rounded-md transition-colors
+                                  ${location.pathname === "/students/pending-payments"
+                                    ? "text-primary font-semibold"
+                                    : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+                                  }`}
+                              >
+                                <span className={`absolute left-[-4.5px] top-1/2 -translate-y-1/2 h-2 w-2 rounded-full border-2 transition-all
+                                  ${location.pathname === "/students/pending-payments"
+                                    ? "bg-primary border-primary scale-110"
+                                    : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700"
+                                  }`}
+                                />
+                                <IndianRupee className="h-3.5 w-3.5" />
+                                <span>Pending Payments</span>
+                              </Link>
+                            )}
+                          </div>
+                        </CollapsibleContent>
+                      </SidebarMenuItem>
+                    </Collapsible>
+                  )
                 }
 
                 if (moduleName === "attendance") {

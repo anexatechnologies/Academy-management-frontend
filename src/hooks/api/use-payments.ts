@@ -1,6 +1,6 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { useMutation, useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query"
 import { useAxiosPrivate } from "@/hooks/useAxiosPrivate"
-import type { PaymentListResponse, RecordPaymentPayload, RefundPayload } from "@/types/payment"
+import type { PaymentListResponse, PendingPaymentsResponse, RecordPaymentPayload, RefundPayload } from "@/types/payment"
 
 export const usePayments = (studentId?: number) => {
   const axiosPrivate = useAxiosPrivate()
@@ -44,5 +44,25 @@ export const useRefundPayment = (studentId?: number) => {
       queryClient.invalidateQueries({ queryKey: ["payments", studentId] })
       queryClient.invalidateQueries({ queryKey: ["students", studentId] })
     },
+  })
+}
+
+export const usePendingPayments = (params: {
+  page?: number
+  limit?: number
+  search?: string
+  status?: "pending" | "overdue" | ""
+}) => {
+  const axiosPrivate = useAxiosPrivate()
+  return useQuery({
+    queryKey: ["pending-payments", params],
+    queryFn: async () => {
+      const cleanParams = Object.fromEntries(
+        Object.entries(params).filter(([, v]) => v !== "" && v !== undefined)
+      )
+      const { data } = await axiosPrivate.get<PendingPaymentsResponse>("/payments/pending", { params: cleanParams })
+      return data
+    },
+    placeholderData: keepPreviousData,
   })
 }
