@@ -16,6 +16,8 @@ export interface AnnouncementTemplate {
   body: string
   is_active: boolean
   dlt_template_id?: string
+  entity_id?: string
+  target: 'student' | 'parent' | 'both'
 }
 
 export interface TargetCountItem {
