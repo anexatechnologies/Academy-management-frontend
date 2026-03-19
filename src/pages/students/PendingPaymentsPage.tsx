@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom"
 import {
   AlertCircle,
   Clock,
-  CreditCard,
   ExternalLink,
   History,
   Layers,
@@ -160,182 +159,214 @@ const DetailSheet = ({ record, onClose, canPay, canRefund }: DetailSheetProps) =
               </div>
             )}
 
-            {/* Course summary */}
             {isLoading ? (
-              <Skeleton className="h-24 w-full rounded-2xl" />
-            ) : matchedBatch ? (
-              <div className="grid grid-cols-3 gap-3">
-                {[
-                  { label: "Total Fees", value: matchedBatch.total_fees_with_tax, color: "text-slate-900 dark:text-slate-100" },
-                  { label: "Paid", value: matchedBatch.fees_paid, color: "text-emerald-600" },
-                  { label: "Remaining", value: matchedBatch.fees_remaining, color: "text-rose-600" },
-                ].map(({ label, value, color }) => (
-                  <div key={label} className="bg-white dark:bg-slate-950 rounded-xl border border-slate-100 dark:border-slate-800 p-4 text-center shadow-sm">
-                    <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-1">{label}</p>
-                    <p className={`text-xl font-black ${color}`}>₹{formatCurrency(Number(value))}</p>
+              <div className="space-y-6 pt-2">
+                <Skeleton className="h-20 w-full rounded-2xl" />
+                <Skeleton className="h-32 w-full rounded-2xl" />
+                <Skeleton className="h-48 w-full rounded-2xl" />
+              </div>
+            ) : (
+              <>
+                {/* Financial summary: Prefer matchedBatch, fallback to record */}
+                {matchedBatch ? (
+                  <div className="grid grid-cols-3 gap-3">
+                    {[
+                      { label: "Total Fees", value: matchedBatch.total_fees_with_tax, color: "text-slate-900 dark:text-slate-100" },
+                      { label: "Paid", value: matchedBatch.fees_paid, color: "text-emerald-600" },
+                      { label: "Remaining", value: matchedBatch.fees_remaining, color: "text-rose-600" },
+                    ].map(({ label, value, color }) => (
+                      <div key={label} className="bg-white dark:bg-slate-950 rounded-xl border border-slate-100 dark:border-slate-800 p-4 text-center shadow-sm">
+                        <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-1">{label}</p>
+                        <p className={`text-xl font-black ${color}`}>₹{formatCurrency(Number(value))}</p>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            ) : null}
+                ) : record ? (
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-white dark:bg-slate-950 rounded-xl border border-slate-100 dark:border-slate-800 p-4 text-center shadow-sm">
+                      <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-1">Amount Due Now</p>
+                      <p className="text-xl font-black text-amber-600">₹{formatCurrency(Number(record.amount_due))}</p>
+                    </div>
+                    <div className="bg-white dark:bg-slate-950 rounded-xl border border-slate-100 dark:border-slate-800 p-4 text-center shadow-sm">
+                      <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-1">Total Remaining</p>
+                      <p className="text-xl font-black text-rose-600">₹{formatCurrency(Number(record.total_fees_remaining))}</p>
+                    </div>
+                  </div>
+                ) : null}
 
-            {/* Action buttons */}
-            {record && matchedBatch && (
-              <div className="flex gap-3">
-                {canPay && (
-                  <Button
-                    className="flex-1 h-10 rounded-xl shadow-lg shadow-primary/20"
-                    disabled={Number(matchedBatch.fees_remaining) <= 0}
-                    onClick={() => {
-                      setPayConfig({
-                        courseId: record.student_course_id,
-                        courseName: record.course_name,
-                        type: record.payment_type,
-                        remainingAmount: Number(matchedBatch.fees_remaining),
-                        installments: matchedBatch.installments || [],
-                      })
-                      setIsPayDialogOpen(true)
-                    }}
-                  >
-                    <CreditCard className="mr-2 h-4 w-4" /> Record Payment
-                  </Button>
+                {/* Action buttons: Always available if record exists */}
+                {record && (
+                  <div className="flex gap-3">
+                    {canPay && (
+                      <Button
+                        className="flex-1 h-11 rounded-xl shadow-lg shadow-primary/20"
+                        disabled={matchedBatch ? Number(matchedBatch.fees_remaining) <= 0 : false}
+                        onClick={() => {
+                          setPayConfig({
+                            courseId: record.student_course_id,
+                            courseName: record.course_name,
+                            type: record.payment_type,
+                            remainingAmount: matchedBatch ? Number(matchedBatch.fees_remaining) : Number(record.total_fees_remaining),
+                            installments: matchedBatch?.installments || [],
+                          })
+                          setIsPayDialogOpen(true)
+                        }}
+                      >
+                        <Zap className="mr-2 h-4 w-4 fill-current" /> Record Payment
+                      </Button>
+                    )}
+                    {canRefund && (
+                      <Button
+                        variant="outline"
+                        className="flex-1 h-11 rounded-xl border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400"
+                        onClick={() =>
+                          setBatchRefundConfig({
+                            courseName: record.course_name,
+                            studentCourseId: record.student_course_id,
+                          })
+                        }
+                      >
+                        <RotateCcw className="mr-2 h-4 w-4" /> Refund
+                      </Button>
+                    )}
+                  </div>
                 )}
-                {canRefund && (
-                  <Button
-                    variant="outline"
-                    className="flex-1 h-10 rounded-xl border-amber-200 text-amber-600 hover:bg-amber-50 dark:border-amber-800 dark:text-amber-400 dark:hover:bg-amber-900/20"
-                    onClick={() =>
-                      setBatchRefundConfig({
-                        courseName: record.course_name,
-                        studentCourseId: record.student_course_id,
-                      })
-                    }
-                  >
-                    <RotateCcw className="mr-2 h-4 w-4" /> Refund
-                  </Button>
-                )}
-              </div>
-            )}
 
-            {/* Installment schedule */}
-            {matchedBatch && (matchedBatch.installments?.length ?? 0) > 0 && (
-              <Card className="shadow-sm border-slate-200 dark:border-slate-800 overflow-hidden rounded-2xl">
-                <CardHeader className="py-3 px-5 border-b border-slate-100 dark:border-slate-800/60">
-                  <CardTitle className="text-sm font-bold flex items-center gap-2 text-slate-800 dark:text-slate-100">
-                    <Layers className="h-4 w-4 text-primary" /> EMI Schedule
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-0">
-                  <Table paginationRequired={false}>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-8">#</TableHead>
-                        <TableHead>Due Date</TableHead>
-                        <TableHead>Amount</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Paid On</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody loading={isLoading} columnCount={5} rowCount={3}>
-                      {(matchedBatch?.installments ?? []).map((inst: Installment) => (
-                        <TableRow key={inst.id}>
-                          <TableCell className="font-bold text-slate-500">{inst.installment_number}</TableCell>
-                          <TableCell><DateCell date={inst.due_date} /></TableCell>
-                          <TableCell className="font-semibold">₹{formatCurrency(Number(inst.amount_due))}</TableCell>
-                          <TableCell>
-                            <span className={cn(
-                              "px-2.5 py-0.5 text-[10px] uppercase font-bold tracking-wider rounded-md",
-                              inst.status === "paid" && "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
-                              inst.status === "pending" && "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
-                              inst.status === "overridden" && "bg-slate-100 text-slate-500 dark:bg-slate-800",
-                            )}>
-                              {inst.status}
-                            </span>
-                          </TableCell>
-                          <TableCell className="text-slate-500">
-                            {inst.paid_on ? <DateCell date={inst.paid_on} /> : <span className="text-slate-300 dark:text-slate-600">—</span>}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Transaction ledger */}
-            <Card className="shadow-sm border-slate-200 dark:border-slate-800 overflow-hidden rounded-2xl">
-              <CardHeader className="py-3 px-5 border-b border-slate-100 dark:border-slate-800/60">
-                <CardTitle className="text-sm font-bold flex items-center gap-2 text-slate-800 dark:text-slate-100">
-                  <History className="h-4 w-4 text-primary" /> Transaction Ledger
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                {coursePayments.length > 0 ? (
-                  <Table paginationRequired={false}>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Amount</TableHead>
-                        <TableHead>Mode</TableHead>
-                        <TableHead>Type</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody loading={isLoading} columnCount={5} rowCount={3}>
-                      {coursePayments.map((payment) => {
-                        const isPositive = Number(payment.amount) >= 0
-                        return (
-                          <TableRow key={payment.id}>
-                            <TableCell><DateCell date={payment.payment_date} /></TableCell>
-                            <TableCell className={`font-bold ${isPositive ? "text-emerald-600" : "text-rose-600"}`}>
-                              {isPositive ? "+" : "-"}₹{formatCurrency(Math.abs(Number(payment.amount)))}
-                            </TableCell>
-                            <TableCell className="text-slate-600 dark:text-slate-400 text-xs">{payment.payment_mode}</TableCell>
-                            <TableCell>
-                              <span className="px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
-                                {payment.payment_type}
-                              </span>
-                            </TableCell>
-                            <TableCell className="text-right">
-                              {isPositive && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  disabled={downloadingId === payment.id}
-                                  className="h-8 px-3 rounded-lg text-primary hover:text-primary hover:bg-primary/5 font-bold text-[11px] gap-1.5"
-                                  onClick={async () => {
-                                    try {
-                                      setDownloadingId(payment.id)
-                                      await downloadCertificate(`receipt/${payment.id}`)
-                                      toast.success("Receipt opened")
-                                    } catch {
-                                      toast.error("Failed to generate receipt")
-                                    } finally {
-                                      setDownloadingId(null)
-                                    }
-                                  }}
-                                >
-                                  {downloadingId === payment.id ? (
-                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                  ) : (
-                                    <><Printer className="h-3.5 w-3.5" /> Receipt</>
-                                  )}
-                                </Button>
-                              )}
-                            </TableCell>
+                {/* EMI Schedule */}
+                <Card className="shadow-sm border-slate-200 dark:border-slate-800 overflow-hidden rounded-2xl">
+                  <CardHeader className="py-3 px-5 border-b border-slate-100 dark:border-slate-800/60">
+                    <CardTitle className="text-sm font-bold flex items-center gap-2 text-slate-800 dark:text-slate-100">
+                      <Layers className="h-4 w-4 text-primary" /> EMI Schedule
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    {matchedBatch && (matchedBatch.installments?.length ?? 0) > 0 ? (
+                      <Table paginationRequired={false}>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="w-8">#</TableHead>
+                            <TableHead>Due Date</TableHead>
+                            <TableHead>Amount</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Paid On</TableHead>
                           </TableRow>
-                        )
-                      })}
-                    </TableBody>
-                  </Table>
-                ) : (
-                  <div className="text-center py-10">
-                    <History className="h-5 w-5 text-slate-300 mx-auto mb-2" />
-                    <p className="text-sm text-slate-400 font-medium">No transactions yet</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                        </TableHeader>
+                        <TableBody loading={isLoading} columnCount={5} rowCount={3}>
+                          {(matchedBatch?.installments ?? []).map((inst: any) => (
+                            <TableRow key={inst.id}>
+                              <TableCell className="font-bold text-slate-500">{inst.installment_number}</TableCell>
+                              <TableCell><DateCell date={inst.due_date} /></TableCell>
+                              <TableCell className="font-semibold">₹{formatCurrency(Number(inst.amount_due))}</TableCell>
+                              <TableCell>
+                                <span className={cn(
+                                  "px-2.5 py-0.5 text-[10px] uppercase font-bold tracking-wider rounded-md",
+                                  inst.status === "paid" && "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
+                                  inst.status === "pending" && "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
+                                  inst.status === "overridden" && "bg-slate-100 text-slate-500 dark:bg-slate-800",
+                                )}>
+                                  {inst.status}
+                                </span>
+                              </TableCell>
+                              <TableCell className="text-slate-500">
+                                {inst.paid_on ? <DateCell date={inst.paid_on} /> : <span className="text-slate-300 dark:text-slate-600">—</span>}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    ) : (
+                      <div className="py-12 flex flex-col items-center justify-center text-center px-6">
+                        <div className="h-10 w-10 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center mb-3">
+                          <Layers className="h-5 w-5 text-slate-400" />
+                        </div>
+                        <p className="text-xs text-slate-500 font-medium max-w-[200px]">
+                          {isLoading ? "Loading schedule..." : "Full installment schedule is currently unavailable for this course."}
+                        </p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Transaction ledger */}
+                <Card className="shadow-sm border-slate-200 dark:border-slate-800 overflow-hidden rounded-2xl">
+                  <CardHeader className="py-3 px-5 border-b border-slate-100 dark:border-slate-800/60">
+                    <CardTitle className="text-sm font-bold flex items-center gap-2 text-slate-800 dark:text-slate-100">
+                      <History className="h-4 w-4 text-primary" /> Transaction Ledger
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    {coursePayments.length > 0 ? (
+                      <Table paginationRequired={false}>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Date</TableHead>
+                            <TableHead>Amount</TableHead>
+                            <TableHead>Mode</TableHead>
+                            <TableHead>Type</TableHead>
+                            <TableHead className="text-right">Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody loading={isLoading} columnCount={5} rowCount={3}>
+                          {coursePayments.map((payment: any) => {
+                            const isPositive = Number(payment.amount) >= 0
+                            return (
+                              <TableRow key={payment.id}>
+                                <TableCell><DateCell date={payment.payment_date} /></TableCell>
+                                <TableCell className={`font-bold ${isPositive ? "text-emerald-600" : "text-rose-600"}`}>
+                                  {isPositive ? "+" : "-"}₹{formatCurrency(Math.abs(Number(payment.amount)))}
+                                </TableCell>
+                                <TableCell className="text-slate-600 dark:text-slate-400 text-xs">{payment.payment_mode}</TableCell>
+                                <TableCell>
+                                  <span className="px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                                    {payment.payment_type}
+                                  </span>
+                                </TableCell>
+                                <TableCell className="text-right">
+                                  {isPositive && (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      disabled={downloadingId === payment.id}
+                                      className="h-8 px-3 rounded-lg text-primary hover:text-primary hover:bg-primary/5 font-bold text-[11px] gap-1.5"
+                                      onClick={async () => {
+                                        try {
+                                          setDownloadingId(payment.id)
+                                          await downloadCertificate(`receipt/${payment.id}`)
+                                          toast.success("Receipt opened")
+                                        } catch {
+                                          toast.error("Failed to generate receipt")
+                                        } finally {
+                                          setDownloadingId(null)
+                                        }
+                                      }}
+                                    >
+                                      {downloadingId === payment.id ? (
+                                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                      ) : (
+                                        <><Printer className="h-3.5 w-3.5" /> Receipt</>
+                                      )}
+                                    </Button>
+                                  )}
+                                </TableCell>
+                              </TableRow>
+                            )
+                          })}
+                        </TableBody>
+                      </Table>
+                    ) : (
+                      <div className="py-12 flex flex-col items-center justify-center text-center px-6">
+                        <div className="h-10 w-10 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center mb-3">
+                          <History className="h-5 w-5 text-slate-400" />
+                        </div>
+                        <p className="text-xs text-slate-500 font-medium max-w-[200px]">
+                          {isLoading ? "Loading ledger..." : "No recent transactions found for this course."}
+                        </p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </>
+            )}
           </div>
         </SheetContent>
       </Sheet>
@@ -405,6 +436,11 @@ const STATUS_OPTIONS = [
   { label: "Pending", value: "pending" },
 ]
 
+const SORT_OPTIONS = [
+  { label: "Oldest Due (Default)", value: "oldest" },
+  { label: "Recently Added Students", value: "newest" },
+]
+
 export default function PendingPaymentsPage() {
   const navigate = useNavigate()
   const { hasPermission } = usePermissions()
@@ -414,13 +450,20 @@ export default function PendingPaymentsPage() {
 
   const [search, setSearch] = useState("")
   const [status, setStatus] = useState<"" | "pending" | "overdue">("")
+  const [sort, setSort] = useState<"oldest" | "newest">("oldest")
   const [page, setPage] = useState(1)
   const [limit, setLimit] = useState(10)
 
   const [detailRecord, setDetailRecord] = useState<PendingPayment | null>(null)
   const [quickPayRecord, setQuickPayRecord] = useState<PendingPayment | null>(null)
 
-  const { data, isLoading, isFetching } = usePendingPayments({ page, limit, search: search || undefined, status: status || undefined })
+  const { data, isLoading, isFetching } = usePendingPayments({ 
+    page, 
+    limit, 
+    search: search || undefined, 
+    status: status || undefined,
+    sort: sort === "oldest" ? undefined : sort
+  })
 
   const breadcrumbs = useMemo(() => [
     { label: "Student Management", href: "/students" },
@@ -454,6 +497,12 @@ export default function PendingPaymentsPage() {
             value={status === "" ? "all" : status}
             onValueChange={(v) => { setStatus(v === "all" ? "" : v as any); setPage(1) }}
             triggerClassName="w-[160px]"
+          />
+          <CustomSelect
+            options={SORT_OPTIONS}
+            value={sort === "" ? "" : sort}
+            onValueChange={(v) => { setSort(v as any); setPage(1) }}
+            triggerClassName="w-[200px]"
           />
         </div>
       }
@@ -491,12 +540,13 @@ export default function PendingPaymentsPage() {
             totalData={totalData}
             onPageChange={setPage}
             onPageSizeChange={(newLimit) => { setLimit(newLimit); setPage(1) }}
+            tableContainerClassName="max-h-[calc(100vh-350px)]"
           >
             <TableHeader>
               <TableRow>
                 <TableHead>Student</TableHead>
                 <TableHead>Course</TableHead>
-                <TableHead>Installment</TableHead>
+                <TableHead>Payment Details</TableHead>
                 <TableHead className="text-right">Amount Due</TableHead>
                 <TableHead className="text-right">Total Remaining</TableHead>
                 <TableHead>Due Date</TableHead>
@@ -534,8 +584,23 @@ export default function PendingPaymentsPage() {
                     <TableCell className="font-medium text-slate-700 dark:text-slate-300 max-w-[180px] truncate">
                       {row.course_name}
                     </TableCell>
-                    <TableCell className="text-slate-600 dark:text-slate-400 font-medium">
-                      {ordinal(row.installment_number)} Installment
+                    <TableCell>
+                      <div className="flex flex-col gap-1">
+                        <span className={cn(
+                          "w-fit px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider",
+                          row.payment_type === "instalment" 
+                            ? "bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400"
+                            : "bg-indigo-50 text-indigo-700 dark:bg-indigo-900/20 dark:text-indigo-400"
+                        )}>
+                          {row.payment_type === "instalment" ? "EMI" : "One-Time"}
+                        </span>
+                        <p className="text-xs text-slate-500 font-medium">
+                          {row.payment_type === "instalment" 
+                            ? `${ordinal(row.installment_number)} Installment`
+                            : "Full/Monthly"
+                          }
+                        </p>
+                      </div>
                     </TableCell>
                     <TableCell className="text-right font-bold text-rose-600">
                       ₹{formatCurrency(Number(row.amount_due))}
@@ -556,27 +621,19 @@ export default function PendingPaymentsPage() {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center justify-center gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setDetailRecord(row)}
-                          className="h-8 px-3 text-xs font-semibold text-slate-600 hover:text-primary hover:bg-primary/5 rounded-lg"
-                        >
-                          Details
-                        </Button>
                         {canPay && (
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Button
                                 size="sm"
-                                onClick={() => setQuickPayRecord(row)}
-                                className="h-8 px-3 rounded-lg text-xs shadow-sm shadow-primary/20"
+                                onClick={() => setDetailRecord(row)}
+                                className="h-8 px-4 rounded-lg text-xs font-bold shadow-sm shadow-primary/20"
                               >
-                                <Zap className="h-3.5 w-3.5 mr-1" />
+                                <Zap className="h-3.5 w-3.5 mr-1.5" />
                                 Pay Now
                               </Button>
                             </TooltipTrigger>
-                            <TooltipContent><p>Quick payment for this installment</p></TooltipContent>
+                            <TooltipContent><p>View details and record payment</p></TooltipContent>
                           </Tooltip>
                         )}
                       </div>

@@ -52,6 +52,7 @@ export const usePendingPayments = (params: {
   limit?: number
   search?: string
   status?: "pending" | "overdue" | ""
+  sort?: "newest" | string
 }) => {
   const axiosPrivate = useAxiosPrivate()
   return useQuery({

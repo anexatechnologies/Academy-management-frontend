@@ -12,6 +12,7 @@ interface TableProps extends React.ComponentProps<"table"> {
   onPageChange?: (page: number) => void
   onPageSizeChange?: (pageSize: number) => void
   containerClassName?: string
+  tableContainerClassName?: string
 }
 
 function Table({ 
@@ -24,6 +25,7 @@ function Table({
   onPageChange = () => {},
   onPageSizeChange = () => {},
   containerClassName,
+  tableContainerClassName,
   ...props 
 }: TableProps) {
   return (
@@ -34,7 +36,7 @@ function Table({
       )}>
         <div
           data-slot="table-container"
-          className="relative w-full overflow-auto max-h-[calc(100vh-280px)]"
+          className={cn("relative w-full overflow-auto max-h-[calc(100vh-280px)]", tableContainerClassName)}
         >
           <table
             data-slot="table"

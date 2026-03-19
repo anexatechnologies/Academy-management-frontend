@@ -12,6 +12,7 @@ export const useStudents = (params?: {
   to_date?: string
   course_id?: string
   batch_id?: string
+  payment_status?: "pending" | "overdue" | ""
 }) => {
   const axiosPrivate = useAxiosPrivate()
   return useQuery({
