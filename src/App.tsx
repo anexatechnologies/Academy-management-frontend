@@ -69,7 +69,9 @@ function App() {
             <Route path="/batches/view/:id" element={<BatchViewPage />} />
 
             <Route path="/students" element={<StudentsListPage />} />
-            <Route path="/students/pending-payments" element={<PendingPaymentsPage />} />
+            <Route element={<ProtectedRoute requiredPermissions={["payments:read"]} />}>
+              <Route path="/students/pending-payments" element={<PendingPaymentsPage />} />
+            </Route>
             <Route path="/students/new" element={<StudentCreatePage />} />
             <Route path="/students/edit/:id" element={<StudentEditPage />} />
             <Route path="/students/view/:id" element={<StudentViewPage />} />

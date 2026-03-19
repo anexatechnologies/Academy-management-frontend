@@ -444,10 +444,11 @@ const SORT_OPTIONS = [
 
 export default function PendingPaymentsPage() {
   const navigate = useNavigate()
-  const { hasPermission } = usePermissions()
-  const canRead = hasPermission("payments", "read")
-  const canPay = hasPermission("students", "update")
-  const canRefund = hasPermission("payments", "delete")
+  const { 
+    canReadPayments: canRead, 
+    canUpdateStudent: canPay, 
+    canDeletePayments: canRefund 
+  } = usePermissions()
 
   const [search, setSearch] = useState("")
   const [status, setStatus] = useState<"" | "pending" | "overdue">("")

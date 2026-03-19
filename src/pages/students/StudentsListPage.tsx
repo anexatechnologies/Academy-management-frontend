@@ -71,7 +71,12 @@ const StudentsListPage = () => {
 
   const deactivateStudent = useDeactivateStudent()
   const toggleStatus = useToggleStudentStatus()
-  const { canUpdateStudent, canDeleteStudent, canReadStudent } = usePermissions()
+  const { 
+    canUpdateStudent, 
+    canDeleteStudent, 
+    canReadStudent, 
+    canReadPayments 
+  } = usePermissions()
   const [deletingId, setDeletingId] = useState<number | null>(null)
 
   const handleDeactivate = async (id: number) => {
@@ -192,32 +197,34 @@ const StudentsListPage = () => {
             triggerClassName="w-[180px] h-10 bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700"
           />
           
-          <CustomSelect
-            value={params.payment_status || "all"}
-            onValueChange={(val) => setFilter("payment_status", val === "all" ? undefined : val as any)}
-            triggerClassName="w-[160px]"
-            options={[
-              { value: "all", label: "Payment Status" },
-              {
-                value: "pending",
-                label: (
-                  <div className="flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-amber-500" />
-                    <span>Pending Dues</span>
-                  </div>
-                )
-              },
-              {
-                value: "overdue",
-                label: (
-                  <div className="flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-rose-500" />
-                    <span>Overdue Dues</span>
-                  </div>
-                )
-              }
-            ]}
-          />
+          {canReadPayments && (
+            <CustomSelect
+              value={params.payment_status || "all"}
+              onValueChange={(val) => setFilter("payment_status", val === "all" ? undefined : val as any)}
+              triggerClassName="w-[160px]"
+              options={[
+                { value: "all", label: "Payment Status" },
+                {
+                  value: "pending",
+                  label: (
+                    <div className="flex items-center gap-2">
+                      <span className="h-2 w-2 rounded-full bg-amber-500" />
+                      <span>Pending Dues</span>
+                    </div>
+                  )
+                },
+                {
+                  value: "overdue",
+                  label: (
+                    <div className="flex items-center gap-2">
+                      <span className="h-2 w-2 rounded-full bg-rose-500" />
+                      <span>Overdue Dues</span>
+                    </div>
+                  )
+                }
+              ]}
+            />
+          )}
 
           {(search || params.status || params.gender || params.course_id || params.batch_id || params.payment_status) && (
             <Button
