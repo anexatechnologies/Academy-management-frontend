@@ -29,6 +29,38 @@ export const useUpdateMessagingSettings = () => {
   })
 }
 
+export const useAttendanceSettings = () => {
+  const axiosPrivate = useAxiosPrivate()
+  return useQuery({
+    queryKey: ["attendance-settings"],
+    queryFn: async () => {
+      const { data } = await axiosPrivate.get<{ status: string; data: MessagingSettings }>("/settings")
+      return data.data.grouped.attendance || {
+        ground_start_time: "06:00",
+        ground_end_time: "08:00",
+        lecture_start_time: "09:00",
+        lecture_end_time: "11:00"
+      }
+    },
+  })
+}
+
+export const useUpdateAttendanceSettings = () => {
+  const axiosPrivate = useAxiosPrivate()
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (settings: Record<string, string>) => {
+      const { data } = await axiosPrivate.put("/settings", {
+        settings
+      })
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["attendance-settings"] })
+    }
+  })
+}
+
 // Bank Accounts
 export const useBankAccounts = () => {
   const axiosPrivate = useAxiosPrivate()

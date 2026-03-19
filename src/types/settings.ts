@@ -1,3 +1,10 @@
+export interface AttendanceSettings {
+  ground_start_time: string;
+  ground_end_time: string;
+  lecture_start_time: string;
+  lecture_end_time: string;
+}
+
 export interface MessagingSettings {
   grouped: {
     messaging_master: {
@@ -8,6 +15,7 @@ export interface MessagingSettings {
       whatsapp_enabled: string;
     };
     messaging_triggers: Record<string, string>;
+    attendance?: AttendanceSettings;
   };
 }
 

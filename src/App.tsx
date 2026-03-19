@@ -24,6 +24,7 @@ import StudentCreatePage from "@/pages/students/StudentCreatePage"
 import StudentEditPage from "@/pages/students/StudentEditPage"
 import StudentViewPage from "@/pages/students/StudentViewPage"
 import SettingsPage from "@/pages/settings-page"
+import AttendanceSettingsPage from "@/pages/settings/attendance/AttendanceSettingsPage"
 import RolesListPage from "@/pages/settings/roles/RolesListPage"
 import ReportsPage from "@/pages/reports/ReportsPage"
 import CertificationPage from "@/pages/certificates/CertificationPage"
@@ -87,6 +88,7 @@ function App() {
 
             <Route path="/configure" element={<Navigate to="/settings" replace />} />
             <Route path="/settings/fees" element={<Navigate to="/settings" replace />} />
+            <Route path="/settings/attendance" element={<AttendanceSettingsPage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/roles" element={<RolesListPage />} />
           </Route>

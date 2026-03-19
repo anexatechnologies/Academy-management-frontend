@@ -108,6 +108,11 @@ const settingsItems = [
     url: "/settings",
     icon: Settings,
   },
+  {
+    title: "Attendance Settings",
+    url: "/settings/attendance",
+    icon: Settings,
+  },
 ]
 
 export function AppSidebar() {
@@ -263,6 +268,7 @@ export function AppSidebar() {
                         const subModuleMap: Record<string, string> = {
                           "/settings": "settings",
                           "/settings/fees": "fee-settings",
+                          "/settings/attendance": "settings",
                         }
                         const subModuleName = subModuleMap[sub.url]
                         if (subModuleName && !hasPermission(subModuleName, "read")) {
