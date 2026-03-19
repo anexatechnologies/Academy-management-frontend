@@ -78,7 +78,7 @@ const EnquiryListPage = () => {
   }, [data?.pagination?.totalData, setTotal])
 
   const deleteEnquiry = useDeleteEnquiry()
-  const { canUpdateEnquiry, canDeleteEnquiry } = usePermissions()
+  const { canUpdateEnquiry, canDeleteEnquiry, canReadEnquiries } = usePermissions()
   const [deletingId, setDeletingId] = useState<number | null>(null)
 
   const handleDelete = async (id: number) => {
@@ -215,13 +215,15 @@ const EnquiryListPage = () => {
               <TableHead>Enquiry Date</TableHead>
               <TableHead className="w-[130px]">Status</TableHead>
               <TableHead>Next Follow-up</TableHead>
-              <TableHead className="w-[130px] text-left">Actions</TableHead>
+              {(canReadEnquiries || canUpdateEnquiry || canDeleteEnquiry) && (
+                <TableHead className="w-[130px] text-left">Actions</TableHead>
+              )}
             </TableRow>
           </TableHeader>
           <TableBody
             loading={isLoading}
             fetching={isFetching && !isLoading}
-            columnCount={7}
+            columnCount={(canReadEnquiries || canUpdateEnquiry || canDeleteEnquiry) ? 7 : 6}
             rowCount={pageSize}
           >
             {!isLoading &&
@@ -241,14 +243,22 @@ const EnquiryListPage = () => {
                         <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold shrink-0">
                           {enquiry.first_name.charAt(0).toUpperCase()}
                         </div>
-                        <Link 
-                          to={`/enquiries/view/${enquiry.id}`}
-                          className="font-semibold text-slate-900 dark:text-slate-100 hover:text-primary dark:hover:text-primary hover:underline transition-colors w-fit"
-                        >
-                          {[enquiry.first_name, enquiry.middle_name, enquiry.last_name]
-                            .filter(Boolean)
-                            .join(" ")}
-                        </Link>
+                        {canReadEnquiries ? (
+                          <Link 
+                            to={`/enquiries/view/${enquiry.id}`}
+                            className="font-semibold text-slate-900 dark:text-slate-100 hover:text-primary dark:hover:text-primary hover:underline transition-colors w-fit"
+                          >
+                            {[enquiry.first_name, enquiry.middle_name, enquiry.last_name]
+                              .filter(Boolean)
+                              .join(" ")}
+                          </Link>
+                        ) : (
+                          <span className="font-semibold text-slate-900 dark:text-slate-100 w-fit">
+                            {[enquiry.first_name, enquiry.middle_name, enquiry.last_name]
+                              .filter(Boolean)
+                              .join(" ")}
+                          </span>
+                        )}
                       </div>
                     </TableCell>
                     <TableCell>{enquiry.personal_contact}</TableCell>
@@ -279,10 +289,12 @@ const EnquiryListPage = () => {
                     </TableCell>
                     <TableCell>
                       <div className="flex justify-start gap-1">
-                        <ViewButton
-                          title="Enquiry"
-                          onView={() => navigate(`/enquiries/view/${enquiry.id}`)}
-                        />
+                        {canReadEnquiries && (
+                          <ViewButton
+                            title="Enquiry"
+                            onView={() => navigate(`/enquiries/view/${enquiry.id}`)}
+                          />
+                        )}
                         {canUpdateEnquiry && (
                           <>
                             <EditButton
@@ -316,7 +328,7 @@ const EnquiryListPage = () => {
               })}
             {!isLoading && data?.data.length === 0 && (
               <TableRow>
-                <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">
+                <TableCell colSpan={(canReadEnquiries || canUpdateEnquiry || canDeleteEnquiry) ? 7 : 6} className="h-32 text-center text-muted-foreground">
                   No enquiries found.
                 </TableCell>
               </TableRow>

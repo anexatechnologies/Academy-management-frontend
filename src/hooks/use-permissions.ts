@@ -46,5 +46,9 @@ export const usePermissions = () => {
     canReadFinancials: hasPermission("dashboard", "read_financials"),
     canReadAnnouncements: hasPermission("announcements", "read"),
     canSendAnnouncements: hasPermission("announcements", "send"),
+    canCreateStudent: hasPermission("students", "create"),
+    canReadStudent: hasPermission("students", "read"),
+    canUpdateStudent: hasPermission("students", "update"),
+    canDeleteStudent: hasPermission("students", "delete"),
   }
 }

@@ -69,7 +69,7 @@ const StudentsListPage = () => {
 
   const deactivateStudent = useDeactivateStudent()
   const toggleStatus = useToggleStudentStatus()
-  const { canUpdateStaff: canUpdateStudent, canDeleteStaff: canDeleteStudent } = usePermissions()
+  const { canUpdateStudent, canDeleteStudent, canReadStudent } = usePermissions()
   const [deletingId, setDeletingId] = useState<number | null>(null)
 
   const handleDeactivate = async (id: number) => {
@@ -249,9 +249,15 @@ const StudentsListPage = () => {
                       )}
                     </div>
                     <div className="flex flex-col">
-                      <Link to={`/students/view/${student.id}`} className="font-semibold text-slate-900 dark:text-slate-100 hover:text-primary dark:hover:text-primary hover:underline transition-colors w-fit">
-                        {student.name}
-                      </Link>
+                      {canReadStudent ? (
+                        <Link to={`/students/view/${student.id}`} className="font-semibold text-slate-900 dark:text-slate-100 hover:text-primary dark:hover:text-primary hover:underline transition-colors w-fit">
+                          {student.name}
+                        </Link>
+                      ) : (
+                        <span className="font-semibold text-slate-900 dark:text-slate-100 w-fit">
+                          {student.name}
+                        </span>
+                      )}
                       <span className="text-[11px] text-slate-500 font-mono tracking-wider">{student.student_id}</span>
                     </div>
                   </div>

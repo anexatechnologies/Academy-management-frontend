@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, Link } from "react-router-dom"
 import { Plus, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -60,7 +60,7 @@ const StaffListPage = () => {
 
   const deleteStaff = useDeleteStaff()
   const toggleStatus = useToggleStaffStatus()
-  const { canUpdateStaff, canDeleteStaff } = usePermissions()
+  const { canUpdateStaff, canDeleteStaff, canReadStaff } = usePermissions()
   const [deletingId, setDeletingId] = useState<number | null>(null)
 
   const handleDelete = async (id: number) => {
@@ -187,12 +187,12 @@ const StaffListPage = () => {
               <TableHead>Joining Date</TableHead>
               <TableHead>Experience</TableHead>
               <TableHead className="w-[120px]">Status</TableHead>
-              {(canUpdateStaff || canDeleteStaff) && (
+              {(canReadStaff || canUpdateStaff || canDeleteStaff) && (
                 <TableHead className="w-[120px] text-center">Actions</TableHead>
               )}
             </TableRow>
           </TableHeader>
-          <TableBody loading={isLoading} fetching={isFetching && !isLoading} columnCount={(canUpdateStaff || canDeleteStaff) ? 8 : 7} rowCount={pageSize}>
+          <TableBody loading={isLoading} fetching={isFetching && !isLoading} columnCount={(canReadStaff || canUpdateStaff || canDeleteStaff) ? 8 : 7} rowCount={pageSize}>
             {!isLoading && data?.data.map((staff, index) => (
               <TableRow key={staff.id}>
                 <TableCell>{(page - 1) * pageSize + index + 1}</TableCell>
@@ -205,7 +205,13 @@ const StaffListPage = () => {
                         staff.full_name.charAt(0)
                       )}
                     </div>
-                    <span className="font-semibold text-slate-900 dark:text-slate-100">{staff.full_name}</span>
+                    {canReadStaff ? (
+                      <Link to={`/staff/view/${staff.id}`} className="font-semibold text-slate-900 dark:text-slate-100 hover:text-primary dark:hover:text-primary hover:underline transition-colors w-fit">
+                        {staff.full_name}
+                      </Link>
+                    ) : (
+                      <span className="font-semibold text-slate-900 dark:text-slate-100">{staff.full_name}</span>
+                    )}
                   </div>
                 </TableCell>
                 <TableCell>
@@ -251,13 +257,15 @@ const StaffListPage = () => {
                     ]}
                   />
                 </TableCell>
-                {(canUpdateStaff || canDeleteStaff) && (
+                {(canReadStaff || canUpdateStaff || canDeleteStaff) && (
                   <TableCell>
                     <div className="flex justify-center gap-1">
-                      <ViewButton 
-                        title="Staff" 
-                        onView={() => navigate(`/staff/view/${staff.id}`)} 
-                      />
+                      {canReadStaff && (
+                        <ViewButton 
+                          title="Staff" 
+                          onView={() => navigate(`/staff/view/${staff.id}`)} 
+                        />
+                      )}
                       {canUpdateStaff && (
                         <EditButton title="Staff" onEdit={() => navigate(`/staff/edit/${staff.id}`)} />
                       )}
@@ -275,7 +283,7 @@ const StaffListPage = () => {
             ))}
             {!isLoading && data?.data.length === 0 && (
               <TableRow>
-                <TableCell colSpan={(canUpdateStaff || canDeleteStaff) ? 8 : 7} className="h-32 text-center text-muted-foreground">
+                <TableCell colSpan={(canReadStaff || canUpdateStaff || canDeleteStaff) ? 8 : 7} className="h-32 text-center text-muted-foreground">
                   No staff members found.
                 </TableCell>
               </TableRow>

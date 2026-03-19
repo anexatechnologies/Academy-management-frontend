@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, Link } from "react-router-dom"
 import { Plus, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -61,7 +61,7 @@ const BatchesListPage = () => {
 
   const deleteBatch = useDeleteBatch()
   const toggleStatus = useToggleBatchStatus()
-  const { canUpdateBatch, canDeleteBatch } = usePermissions()
+  const { canUpdateBatch, canDeleteBatch, canReadBatches } = usePermissions()
 
   const handleDelete = async (id: number) => {
     setDeletingId(id)
@@ -97,7 +97,7 @@ const BatchesListPage = () => {
 
   const breadcrumbs = useMemo(() => [{ label: "Batch Management" }], [])
 
-  const colCount = (canUpdateBatch || canDeleteBatch) ? 8 : 7
+  const colCount = (canReadBatches || canUpdateBatch || canDeleteBatch) ? 8 : 7
 
   return (
     <BodyLayout
@@ -195,7 +195,7 @@ const BatchesListPage = () => {
               <TableHead>Start Date</TableHead>
               <TableHead>End Date</TableHead>
               <TableHead className="w-[140px]">Status</TableHead>
-              {(canUpdateBatch || canDeleteBatch) && (
+              {(canReadBatches || canUpdateBatch || canDeleteBatch) && (
                 <TableHead className="w-[120px] text-center">Actions</TableHead>
               )}
             </TableRow>
@@ -204,8 +204,14 @@ const BatchesListPage = () => {
             {!isLoading && data?.data.map((batch, index) => (
               <TableRow key={batch.id}>
                 <TableCell>{(page - 1) * pageSize + index + 1}</TableCell>
-                <TableCell className="font-semibold text-slate-900 dark:text-slate-100">
-                  {batch.name}
+                <TableCell>
+                  {canReadBatches ? (
+                    <Link to={`/batches/view/${batch.id}`} className="font-semibold text-slate-900 dark:text-slate-100 hover:text-primary dark:hover:text-primary hover:underline transition-colors w-fit">
+                      {batch.name}
+                    </Link>
+                  ) : (
+                    <span className="font-semibold text-slate-900 dark:text-slate-100">{batch.name}</span>
+                  )}
                 </TableCell>
                 <TableCell>
                   <span className="px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-wider bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400">
@@ -247,13 +253,15 @@ const BatchesListPage = () => {
                     ]}
                   />
                 </TableCell>
-                {(canUpdateBatch || canDeleteBatch) && (
+                {(canReadBatches || canUpdateBatch || canDeleteBatch) && (
                   <TableCell>
                     <div className="flex justify-center gap-1">
-                      <ViewButton
-                        title="Batch"
-                        onView={() => navigate(`/batches/view/${batch.id}`)}
-                      />
+                      {canReadBatches && (
+                        <ViewButton
+                          title="Batch"
+                          onView={() => navigate(`/batches/view/${batch.id}`)}
+                        />
+                      )}
                       {canUpdateBatch && (
                         <EditButton title="Batch" onEdit={() => navigate(`/batches/edit/${batch.id}`)} />
                       )}
