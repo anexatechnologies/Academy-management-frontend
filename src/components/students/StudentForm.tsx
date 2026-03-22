@@ -9,7 +9,8 @@ import { Upload } from "@/components/ui/upload"
 import { FormFooter } from "@/components/ui/form-footer"
 import { DatePickerInput } from "@/components/ui/date-picker"
 import { ComboBox } from "@/components/ui/combobox"
-import { X, IndianRupee, Calculator, Percent, Camera, ClipboardList, Plus, Trash2, GraduationCap } from "lucide-react"
+import { DeleteButton } from "@/components/ui/delete-button"
+import { X, IndianRupee, Calculator, Percent, Camera, ClipboardList, Plus, GraduationCap } from "lucide-react"
 import {
   Tooltip,
   TooltipContent,
@@ -845,14 +846,13 @@ export const StudentForm = ({
                       className="relative p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-900/30 animate-in fade-in slide-in-from-top-2 duration-300"
                     >
                       {fields.length > 1 && !isLoading && (
-                        <button
-                          type="button"
-                          onClick={() => remove(index)}
-                          className="absolute top-4 right-4 p-2 rounded-full text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-all z-10"
-                          title="Remove qualification"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
+                        <div className="absolute top-4 right-4 z-10">
+                          <DeleteButton
+                            title="Qualification"
+                            onDelete={() => remove(index)}
+                            disabled={isLoading}
+                          />
+                        </div>
                       )}
 
                       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
