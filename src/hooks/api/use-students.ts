@@ -49,8 +49,8 @@ export const useCreateStudent = () => {
       const formData = new FormData()
       Object.entries(payload).forEach(([key, value]) => {
         if (value === undefined || value === null || value === "" || key === "photo_url") return
-        if (key === "batch_ids" && Array.isArray(value)) {
-          formData.append("batch_ids", JSON.stringify(value))
+        if (Array.isArray(value)) {
+          formData.append(key, JSON.stringify(value))
         } else if (value instanceof File) {
           formData.append(key, value)
         } else {
@@ -76,8 +76,8 @@ export const useUpdateStudent = (id: number) => {
       const formData = new FormData()
       Object.entries(payload).forEach(([key, value]) => {
         if (value === undefined || value === null || value === "" || key === "photo_url") return
-        if (key === "batch_ids" && Array.isArray(value)) {
-          formData.append("batch_ids", JSON.stringify(value))
+        if (Array.isArray(value)) {
+          formData.append(key, JSON.stringify(value))
         } else if (value instanceof File) {
           formData.append(key, value)
         } else {
@@ -101,12 +101,35 @@ export const useDeactivateStudent = () => {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (id: number) => {
-      await axiosPrivate.delete(`/students/${id}`)
+      const { data } = await axiosPrivate.patch(`/students/${id}/status`, { status: "inactive" })
+      return data
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["students"] })
     },
   })
+}
+
+export const useDownloadAdmissionForm = () => {
+  const axiosPrivate = useAxiosPrivate()
+
+  const downloadAdmissionForm = async (studentId: number) => {
+    try {
+      const response = await axiosPrivate.get(`/students/${studentId}/admission-form`, {
+        responseType: "blob",
+      })
+
+      const file = new Blob([response.data], { type: "application/pdf" })
+      const fileURL = URL.createObjectURL(file)
+      window.open(fileURL, "_blank")
+      return true
+    } catch (error) {
+      console.error("Failed to download admission form:", error)
+      throw error
+    }
+  }
+
+  return { downloadAdmissionForm }
 }
 
 export const useToggleStudentStatus = () => {

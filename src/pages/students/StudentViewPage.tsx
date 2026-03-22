@@ -17,10 +17,11 @@ import {
   Layers,
   Printer,
   Loader2,
+  FileText,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import BodyLayout from "@/components/layout/BodyLayout"
-import { useStudent } from "@/hooks/api/use-students"
+import { useStudent, useDownloadAdmissionForm } from "@/hooks/api/use-students"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
@@ -40,8 +41,8 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-
 import { useCertificates } from "@/hooks/api/use-certificates"
+import { usePermissions } from "@/hooks/use-permissions"
 
 const StudentViewPage = () => {
   const { id } = useParams()
@@ -49,6 +50,9 @@ const StudentViewPage = () => {
   const { data: student, isLoading } = useStudent(Number(id))
   const { data: payments } = usePayments(Number(id))
   const { downloadCertificate } = useCertificates()
+  const { canUpdateStudent, canReadStudent } = usePermissions()
+  const { downloadAdmissionForm } = useDownloadAdmissionForm()
+  const [isDownloading, setIsDownloading] = useState(false)
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false)
   const [selectedPaymentConfig, setSelectedPaymentConfig] = useState<{
     courseId: number;
@@ -124,9 +128,40 @@ const StudentViewPage = () => {
                   </div>
                 </div>
               </div>
-              <Button onClick={() => navigate(`/students/edit/${student.id}`)} className="h-10 px-6 rounded-xl shadow-lg shadow-primary/20">
-                <Edit className="mr-2 h-4 w-4" /> Edit Profile
-              </Button>
+              <div className="flex items-center gap-3">
+                {canReadStudent && (
+                  <Button 
+                    variant="outline" 
+                    onClick={async () => {
+                      if (!student) return
+                      setIsDownloading(true)
+                      try {
+                        await downloadAdmissionForm(student.id)
+                        toast.success("Admission form opened in new tab")
+                      } catch (error) {
+                        toast.error("Failed to download admission form")
+                      } finally {
+                        setIsDownloading(false)
+                      }
+                    }} 
+                    disabled={isDownloading}
+                    className="h-10 px-6 rounded-xl border-slate-200 dark:border-slate-800"
+                  >
+                    {isDownloading ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <FileText className="mr-2 h-4 w-4" />
+                    )}
+                    Admission Form
+                  </Button>
+                )}
+                
+                {canUpdateStudent && (
+                  <Button onClick={() => navigate(`/students/edit/${student.id}`)} className="h-10 px-6 rounded-xl shadow-lg shadow-primary/20">
+                    <Edit className="mr-2 h-4 w-4" /> Edit Profile
+                  </Button>
+                )}
+              </div>
             </div>
 
             <TabsList className="bg-transparent border-b border-slate-200 dark:border-slate-800 p-0 h-auto rounded-none w-full justify-start gap-8 shadow-none">
@@ -198,26 +233,54 @@ const StudentViewPage = () => {
                       <DetailItem label="Category" value={student.category} />
                       <DetailItem label="Religion" value={student.religion} />
                       <DetailItem label="Nationality" value={student.nationality} />
+                       <DetailItem label="Adhar Number" value={student.adhar_no} icon={<CreditCard className="h-4 w-4" />} />
+                      <DetailItem label="Place of Birth" value={student.place_of_birth} />
+                      <DetailItem label="Height" value={student.height} />
+                      <DetailItem label="Caste" value={student.caste} />
+                      <DetailItem label="Registration Date" value={<DateCell date={student.registration_date} />} icon={<Calendar className="h-4 w-4" />} />
                       <DetailItem label="Heard About Us" value={student.heard_about_us} />
                     </div>
                   </CardContent>
                 </Card>
 
-                <Card className="shadow-sm border-none bg-white dark:bg-slate-950 overflow-hidden rounded-2xl">
-                  <CardHeader className="pb-0 pt-4 px-6">
+                 <Card className="shadow-sm border-none bg-white dark:bg-slate-950 overflow-hidden rounded-2xl">
+                  <CardHeader className="pb-4 pt-5 px-6 border-b border-slate-100 dark:border-slate-800/60">
                     <CardTitle className="text-lg font-bold flex items-center gap-2 text-slate-800 dark:text-slate-100 m-0">
-                      <GraduationCap className="h-5 w-5 text-primary" /> Academic Information
+                      <GraduationCap className="h-5 w-5 text-primary" /> Educational Qualifications
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="pt-0.5 pb-6 px-6">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-7 gap-x-10">
-                      <DetailItem label="Registration Date" value={<DateCell date={student.registration_date} />} icon={<Calendar className="h-4 w-4" />} />
-                      <DetailItem label="Stream" value={student.stream} />
-                      <DetailItem label="Class/Year" value={student.class_year} />
-                      <DetailItem label="University Enroll No." value={student.university_enrollment_no || "N/A"} />
-                      <div className="sm:col-span-2">
-                        <DetailItem label="School/College/Company" value={student.school_college_company} icon={<BookOpen className="h-4 w-4" />} />
-                      </div>
+                  <CardContent className="p-0">
+                    <div className="overflow-x-auto">
+                      <Table paginationRequired={false}>
+                        <TableHeader>
+                          <TableRow className="bg-slate-50/50 dark:bg-slate-900/50">
+                            <TableHead className="font-bold py-3">Degree</TableHead>
+                            <TableHead className="font-bold py-3">Year of Passing</TableHead>
+                            <TableHead className="font-bold py-3">Subject / Discipline</TableHead>
+                            <TableHead className="font-bold py-3">Board / University</TableHead>
+                            <TableHead className="font-bold py-3">Marks</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {student.qualifications && student.qualifications.length > 0 ? (
+                            student.qualifications.map((qual, index) => (
+                              <TableRow key={index}>
+                                <TableCell className="font-bold py-3">{qual.degree}</TableCell>
+                                <TableCell className="py-3">{qual.passing_year || "N/A"}</TableCell>
+                                <TableCell className="py-3">{qual.subject_discipline || "N/A"}</TableCell>
+                                <TableCell className="py-3">{qual.board_university || "N/A"}</TableCell>
+                                <TableCell className="py-3">{qual.marks || "N/A"}</TableCell>
+                              </TableRow>
+                            ))
+                          ) : (
+                            <TableRow>
+                              <TableCell colSpan={5} className="text-center py-6 text-slate-500 italic">
+                                No educational qualifications recorded
+                              </TableCell>
+                            </TableRow>
+                          )}
+                        </TableBody>
+                      </Table>
                     </div>
                   </CardContent>
                 </Card>
@@ -237,6 +300,7 @@ const StudentViewPage = () => {
                     </div>
                   </CardContent>
                 </Card>
+
               </div>
             </div>
 

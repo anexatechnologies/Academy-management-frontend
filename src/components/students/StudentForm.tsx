@@ -1,4 +1,4 @@
-import { useForm, Controller } from "react-hook-form"
+import { useForm, Controller, useFieldArray } from "react-hook-form"
 import { toast } from "sonner"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Input } from "@/components/ui/input"
@@ -9,7 +9,7 @@ import { Upload } from "@/components/ui/upload"
 import { FormFooter } from "@/components/ui/form-footer"
 import { DatePickerInput } from "@/components/ui/date-picker"
 import { ComboBox } from "@/components/ui/combobox"
-import { X, IndianRupee, Calculator, Percent, Camera, ClipboardList } from "lucide-react"
+import { X, IndianRupee, Calculator, Percent, Camera, ClipboardList, Plus, Trash2, GraduationCap } from "lucide-react"
 import {
   Tooltip,
   TooltipContent,
@@ -35,6 +35,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+
+const DEGREE_OPTIONS: { label: string; value: "S.S.C." | "H.S.C." | "Degree" | "Post Graduate" }[] = [
+  { label: "S.S.C.", value: "S.S.C." },
+  { label: "H.S.C.", value: "H.S.C." },
+  { label: "Degree", value: "Degree" },
+  { label: "Post Graduate", value: "Post Graduate" },
+]
 
 type DiscountType = "flat" | "percent"
 
@@ -82,6 +89,9 @@ export const StudentForm = ({
             return { first_name, middle_name, last_name }
           })()
           : { first_name: "", middle_name: "", last_name: "" }),
+        qualifications: initialValues.qualifications && initialValues.qualifications.length > 0 
+          ? initialValues.qualifications 
+          : [{ degree: "S.S.C.", passing_year: "", subject_discipline: "", board_university: "", marks: "" }],
         batch_ids: [],
         fee_mode: "one-time",
         discount_amount: null,
@@ -90,13 +100,23 @@ export const StudentForm = ({
       : {
         gender: "Male",
         category: "Open/General",
-        nationality: "Indian",
+        adhar_no: "",
+        place_of_birth: "",
+        height: "",
+        caste: "",
+        qualifications: [{ degree: "S.S.C.", passing_year: "", subject_discipline: "", board_university: "", marks: "" }],
         batch_ids: [],
         fee_mode: "one-time",
         discount_amount: null,
         discount_percentage: null,
       },
   })
+
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "qualifications",
+  })
+
 
   const [discountType, setDiscountType] = useState<DiscountType>("flat")
   const [isWebcamOpen, setIsWebcamOpen] = useState(false)
@@ -123,6 +143,7 @@ export const StudentForm = ({
     setValue("last_name", enquiryData.last_name)
     setValue("personal_contact", enquiryData.personal_contact)
     if (enquiryData.email) setValue("email", enquiryData.email)
+    if (enquiryData.height) setValue("height", enquiryData.height)
   }, [enquiryData, setValue])
 
   // Batch ComboBox for Section 4
@@ -412,8 +433,7 @@ export const StudentForm = ({
                 <Input
                   {...register("registration_no")}
                   label="Registration No."
-                  required={true}
-                  placeholder="e.g. 1000001"
+                  placeholder="e.g. 1000001 (Optional)"
                   className="rounded-lg text-sm font-mono"
                   error={errors.registration_no?.message}
                   disabled={isLoading}
@@ -528,6 +548,46 @@ export const StudentForm = ({
                   placeholder="e.g. Indian"
                   className="rounded-lg text-sm"
                   error={errors.nationality?.message}
+                  disabled={isLoading}
+                />
+
+                <Input
+                  {...register("adhar_no")}
+                  label="Adhar Number"
+                  placeholder="12-digit Adhar Number"
+                  maxLength={12}
+                  onInput={(e: React.FormEvent<HTMLInputElement>) => {
+                    e.currentTarget.value = e.currentTarget.value.replace(/\D/g, '').slice(0, 12);
+                  }}
+                  className="rounded-lg text-sm"
+                  error={errors.adhar_no?.message}
+                  disabled={isLoading}
+                />
+
+                <Input
+                  {...register("place_of_birth")}
+                  label="Place of Birth"
+                  placeholder="Enter place of birth"
+                  className="rounded-lg text-sm"
+                  error={errors.place_of_birth?.message}
+                  disabled={isLoading}
+                />
+
+                <Input
+                  {...register("height")}
+                  label="Height"
+                  placeholder="e.g. 5.8 ft"
+                  className="rounded-lg text-sm"
+                  error={errors.height?.message}
+                  disabled={isLoading}
+                />
+
+                <Input
+                  {...register("caste")}
+                  label="Caste"
+                  placeholder="Enter detailed caste"
+                  className="rounded-lg text-sm"
+                  error={errors.caste?.message}
                   disabled={isLoading}
                 />
 
@@ -745,54 +805,125 @@ export const StudentForm = ({
 
             {/* Section 3: Academic Information */}
             <div className="space-y-6">
-              <div className="flex items-center gap-3">
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-primary text-[10px] font-bold">3</span>
-                <h2 className="text-[13px] font-bold text-slate-500 uppercase tracking-widest">Academic Information</h2>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-6 w-6 items-center justify-center rounded-md bg-primary/10 text-primary shrink-0">
+                    <GraduationCap className="h-3.5 w-3.5" />
+                  </div>
+                  <h2 className="text-[13px] font-bold text-slate-500 uppercase tracking-widest">Academic Information</h2>
+                </div>
+                {!isLoading && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => append({ degree: "Degree", passing_year: "", subject_discipline: "", board_university: "", marks: "" })}
+                    className="h-8 px-3 rounded-lg border-primary/20 hover:bg-primary/5 text-primary gap-1.5"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    <span>Add Qualification</span>
+                  </Button>
+                )}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-                <Input
-                  {...register("school_college_company")}
-                  label="School / College / Company"
-                  placeholder="Enter institution name"
-                  className="rounded-lg text-sm"
-                  error={errors.school_college_company?.message}
-                  disabled={isLoading}
-                />
-                <Input
-                  {...register("stream")}
-                  label="Stream"
-                  placeholder="e.g. Science, Commerce, Arts"
-                  className="rounded-lg text-sm"
-                  error={errors.stream?.message}
-                  disabled={isLoading}
-                />
-                <Input
-                  {...register("class_year")}
-                  label="Class / Year"
-                  placeholder="e.g. 12th, 1st Year"
-                  className="rounded-lg text-sm"
-                  error={errors.class_year?.message}
-                  disabled={isLoading}
-                />
-                <Input
-                  {...register("semester")}
-                  label="Semester"
-                  placeholder="e.g. 1st, 2nd"
-                  className="rounded-lg text-sm"
-                  error={errors.semester?.message}
-                  disabled={isLoading}
-                />
-                <Input
-                  {...register("university_enrollment_no")}
-                  label="University Enrollment No."
-                  placeholder="Enter enrollment number"
-                  className="rounded-lg text-sm"
-                  error={errors.university_enrollment_no?.message}
-                  disabled={isLoading}
-                />
+              <div className="space-y-4">
+                {fields.map((field, index) => {
+                  const watchedQualifications = watch("qualifications")
+                  const currentDegree = watchedQualifications?.[index]?.degree
+                  const otherSelectedDegrees = watchedQualifications
+                    ?.filter((_, i) => i !== index)
+                    .map(q => q.degree)
+
+                  const dynamicOptions = DEGREE_OPTIONS.map(opt => ({
+                    ...opt,
+                    disabled: (otherSelectedDegrees as string[])?.includes(opt.value) && opt.value !== currentDegree
+                  }))
+
+                  return (
+                    <div 
+                      key={field.id} 
+                      className="relative p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-900/30 animate-in fade-in slide-in-from-top-2 duration-300"
+                    >
+                      {fields.length > 1 && !isLoading && (
+                        <button
+                          type="button"
+                          onClick={() => remove(index)}
+                          className="absolute top-4 right-4 p-2 rounded-full text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-all z-10"
+                          title="Remove qualification"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      )}
+
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div className="md:col-span-1">
+                          <Controller
+                            control={control}
+                            name={`qualifications.${index}.degree`}
+                            render={({ field }) => (
+                              <CustomSelect
+                                label="Degree"
+                                options={dynamicOptions}
+                                value={field.value}
+                                onValueChange={field.onChange}
+                                disabled={isLoading}
+                                triggerClassName="w-full h-11 rounded-lg bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 shadow-none text-sm font-bold"
+                              />
+                            )}
+                          />
+                        </div>
+                        <div className="md:col-span-1">
+                          <Input
+                            {...register(`qualifications.${index}.passing_year`)}
+                            label="Passing Year"
+                            placeholder="YYYY"
+                            maxLength={4}
+                            className="h-11 rounded-lg"
+                            disabled={isLoading}
+                            error={errors.qualifications?.[index]?.passing_year?.message}
+                          />
+                        </div>
+                        <div className="md:col-span-2">
+                          <Input
+                            {...register(`qualifications.${index}.subject_discipline`)}
+                            label="Subject / Discipline"
+                            placeholder="e.g. Science / Arts / Commerce"
+                            className="h-11 rounded-lg"
+                            disabled={isLoading}
+                            error={errors.qualifications?.[index]?.subject_discipline?.message}
+                          />
+                        </div>
+                        <div className="md:col-span-3">
+                          <Input
+                            {...register(`qualifications.${index}.board_university`)}
+                            label="Board / University"
+                            placeholder="e.g. Mumbai University"
+                            className="h-11 rounded-lg"
+                            disabled={isLoading}
+                            error={errors.qualifications?.[index]?.board_university?.message}
+                          />
+                        </div>
+                        <div className="md:col-span-1">
+                          <Input
+                            {...register(`qualifications.${index}.marks`)}
+                            label="Marks / Grade"
+                            placeholder="e.g. 85.50"
+                            className="h-11 rounded-lg"
+                            disabled={isLoading}
+                            error={errors.qualifications?.[index]?.marks?.message}
+                            onInput={(e: any) => {
+                              // Only allow numbers and one decimal point
+                              e.target.value = e.target.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1')
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
+
 
             <div className="h-px bg-slate-100 dark:bg-slate-800" />
 

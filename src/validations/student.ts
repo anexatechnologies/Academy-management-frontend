@@ -18,13 +18,17 @@ export const studentSchema = z.object({
   gender: z.string().min(1, "Gender is required"),
   date_of_birth: z.string().min(1, "Date of birth is required"),
   registration_date: z.string().min(1, "Registration date is required"),
-  registration_no: z.string().regex(/^(?:REG-[0-9]{7}|[0-9]{7})$/, "Numeric 7-digit ID only"),
+  registration_no: z.string().regex(/^(?:REG-[0-9]{7}|[0-9]{7})$/, "Numeric 7-digit ID only").optional().or(z.literal("")),
   attendance_id: z.string().regex(/^(?:AT-[0-9]{7}|[0-9]{7})$/, "Numeric 7-digit ID only").optional().or(z.literal("")),
   nationality: z.string().nullish(),
   category: z.string().nullish(),
   religion: z.string().nullish(),
   heard_about_us: z.string().nullish(),
   heard_about_us_remark: z.string().nullish(),
+  adhar_no: z.string().regex(/^\d{12}$/, "Adhar number must be exactly 12 digits").nullish().or(z.literal("")),
+  place_of_birth: z.string().nullish().or(z.literal("")),
+  height: z.string().nullish().or(z.literal("")),
+  caste: z.string().nullish().or(z.literal("")),
 
   // Section 2: Contact Info
   personal_contact: z.string().regex(/^\d{10}$/, "Contact must be exactly 10 digits"),
@@ -35,12 +39,14 @@ export const studentSchema = z.object({
   mother_email: z.string().email("Invalid email format").nullish().or(z.literal("")),
   reference: z.string().nullish(),
 
-  // Section 3: College/School Info
-  school_college_company: z.string().nullish(),
-  stream: z.string().nullish(),
-  class_year: z.string().nullish(),
-  semester: z.string().nullish(),
-  university_enrollment_no: z.string().nullish(),
+  // Section 3: Academic Qualifications
+  qualifications: z.array(z.object({
+    degree: z.enum(["S.S.C.", "H.S.C.", "Degree", "Post Graduate"]),
+    passing_year: z.string().regex(/^\d{4}$/, "Must be a 4-digit year"),
+    subject_discipline: z.string().min(1, "Subject/Discipline is required"),
+    board_university: z.string().min(1, "Board/University is required"),
+    marks: z.string().regex(/^\d{1,3}(\.\d{1,2})?$/, "Invalid format (e.g. 85.50)"),
+  })).optional(),
 
   // Section 4: Batches
   batch_ids: z.array(z.number()).optional(),

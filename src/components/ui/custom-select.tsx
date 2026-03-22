@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label"
 export interface CustomSelectOption {
   value: string
   label: React.ReactNode
+  disabled?: boolean
 }
 
 interface CustomSelectProps {
@@ -72,7 +73,7 @@ export function CustomSelect({
           </SelectTrigger>
           <SelectContent>
             {options.map((option) => (
-              <SelectItem key={option.value} value={option.value}>
+              <SelectItem key={option.value} value={option.value} disabled={option.disabled}>
                 {option.label}
               </SelectItem>
             ))}

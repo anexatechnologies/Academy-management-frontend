@@ -1,3 +1,10 @@
+export interface Qualification {
+  degree: "S.S.C." | "H.S.C." | "Degree" | "Post Graduate"
+  passing_year: string
+  subject_discipline: string
+  board_university: string
+  marks: string
+}
 
 export interface Installment {
   id: number
@@ -56,12 +63,12 @@ export interface Student {
   father_email: string
   mother_email: string
   reference: string
-  school_college_company: string
-  stream: string
-  class_year: string
-  semester: string
-  university_enrollment_no: string
   status: "active" | "inactive"
+  adhar_no?: string
+  place_of_birth?: string
+  height?: string
+  caste?: string
+  qualifications?: Qualification[]
   batches?: EnrolledBatch[]
   created_at: string
   updated_at: string
@@ -93,11 +100,11 @@ export interface CreateStudentPayload {
   father_email?: string | null
   mother_email?: string | null
   reference?: string | null
-  school_college_company?: string | null
-  stream?: string | null
-  class_year?: string | null
-  semester?: string | null
-  university_enrollment_no?: string | null
+  adhar_no?: string | null
+  place_of_birth?: string | null
+  height?: string | null
+  caste?: string | null
+  qualifications?: Qualification[]
   batch_ids?: number[]
 }
 
