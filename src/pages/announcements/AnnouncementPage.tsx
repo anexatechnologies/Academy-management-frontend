@@ -52,6 +52,7 @@ const AnnouncementPage = () => {
   // --- State ---
   const [targetType, setTargetType] = useState<AnnouncementTargetType>("batch")
   const [selectedTargetIds, setSelectedTargetIds] = useState<number[]>([])
+  const [selectedStudentName, setSelectedStudentName] = useState<string>("")
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>("")
   const [selectedChannels, setSelectedChannels] = useState<string[]>(["sms"])
   const [placeholderData, setPlaceholderData] = useState<Record<string, string>>({})
@@ -129,6 +130,7 @@ const AnnouncementPage = () => {
   useEffect(() => {
     // Reset selected IDs when target type changes
     setSelectedTargetIds([])
+    setSelectedStudentName("")
   }, [targetType])
 
   // Init placeholder data when required placeholders change
@@ -161,7 +163,12 @@ const AnnouncementPage = () => {
   const handleStudentSelect = (val: string) => {
     if (!val) {
       setSelectedTargetIds([])
+      setSelectedStudentName("")
       return
+    }
+    const student = studentComboBox.options.find(o => o.value === val)
+    if (student) {
+      setSelectedStudentName(student.label)
     }
     setSelectedTargetIds([Number(val)])
   }
@@ -367,7 +374,12 @@ const AnnouncementPage = () => {
                       disabled={isSending}
                       value={selectedTargetIds.length > 0 ? String(selectedTargetIds[0]) : ""}
                       onValueChange={handleStudentSelect}
-                      options={studentComboBox.options}
+                      options={[
+                        ...(selectedTargetIds.length > 0 && selectedStudentName
+                          ? [{ value: String(selectedTargetIds[0]), label: selectedStudentName }]
+                          : []),
+                        ...studentComboBox.options.filter(o => o.value !== String(selectedTargetIds[0]))
+                      ]}
                       onSearch={studentComboBox.onSearch}
                       onLoadMore={studentComboBox.onLoadMore}
                       onReset={studentComboBox.onReset}
@@ -387,7 +399,7 @@ const AnnouncementPage = () => {
                         </div>
                         <div className="flex-1">
                            <p className="text-sm font-bold text-slate-900 dark:text-slate-100 uppercase tracking-tight">
-                              {studentComboBox.options.find(o => o.value === String(selectedTargetIds[0]))?.label || "Student Selected"}
+                              {selectedStudentName || "Student Selected"}
                            </p>
                            <p className="text-[11px] text-primary font-bold">Recipient Ready</p>
                         </div>
@@ -396,7 +408,10 @@ const AnnouncementPage = () => {
                           size="icon" 
                           disabled={isSending}
                           className="h-8 w-8 hover:bg-primary/10 text-slate-400 hover:text-primary cursor-pointer"
-                          onClick={() => setSelectedTargetIds([])}
+                          onClick={() => {
+                            setSelectedTargetIds([])
+                            setSelectedStudentName("")
+                          }}
                         >
                           <X className="h-4 w-4" />
                         </Button>
