@@ -30,8 +30,8 @@ const staffSchema = z.object({
   experience_years: z.coerce.number().min(0, "Experience cannot be negative"),
   last_employer: z.string().nullish(),
   // System IDs (Optional for auto-generation)
-  registration_no: z.string().regex(/^(?:SREG-[0-9]{7}|[0-9]{7})$/, "Numeric 7-digit ID only").optional().or(z.literal("")),
-  attendance_id: z.string().regex(/^(?:SAT-[0-9]{7}|[0-9]{7})$/, "Numeric 7-digit ID only").optional().or(z.literal("")),
+  registration_no: z.string().optional().or(z.literal("")),
+  attendance_id: z.string().regex(/^\d*$/, "Numbers only").optional().or(z.literal("")),
 })
 
 export type StaffFormValues = z.infer<typeof staffSchema>
@@ -139,6 +139,9 @@ export const StaffForm = ({
                 className="h-10 rounded-lg text-sm font-mono"
                 error={errors.attendance_id?.message}
                 disabled={isLoading}
+                onInput={(e: React.FormEvent<HTMLInputElement>) => {
+                  e.currentTarget.value = e.currentTarget.value.replace(/\D/g, '');
+                }}
               />
 
               <div className="md:col-span-2 space-y-2">

@@ -446,6 +446,9 @@ export const StudentForm = ({
                   className="rounded-lg text-sm font-mono"
                   error={errors.attendance_id?.message}
                   disabled={isLoading}
+                  onInput={(e: React.FormEvent<HTMLInputElement>) => {
+                    e.currentTarget.value = e.currentTarget.value.replace(/\D/g, '');
+                  }}
                 />
                 <Input
                   {...register("first_name")}

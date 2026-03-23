@@ -198,7 +198,10 @@ const StudentViewPage = () => {
                         )}
                       </div>
                       <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100">{student.name}</h3>
-                      <p className="text-sm text-slate-500 mt-1 font-medium italic">Student ID: #{student.student_id}</p>
+                      <div className="flex flex-col items-center gap-1 mt-2">
+                        <p className="text-[13px] text-slate-500 font-medium">Registration ID: <span className="text-slate-700 dark:text-slate-300 font-semibold">{student.registration_no || "N/A"}</span></p>
+                        <p className="text-[13px] text-slate-500 font-medium">Biometric ID: <span className="text-slate-700 dark:text-slate-300 font-semibold">{student.attendance_id || "N/A"}</span></p>
+                      </div>
                       
                       <Separator className="my-6 opacity-50" />
                       
