@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { DateCell } from "@/components/ui/date-cell"
 import { BatchStudentsList } from "@/components/batches/BatchStudentsList"
 import { BatchAssignModal } from "@/components/batches/BatchAssignModal"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 
 const BatchViewPage = () => {
@@ -99,9 +100,27 @@ const BatchViewPage = () => {
               <CardTitle className="text-lg flex items-center gap-2">
                 <Users className="h-5 w-5 text-primary" /> Students
               </CardTitle>
-              <Button size="sm" className="h-8" onClick={() => setIsAssignModalOpen(true)}>
-                Assign Students
-              </Button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div>
+                      <Button 
+                        size="sm" 
+                        className="h-8" 
+                        onClick={() => setIsAssignModalOpen(true)}
+                        disabled={batch.status === "inactive"}
+                      >
+                        Assign Students
+                      </Button>
+                    </div>
+                  </TooltipTrigger>
+                  {batch.status === "inactive" && (
+                    <TooltipContent side="top">
+                      <p>You can't assign students to an inactive batch.</p>
+                    </TooltipContent>
+                  )}
+                </Tooltip>
+              </TooltipProvider>
             </CardHeader>
             <CardContent className="p-0 sm:p-6 sm:pt-0">
               <BatchStudentsList batchId={batch.id} />

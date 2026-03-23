@@ -81,7 +81,7 @@ export const BatchForm = ({
                 required={true}
                 placeholder="Select a course"
                 value={String(watch("course_id") || "")}
-                onValueChange={(val) => setValue("course_id", Number(val))}
+                onValueChange={(val) => setValue("course_id", Number(val), { shouldValidate: true })}
                 options={courseComboBox.options}
                 onSearch={courseComboBox.onSearch}
                 onLoadMore={courseComboBox.onLoadMore}
@@ -175,7 +175,7 @@ export const BatchForm = ({
                 required={true}
                 placeholder="Select a staff member"
                 value={String(watch("staff_id") || "")}
-                onValueChange={(val) => setValue("staff_id", Number(val))}
+                onValueChange={(val) => setValue("staff_id", Number(val), { shouldValidate: true })}
                 options={staffComboBox.options}
                 onSearch={staffComboBox.onSearch}
                 onLoadMore={staffComboBox.onLoadMore}

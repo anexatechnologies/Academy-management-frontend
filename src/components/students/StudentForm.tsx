@@ -148,7 +148,7 @@ export const StudentForm = ({
   }, [enquiryData, setValue])
 
   // Batch ComboBox for Section 4
-  const batchComboBox = useBatchComboBox()
+  const batchComboBox = useBatchComboBox({ activeOnly: true })
   const [selectedBatches, setSelectedBatches] = useState<EnrolledBatch[]>([])
 
   // Sync selected batches when initialValues load

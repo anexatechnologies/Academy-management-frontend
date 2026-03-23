@@ -166,7 +166,7 @@ export function useStaffComboBox() {
   }
 }
 
-export function useBatchComboBox() {
+export function useBatchComboBox(options?: { activeOnly?: boolean }) {
   const [inputValue, setInputValue] = useState("")
   const [search, setSearch] = useState("")
   const [page, setPage] = useState(1)
@@ -188,7 +188,7 @@ export function useBatchComboBox() {
     page,
     limit: PAGE_SIZE,
     search: search || undefined,
-    status: "active",
+    status: options?.activeOnly ? "active" : undefined,
   })
 
   useEffect(() => {
@@ -196,15 +196,18 @@ export function useBatchComboBox() {
     const key = `${search}-${page}-${data.data.length}`
     if (key === lastProcessed.current) return
     lastProcessed.current = key
+    const activeData = options?.activeOnly 
+      ? data.data.filter((b) => b.status?.toLowerCase() === "active")
+      : data.data
 
-    const newOptions = data.data.map((b) => ({
+    const newOptions = activeData.map((b) => ({
       value: String(b.id),
       label: b.name,
     }))
 
     if (page === 1) {
       setAccumulated(newOptions)
-      setRawData(data.data)
+      setRawData(activeData)
     } else {
       setAccumulated((prev) => {
         const seen = new Set(prev.map((o) => o.value))
@@ -213,7 +216,7 @@ export function useBatchComboBox() {
       })
       setRawData((prev) => {
         const seen = new Set(prev.map((b) => b.id))
-        const unique = data.data.filter((b) => !seen.has(b.id))
+        const unique = activeData.filter((b) => !seen.has(b.id))
         return [...prev, ...unique]
       })
     }
