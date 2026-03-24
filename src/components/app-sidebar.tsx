@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Link, useLocation } from "react-router-dom"
+import { Link, useLocation, useNavigate } from "react-router-dom"
 import {
   LayoutDashboard,
   Users,
@@ -118,6 +118,7 @@ const settingsItems = [
 
 export function AppSidebar() {
   const location = useLocation()
+  const navigate = useNavigate()
   const { hasPermission } = usePermissions()
 
   const isUnderSettings = location.pathname.startsWith("/settings")
@@ -175,6 +176,7 @@ export function AppSidebar() {
                             tooltip={item.title}
                             isActive={isUnderStudents}
                             className="w-full cursor-pointer"
+                            onClick={() => navigate("/students")}
                           >
                             <item.icon />
                             <span>{item.title}</span>
@@ -238,6 +240,7 @@ export function AppSidebar() {
                             tooltip={item.title}
                             isActive={location.pathname.startsWith("/attendance")}
                             className="w-full cursor-pointer"
+                            onClick={() => navigate("/attendance/students")}
                           >
                             <item.icon />
                             <span>{item.title}</span>
@@ -315,6 +318,7 @@ export function AppSidebar() {
                         tooltip="Settings"
                         isActive={isUnderSettings}
                         className="w-full cursor-pointer"
+                        onClick={() => navigate("/settings")}
                       >
                         <Settings />
                         <span>Settings</span>
