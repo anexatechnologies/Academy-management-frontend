@@ -36,10 +36,12 @@ import EnquiryCreatePage from "@/pages/enquiries/EnquiryCreatePage"
 import EnquiryEditPage from "@/pages/enquiries/EnquiryEditPage"
 import EnquiryViewPage from "@/pages/enquiries/EnquiryViewPage"
 import AnnouncementPage from "@/pages/announcements/AnnouncementPage"
+import { PageTitle } from "@/components/PageTitle"
 
 function App() {
   return (
     <BrowserRouter>
+      <PageTitle />
       <Routes>
         {/* Public Routes */}
         <Route path="/login" element={<LoginPage />} />
