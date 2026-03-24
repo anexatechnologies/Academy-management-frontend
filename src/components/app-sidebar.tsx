@@ -15,6 +15,7 @@ import {
   ClipboardList,
   Megaphone,
   IndianRupee,
+  Plus,
 } from "lucide-react"
 import { usePermissions } from "@/hooks/use-permissions"
 
@@ -153,6 +154,7 @@ export function AppSidebar() {
                   "/attendance": "attendance",
                   "/reports": "reports",
                   "/announcements": "announcements",
+                  "/enquiries": "enquiries",
                   "/configure": "configure",
                   "/roles": "roles",
                 }
@@ -170,19 +172,32 @@ export function AppSidebar() {
                       onOpenChange={setStudentsOpen}
                       className="group/collapsible"
                     >
-                      <SidebarMenuItem>
+                      <SidebarMenuItem className="group/item relative">
                         <CollapsibleTrigger asChild>
                           <SidebarMenuButton
                             tooltip={item.title}
                             isActive={isUnderStudents}
-                            className="w-full cursor-pointer"
+                            className={`w-full cursor-pointer ${hasPermission("students", "create") ? "pr-12" : "pr-8"}`}
                             onClick={() => navigate("/students")}
                           >
                             <item.icon />
-                            <span>{item.title}</span>
-                            <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90 group-data-[collapsible=icon]:hidden" />
-                          </SidebarMenuButton>
+                            <span className="flex-1 truncate text-left">{item.title}</span>
+                            <ChevronRight className="ml-auto h-4 w-4 shrink-0 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90 group-data-[collapsible=icon]:hidden" />
+                           </SidebarMenuButton>
                         </CollapsibleTrigger>
+                        
+                        {hasPermission("students", "create") && (
+                          <div className="absolute right-6 top-1/2 -translate-y-1/2 opacity-0 group-hover/item:opacity-100 transition-opacity z-10 group-data-[collapsible=icon]:hidden">
+                            <Link
+                              to="/students/new"
+                              className="flex h-6 w-6 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-500 shadow-sm transition-colors hover:bg-primary hover:text-white dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400 dark:hover:bg-primary"
+                              title="Add Student"
+                            >
+                              <Plus className="h-4 w-4" />
+                            </Link>
+                          </div>
+                        )}
+
                         <CollapsibleContent className="transition-all duration-200 group-data-[collapsible=icon]:hidden">
                           <div className="relative ml-[22px] mt-0.5 mb-1">
                             <span className="absolute left-0 top-0 bottom-0 w-px bg-slate-200 dark:bg-slate-700" />
@@ -289,18 +304,34 @@ export function AppSidebar() {
                   )
                 }
 
+                const hasCreateEndpoint = ["users", "courses", "batches", "enquiries", "staff"].includes(moduleName)
+                const canCreate = hasCreateEndpoint && hasPermission(moduleName as any, "create")
+
                 return (
-                  <SidebarMenuItem key={item.title}>
+                  <SidebarMenuItem key={item.title} className="group/item relative">
                   <SidebarMenuButton
                     asChild
                     tooltip={item.title}
                     isActive={item.url === '/' ? location.pathname === '/' : location.pathname.startsWith(item.url)}
+                    className={canCreate ? "pr-10" : ""}
                   >
-                    <Link to={item.url}>
+                    <Link to={item.url} className="flex w-full items-center gap-2">
                       <item.icon />
-                      <span>{item.title}</span>
+                      <span className="flex-1 truncate text-left">{item.title}</span>
                     </Link>
                   </SidebarMenuButton>
+
+                  {canCreate && (
+                    <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover/item:opacity-100 transition-opacity z-10 group-data-[collapsible=icon]:hidden">
+                      <Link
+                        to={`${item.url}/new`}
+                        className="flex h-6 w-6 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-500 shadow-sm transition-colors hover:bg-primary hover:text-white dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400 dark:hover:bg-primary"
+                        title={`Add ${item.title.split(' ')[0]}`}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Link>
+                    </div>
+                  )}
                 </SidebarMenuItem>
               )})}
 
