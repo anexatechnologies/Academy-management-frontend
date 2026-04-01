@@ -69,6 +69,7 @@ export const StudentForm = ({
     watch,
     control,
     setError,
+    clearErrors,
     formState: { errors },
   } = useForm<StudentFormValues>({
     resolver: zodResolver(
@@ -90,22 +91,23 @@ export const StudentForm = ({
             return { first_name, middle_name, last_name }
           })()
           : { first_name: "", middle_name: "", last_name: "" }),
-        qualifications: initialValues.qualifications && initialValues.qualifications.length > 0 
-          ? initialValues.qualifications 
-          : [{ degree: "S.S.C.", passing_year: "", subject_discipline: "", board_university: "", marks: "" }],
+        qualifications:
+          initialValues.qualifications && initialValues.qualifications.length > 0
+            ? initialValues.qualifications
+            : [],
         batch_ids: [],
         fee_mode: "one-time",
         discount_amount: null,
         discount_percentage: null,
       } as any
       : {
-        gender: "Male",
+        gender: "",
         category: "Open/General",
         adhar_no: "",
         place_of_birth: "",
         height: "",
         caste: "",
-        qualifications: [{ degree: "S.S.C.", passing_year: "", subject_discipline: "", board_university: "", marks: "" }],
+        qualifications: [],
         batch_ids: [],
         fee_mode: "one-time",
         discount_amount: null,
@@ -356,7 +358,6 @@ export const StudentForm = ({
     }
   }, [selectedBatches, feeSettings, watchedDiscountAmount, watchedDiscountPercent, watchedFeeMode])
 
-
   return (
     <TooltipProvider>
       <form
@@ -364,9 +365,17 @@ export const StudentForm = ({
           const fullName = `${values.first_name} ${values.middle_name} ${values.last_name}`
             .replace(/\s+/g, " ")
             .trim()
+          const sanitizedQualifications = (values.qualifications ?? []).filter((q) => {
+            const py = (q.passing_year ?? "").trim()
+            const sd = (q.subject_discipline ?? "").trim()
+            const bu = (q.board_university ?? "").trim()
+            const mk = (q.marks ?? "").trim()
+            return Boolean(py || sd || bu || mk)
+          })
           const submission = {
             ...values,
             name: fullName,
+            qualifications: sanitizedQualifications.length > 0 ? sanitizedQualifications : undefined,
           }
           onSubmit(submission as StudentFormValues, setError)
         })}
@@ -503,13 +512,26 @@ export const StudentForm = ({
                   >
                     Gender
                   </Label>
-                  <CustomSelect
-                    options={[...GENDER_TYPES]}
-                    value={watch("gender") || "Male"}
-                    triggerClassName="w-full h-11 rounded-lg bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 shadow-none text-sm"
-                    onValueChange={(value) => setValue("gender", value)}
-                    disabled={isLoading}
-                    placeholder="Select gender"
+                  <Controller
+                    control={control}
+                    name="gender"
+                    render={({ field }) => (
+                      <CustomSelect
+                        options={[...GENDER_TYPES]}
+                        value={
+                          field.value != null && String(field.value).trim() !== ""
+                            ? String(field.value)
+                            : undefined
+                        }
+                        triggerClassName="w-full h-11 rounded-lg bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 shadow-none text-sm"
+                        onValueChange={(value) => {
+                          field.onChange(value)
+                          clearErrors("gender")
+                        }}
+                        disabled={isLoading}
+                        placeholder="Select gender"
+                      />
+                    )}
                   />
                   {errors.gender && <p className="text-[11px] text-rose-500 font-medium">{errors.gender.message}</p>}
                 </div>
@@ -585,6 +607,11 @@ export const StudentForm = ({
                   className="rounded-lg text-sm"
                   error={errors.height?.message}
                   disabled={isLoading}
+                  onInput={(e: React.FormEvent<HTMLInputElement>) => {
+                    e.currentTarget.value = e.currentTarget.value
+                      .replace(/[^0-9.]/g, "")
+                      .replace(/(\..*)\./g, "$1")
+                  }}
                 />
 
                 <Input
@@ -847,7 +874,7 @@ export const StudentForm = ({
                       key={field.id} 
                       className="relative p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-900/30 animate-in fade-in slide-in-from-top-2 duration-300"
                     >
-                      {fields.length > 1 && !isLoading && (
+                      {fields.length >= 1 && !isLoading && (
                         <div className="absolute top-4 right-4 z-10">
                           <DeleteButton
                             title="Qualification"
@@ -883,6 +910,9 @@ export const StudentForm = ({
                             className="h-11 rounded-lg"
                             disabled={isLoading}
                             error={errors.qualifications?.[index]?.passing_year?.message}
+                            onInput={(e: React.FormEvent<HTMLInputElement>) => {
+                              e.currentTarget.value = e.currentTarget.value.replace(/\D/g, "").slice(0, 4)
+                            }}
                           />
                         </div>
                         <div className="md:col-span-2">
