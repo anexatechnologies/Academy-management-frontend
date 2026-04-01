@@ -1,5 +1,56 @@
 import * as z from "zod"
 
+const qualificationEntrySchema = z
+  .object({
+    degree: z.enum(["S.S.C.", "H.S.C.", "Degree", "Post Graduate"]),
+    passing_year: z.string(),
+    subject_discipline: z.string(),
+    board_university: z.string(),
+    marks: z.string(),
+  })
+  .superRefine((data, ctx) => {
+    const py = (data.passing_year ?? "").trim()
+    const sd = (data.subject_discipline ?? "").trim()
+    const bu = (data.board_university ?? "").trim()
+    const mk = (data.marks ?? "").trim()
+    if (!py && !sd && !bu && !mk) return
+
+    if (!/^\d{4}$/.test(py)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Must be a 4-digit year",
+        path: ["passing_year"],
+      })
+    }
+    if (!sd) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Subject/Discipline is required",
+        path: ["subject_discipline"],
+      })
+    }
+    if (!bu) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Board/University is required",
+        path: ["board_university"],
+      })
+    }
+    if (!mk) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Invalid format (e.g. 85.50)",
+        path: ["marks"],
+      })
+    } else if (!/^\d{1,3}(\.\d{1,2})?$/.test(mk)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Invalid format (e.g. 85.50)",
+        path: ["marks"],
+      })
+    }
+  })
+
 export const studentSchema = z.object({
   // Section 1: Personal Info
   photo: z.instanceof(File).optional(),
@@ -39,14 +90,8 @@ export const studentSchema = z.object({
   mother_email: z.string().email("Invalid email format").nullish().or(z.literal("")),
   reference: z.string().nullish(),
 
-  // Section 3: Academic Qualifications
-  qualifications: z.array(z.object({
-    degree: z.enum(["S.S.C.", "H.S.C.", "Degree", "Post Graduate"]),
-    passing_year: z.string().regex(/^\d{4}$/, "Must be a 4-digit year"),
-    subject_discipline: z.string().min(1, "Subject/Discipline is required"),
-    board_university: z.string().min(1, "Board/University is required"),
-    marks: z.string().regex(/^\d{1,3}(\.\d{1,2})?$/, "Invalid format (e.g. 85.50)"),
-  })).optional(),
+  // Section 3: Academic Qualifications (optional; rows with no data are ignored)
+  qualifications: z.array(qualificationEntrySchema).optional(),
 
   // Section 4: Batches
   batch_ids: z.array(z.number()).optional(),
@@ -55,15 +100,27 @@ export const studentSchema = z.object({
   fee_mode: z.enum(["one-time", "installment"]).default("one-time"),
   discount_amount: z.number().min(0).optional().nullable(),
   discount_percentage: z.number().min(0).max(100).optional().nullable(),
-}).refine(
-  (data) =>
-    data.heard_about_us !== "Other" ||
-    (typeof data.heard_about_us_remark === "string" &&
-      data.heard_about_us_remark.trim().length > 0),
-  {
-    path: ["heard_about_us_remark"],
-    message: "Remark is required when 'Other' is selected",
-  }
-)
+})
+  .refine(
+    (data) =>
+      data.heard_about_us !== "Other" ||
+      (typeof data.heard_about_us_remark === "string" &&
+        data.heard_about_us_remark.trim().length > 0),
+    {
+      path: ["heard_about_us_remark"],
+      message: "Remark is required when 'Other' is selected",
+    }
+  )
+  .refine(
+    (data) => {
+      const h = data.height
+      if (h == null || String(h).trim() === "") return true
+      return /^\d+(\.\d+)?$/.test(String(h).trim())
+    },
+    {
+      path: ["height"],
+      message: "Use numbers and decimals only (e.g. 5.8)",
+    }
+  )
 
 export type StudentFormValues = z.infer<typeof studentSchema>
