@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/table"
 import { usePagination } from "@/hooks/use-pagination"
 import { useSearchFilter } from "@/hooks/use-search-filter"
-import { useStudents, useDeactivateStudent, useToggleStudentStatus } from "@/hooks/api/use-students"
+import { useStudents, useDeleteStudent, useToggleStudentStatus } from "@/hooks/api/use-students"
 import { GENDER_TYPES } from "@/utils/student-constants"
 import { toast } from "sonner"
 import { EditButton } from "@/components/ui/edit-button"
@@ -69,7 +69,7 @@ const StudentsListPage = () => {
     }
   }, [data?.pagination?.totalData, setTotal])
 
-  const deactivateStudent = useDeactivateStudent()
+  const deleteStudent = useDeleteStudent()
   const toggleStatus = useToggleStudentStatus()
   const { 
     canUpdateStudent, 
@@ -79,14 +79,14 @@ const StudentsListPage = () => {
   } = usePermissions()
   const [deletingId, setDeletingId] = useState<number | null>(null)
 
-  const handleDeactivate = async (id: number) => {
+  const handleDelete = async (id: number) => {
     setDeletingId(id)
     try {
-      await deactivateStudent.mutateAsync(id)
-      toast.success("Student deactivated successfully")
+      await deleteStudent.mutateAsync(id)
+      toast.success("Student deleted successfully")
     } catch (err: unknown) {
       const error = err as Error & { response?: { data?: { message?: string } } }
-      toast.error(error.response?.data?.message || "Failed to deactivate student")
+      toast.error(error.response?.data?.message || "Failed to delete student")
     } finally {
       setDeletingId(null)
     }
@@ -361,7 +361,7 @@ const StudentsListPage = () => {
                         <DeleteButton
                           title="Student"
                           loading={deletingId === student.id}
-                          onDelete={() => handleDeactivate(student.id)}
+                          onDelete={() => handleDelete(student.id)}
                         />
                       )}
                     </div>
