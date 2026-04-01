@@ -75,8 +75,8 @@ const MainLayout = () => {
             <AppSidebar />
             <main className="flex-1 overflow-hidden bg-slate-50/50 dark:bg-slate-950/50 flex flex-col h-screen">
               <header className="flex h-[73px] items-center gap-2 border-b px-4 md:px-6 bg-white dark:bg-slate-900 sticky top-0 z-10 shrink-0">
-                <SidebarTrigger className="md:hidden" />
-                <div className="h-4 w-px bg-slate-200 dark:bg-slate-800 md:hidden" />
+                <SidebarTrigger className="lg:hidden" />
+                <div className="h-4 w-px bg-slate-200 dark:bg-slate-800 lg:hidden" />
                 <div className="flex items-center gap-2 overflow-hidden flex-1 min-w-0">
                   <h2 className="text-sm font-medium text-slate-400 uppercase tracking-wider whitespace-nowrap">
                     Academy Management

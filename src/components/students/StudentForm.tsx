@@ -10,7 +10,7 @@ import { FormFooter } from "@/components/ui/form-footer"
 import { DatePickerInput } from "@/components/ui/date-picker"
 import { ComboBox } from "@/components/ui/combobox"
 import { DeleteButton } from "@/components/ui/delete-button"
-import { X, IndianRupee, Calculator, Percent, Camera, ClipboardList, Plus, GraduationCap } from "lucide-react"
+import { X, IndianRupee, Calculator, Percent, Camera, ClipboardList, Plus } from "lucide-react"
 import {
   Tooltip,
   TooltipContent,
@@ -372,8 +372,8 @@ export const StudentForm = ({
         })}
         className="relative flex flex-col"
       >
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm relative">
-          <div className="p-6 md:p-8 pb-24 md:pb-28 space-y-10">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm relative min-w-0 max-w-full">
+          <div className="p-4 sm:p-6 md:p-8 pb-24 md:pb-28 space-y-8 xl:space-y-10">
 
             {/* Enquiry Pre-fill (only shown when creating new student) */}
             {!isEdit && (
@@ -423,8 +423,9 @@ export const StudentForm = ({
               </div>
             )}
 
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 xl:gap-x-10 xl:gap-y-0">
             {/* Section 1: Personal Information */}
-            <div className="space-y-6">
+            <div className="space-y-6 min-w-0">
               <div className="flex items-center gap-3">
                 <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-primary text-[10px] font-bold">1</span>
                 <h2 className="text-[13px] font-bold text-slate-500 uppercase tracking-widest">Personal Information</h2>
@@ -557,8 +558,8 @@ export const StudentForm = ({
 
                 <Input
                   {...register("adhar_no")}
-                  label="Adhar Number"
-                  placeholder="12-digit Adhar Number"
+                  label="Aadhaar Number"
+                  placeholder="12-digit Aadhaar number"
                   maxLength={12}
                   onInput={(e: React.FormEvent<HTMLInputElement>) => {
                     e.currentTarget.value = e.currentTarget.value.replace(/\D/g, '').slice(0, 12);
@@ -720,10 +721,8 @@ export const StudentForm = ({
               </div>
             </div>
 
-            <div className="h-px bg-slate-100 dark:bg-slate-800" />
-
             {/* Section 2: Contact Information */}
-            <div className="space-y-6">
+            <div className="space-y-6 min-w-0">
               <div className="flex items-center gap-3">
                 <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-primary text-[10px] font-bold">2</span>
                 <h2 className="text-[13px] font-bold text-slate-500 uppercase tracking-widest">Contact Information</h2>
@@ -804,16 +803,16 @@ export const StudentForm = ({
                 />
               </div>
             </div>
+            </div>
 
             <div className="h-px bg-slate-100 dark:bg-slate-800" />
 
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 xl:gap-x-10 xl:gap-y-0 xl:items-start">
             {/* Section 3: Academic Information */}
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
+            <div className="space-y-6 min-w-0">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-6 w-6 items-center justify-center rounded-md bg-primary/10 text-primary shrink-0">
-                    <GraduationCap className="h-3.5 w-3.5" />
-                  </div>
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-[10px] font-bold">3</span>
                   <h2 className="text-[13px] font-bold text-slate-500 uppercase tracking-widest">Academic Information</h2>
                 </div>
                 {!isLoading && (
@@ -927,11 +926,8 @@ export const StudentForm = ({
               </div>
             </div>
 
-
-            <div className="h-px bg-slate-100 dark:bg-slate-800" />
-
             {/* Section 4: Batch Enrollment */}
-            <div className="space-y-6">
+            <div className="space-y-6 min-w-0">
               <div className="flex items-center gap-3">
                 <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-primary text-[10px] font-bold">4</span>
                 <h2 className="text-[13px] font-bold text-slate-500 uppercase tracking-widest">Batch Enrollment</h2>
@@ -1257,6 +1253,7 @@ export const StudentForm = ({
                 )}
               </div>
             </div>
+            </div>
           </div>
           <Dialog open={isWebcamOpen} onOpenChange={setIsWebcamOpen}>
             <DialogContent className="max-w-md">
@@ -1298,7 +1295,7 @@ export const StudentForm = ({
           </Dialog>
 
           {/* Sticky Footer */}
-          <div className="sticky -bottom-6 left-0 right-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 px-6 md:px-8 pt-4 pb-10 flex items-center justify-end z-40 rounded-b-xl">
+          <div className="sticky -bottom-6 left-0 right-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 px-4 sm:px-6 md:px-8 pt-4 pb-10 flex items-center justify-end z-40 rounded-b-xl">
             <FormFooter
               isLoading={isLoading}
               submitLabel={isEdit ? "Update Student" : "Register Student"}
