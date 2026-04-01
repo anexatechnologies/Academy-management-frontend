@@ -96,16 +96,16 @@ export const useUpdateStudent = (id: number) => {
   })
 }
 
-export const useDeactivateStudent = () => {
+export const useDeleteStudent = () => {
   const axiosPrivate = useAxiosPrivate()
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async (id: number) => {
-      const { data } = await axiosPrivate.patch(`/students/${id}/status`, { status: "inactive" })
-      return data
+      await axiosPrivate.delete(`/students/${id}`)
     },
-    onSuccess: () => {
+    onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: ["students"] })
+      queryClient.removeQueries({ queryKey: ["students", id] })
     },
   })
 }
