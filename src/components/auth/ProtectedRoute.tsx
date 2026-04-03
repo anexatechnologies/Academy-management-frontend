@@ -14,15 +14,20 @@ const ProtectedRoute = ({ requiredPermissions }: ProtectedRouteProps) => {
   }
 
   if (requiredPermissions && requiredPermissions.length > 0) {
-    const hasPermission = requiredPermissions.every((req) => {
-      const [module, action] = req.split(':');
-      return auth.user?.permissions?.some(
-        (p) => p.module === module && (p.action === action || p.action === 'manage')
-      );
-    });
+    // Super admin can bypass permission checks
+    const isSuperAdmin = auth.user?.role === 'super_admin' || auth.user?.role === 'SUPER_ADMIN';
+    
+    if (!isSuperAdmin) {
+      const hasPermission = requiredPermissions.every((req) => {
+        const [module, action] = req.split(':');
+        return auth.user?.permissions?.some(
+          (p) => p.module === module && (p.action === action || p.action === 'manage')
+        );
+      });
 
-    if (!hasPermission) {
-      return <Navigate to="/unauthorized" replace />;
+      if (!hasPermission) {
+        return <Navigate to="/unauthorized" replace />;
+      }
     }
   }
 

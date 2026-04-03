@@ -12,11 +12,13 @@ const UserEditPage = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const userId = parseInt(id || "0")
-  
+
   const { data: user, isLoading } = useUser(userId)
   const { mutate: updateUser, isPending: isUpdating } = useUpdateUser(userId)
 
   const onSubmit = (values: UserFormValues, setError: UseFormSetError<UserFormValues>) => {
+    // Always send all fields so the backend receives a complete payload.
+    // Non–super admins cannot change non-password fields because those inputs are disabled in `UserForm`.
     const payload = {
       full_name: values.full_name,
       username: values.username,

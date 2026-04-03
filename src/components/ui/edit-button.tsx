@@ -31,7 +31,7 @@ export function EditButton({
             onClick={onEdit}
             disabled={loading}
             className={cn(
-              "h-9 w-9 text-slate-500 hover:text-primary hover:bg-primary/10 transition-colors rounded-lg",
+              "h-8 w-8 text-slate-500 hover:text-primary hover:bg-primary/10 transition-colors rounded-lg",
               className
             )}
           >

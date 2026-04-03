@@ -5,10 +5,12 @@ import { Label } from "@/components/ui/label"
 interface TextareaProps extends React.ComponentProps<"textarea"> {
   label?: string
   error?: string
+  required?: boolean
 }
 
-function Textarea({ className, label, error, id, ...props }: TextareaProps) {
-  const textareaId = id || React.useId()
+function Textarea({ className, label, error, required, id, ...props }: TextareaProps) {
+  const reactId = React.useId()
+  const textareaId = id || reactId
 
   return (
     <div className="space-y-1.5 w-full">
@@ -16,6 +18,7 @@ function Textarea({ className, label, error, id, ...props }: TextareaProps) {
         <Label 
           htmlFor={textareaId}
           className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 ml-0.5"
+          required={required}
         >
           {label}
         </Label>

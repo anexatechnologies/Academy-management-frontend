@@ -38,7 +38,7 @@ const ForgotPasswordPage = () => {
       toast.success("OTP sent to your phone!")
       navigate("/reset-password", { state: { phone } })
     },
-    onError: (error: any, variables) => {
+    onError: (error: unknown, variables) => {
       handleApiError(error, variables.setError)
     }
   })

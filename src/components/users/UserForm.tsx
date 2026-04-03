@@ -3,10 +3,11 @@ import type { UseFormSetError } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { Input } from "@/components/ui/input"
-import { CustomSelect } from "@/components/ui/custom-select"
+import { ComboBox } from "@/components/ui/combobox"
 import { Label } from "@/components/ui/label"
-import { useRoles } from "@/hooks/api/use-roles"
+import { useRoleComboBox } from "@/hooks/use-combobox-data"
 import { FormFooter } from "@/components/ui/form-footer"
+import { useAuth } from "@/context/AuthContext"
 
 const userSchema = z.object({
   full_name: z.string().min(2, "Full name must be at least 2 characters"),
@@ -32,7 +33,14 @@ interface UserFormProps {
 }
 
 export const UserForm = ({ initialValues, onSubmit, isLoading, isEdit }: UserFormProps) => {
-  const { data: roles, isLoading: isLoadingRoles } = useRoles()
+  const roleComboBox = useRoleComboBox("id")
+  const { auth } = useAuth()
+
+  // Check if current user is super admin
+  const isSuperAdmin = auth.user?.role === "super_admin" || auth.user?.role === "SUPER_ADMIN"
+
+  // For non-super admin users, only password field should be editable
+  const canEditOtherFields = isSuperAdmin
 
   const {
     register,
@@ -70,42 +78,62 @@ export const UserForm = ({ initialValues, onSubmit, isLoading, isEdit }: UserFor
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Input
           label="Full Name"
+          required={true}
           placeholder="Enter full name"
           {...register("full_name")}
           error={errors.full_name?.message}
+          disabled={isLoading || !canEditOtherFields}
         />
         <Input
           label="Username"
+          required={true}
           placeholder="Enter username"
           {...register("username")}
           error={errors.username?.message}
+          disabled={isLoading || !canEditOtherFields}
         />
         <Input
           label="Email Address"
+          required={true}
           placeholder="Enter email address"
           type="email"
           {...register("email")}
           error={errors.email?.message}
+          disabled={isLoading || !canEditOtherFields}
         />
         <Input
           label="Phone Number"
-          placeholder="Enter phone number"
+          required={true}
+          placeholder="Enter 10-digit phone number"
           {...register("phone")}
+          maxLength={10}
+          onInput={(e: React.FormEvent<HTMLInputElement>) => {
+            e.currentTarget.value = e.currentTarget.value.replace(/\D/g, '').slice(0, 10);
+          }}
           error={errors.phone?.message}
+          disabled={isLoading || !canEditOtherFields}
         />
-        
+
         <div className="space-y-2">
-          <Label className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 ml-0.5">Role</Label>
-          <CustomSelect
+          <Label
+            className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 ml-0.5"
+            required={true}
+          >
+            Role
+          </Label>
+          <ComboBox
             value={selectedRoleId}
             onValueChange={(val) => setValue("role_id", val, { shouldValidate: true })}
-            placeholder="Select role"
-            isLoading={isLoadingRoles}
+            placeholder="Select user role"
+            options={roleComboBox.options}
+            onSearch={roleComboBox.onSearch}
+            onLoadMore={roleComboBox.onLoadMore}
+            onReset={roleComboBox.onReset}
+            hasMore={roleComboBox.hasMore}
+            isLoading={roleComboBox.isLoading}
+            isLoadingMore={roleComboBox.isLoadingMore}
+            disabled={isLoading || !canEditOtherFields}
             triggerClassName="w-full h-11 rounded-lg bg-white dark:bg-slate-900/50 border-slate-200 border shadow-[0_1px_2px_rgba(0,0,0,0.05)] hover:border-primary/40 hover:shadow-sm focus:border-primary focus:ring-[3px] focus:ring-primary/20 transition-all px-3.5 text-base md:text-sm"
-            options={(roles || []).map((role) => ({
-              value: role.id.toString(),
-              label: role.name.replace("_", " ").replace(/\b\w/g, (l) => l.toUpperCase()),
-            }))}
           />
           {errors.role_id && (
             <p className="text-[11px] font-medium text-rose-500 ml-1 mt-1 transition-all">
@@ -116,10 +144,12 @@ export const UserForm = ({ initialValues, onSubmit, isLoading, isEdit }: UserFor
 
         <Input
           label={isEdit ? "New Password (Optional)" : "Password"}
+          required={!isEdit}
           placeholder={isEdit ? "Leave blank to keep current" : "Enter password"}
           type="password"
           {...register("password")}
           error={errors.password?.message}
+          disabled={isLoading}
         />
       </div>
 

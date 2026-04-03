@@ -1,6 +1,6 @@
 import { useAuth } from "@/context/AuthContext"
 
-type Action = "create" | "read" | "update" | "delete"
+type Action = "create" | "read" | "update" | "delete" | "read_financials" | "send"
 
 export const usePermissions = () => {
   const { auth } = useAuth()
@@ -27,5 +27,30 @@ export const usePermissions = () => {
     canReadUsers: hasPermission("users", "read"),
     canUpdateUser: hasPermission("users", "update"),
     canDeleteUser: hasPermission("users", "delete"),
+    canCreateCourse: hasPermission("courses", "create"),
+    canReadCourses: hasPermission("courses", "read"),
+    canUpdateCourse: hasPermission("courses", "update"),
+    canDeleteCourse: hasPermission("courses", "delete"),
+    canCreateStaff: hasPermission("staff", "create"),
+    canReadStaff: hasPermission("staff", "read"),
+    canUpdateStaff: hasPermission("staff", "update"),
+    canDeleteStaff: hasPermission("staff", "delete"),
+    canCreateBatch: hasPermission("batches", "create"),
+    canReadBatches: hasPermission("batches", "read"),
+    canUpdateBatch: hasPermission("batches", "update"),
+    canDeleteBatch: hasPermission("batches", "delete"),
+    canCreateEnquiry: hasPermission("enquiries", "create"),
+    canReadEnquiries: hasPermission("enquiries", "read"),
+    canUpdateEnquiry: hasPermission("enquiries", "update"),
+    canDeleteEnquiry: hasPermission("enquiries", "delete"),
+    canReadFinancials: hasPermission("dashboard", "read_financials"),
+    canReadAnnouncements: hasPermission("announcements", "read"),
+    canSendAnnouncements: hasPermission("announcements", "send"),
+    canCreateStudent: hasPermission("students", "create"),
+    canReadStudent: hasPermission("students", "read"),
+    canUpdateStudent: hasPermission("students", "update"),
+    canDeleteStudent: hasPermission("students", "delete"),
+    canReadPayments: hasPermission("payments", "read"),
+    canDeletePayments: hasPermission("payments", "delete"),
   }
 }

@@ -20,4 +20,5 @@ export const BreadcrumbProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   )
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useBreadcrumbs = () => useContext(BreadcrumbContext)

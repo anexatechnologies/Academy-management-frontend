@@ -44,16 +44,16 @@ export function DeleteButton({
           <Tooltip>
             <TooltipTrigger asChild>
               <PopoverTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  disabled={loading || disabled}
-                  className={cn(
-                    "h-9 w-9 text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-colors rounded-lg",
-                    open && "bg-rose-50 text-rose-600 shadow-inner",
-                    className
-                  )}
-                >
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    disabled={loading || disabled}
+                    className={cn(
+                      "h-8 w-8 text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-colors rounded-lg",
+                      open && "bg-rose-50 text-rose-600 shadow-inner",
+                      className
+                    )}
+                  >
                   {loading ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (

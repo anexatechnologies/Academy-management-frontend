@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react"
+import { useMemo, useEffect } from "react"
 import { RequirePermission } from "@/components/auth/RequirePermission"
 import { usePermissions } from "@/hooks/use-permissions"
 import { useNavigate } from "react-router-dom"
@@ -13,20 +13,20 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { useUsers, useDeleteUser, useToggleUserStatus } from "@/hooks/api/use-users"
-import { useRoles } from "@/hooks/api/use-roles"
+import { useRoleComboBox } from "@/hooks/use-combobox-data"
+import { ComboBox } from "@/components/ui/combobox"
 import BodyLayout from "@/components/layout/BodyLayout"
 import { toast } from "sonner"
 import { EditButton } from "@/components/ui/edit-button"
 import { DeleteButton } from "@/components/ui/delete-button"
 import { SearchBar } from "@/components/ui/search-bar"
 import { CustomSelect } from "@/components/ui/custom-select"
-
 import { useSearchFilter } from "@/hooks/use-search-filter"
+import { usePagination } from "@/hooks/use-pagination"
 
 const UsersListPage = () => {
   const navigate = useNavigate()
-  const [page, setPage] = useState(1)
-  const [limit, setLimit] = useState(10)
+  const { page, pageSize, setPage, setPageSize, setTotal } = usePagination()
 
   type UserFilters = {
     role?: string
@@ -35,18 +35,26 @@ const UsersListPage = () => {
 
   const { search, setSearch, params, setFilter, resetFilters } = useSearchFilter<UserFilters>({
     initialFilters: {},
+    onFilterChange: () => setPage(1),
   })
 
-  const { data, isLoading } = useUsers({
+  const { data, isLoading, isFetching } = useUsers({
     page,
-    limit,
+    limit: pageSize,
     ...params,
   })
+
+  // Sync total items with pagination hook
+  useEffect(() => {
+    if (data?.pagination?.totalData) {
+      setTotal(data.pagination.totalData)
+    }
+  }, [data?.pagination?.totalData, setTotal])
 
   const { mutate: deleteUser, isPending: isDeleting } = useDeleteUser()
   const { mutate: toggleStatus } = useToggleUserStatus()
 
-  const { data: rolesData, isLoading: isLoadingRoles } = useRoles()
+  const roleComboBox = useRoleComboBox("name")
   const { canUpdateUser, canDeleteUser } = usePermissions()
 
   const handleDelete = (id: number) => {
@@ -96,7 +104,7 @@ const UsersListPage = () => {
     <BodyLayout
       breadcrumbs={breadcrumbs}
       toolbar={
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 px-2 py-2">
           <SearchBar
             placeholder="Search users..."
             value={search}
@@ -105,15 +113,18 @@ const UsersListPage = () => {
           />
           <div className="w-px h-6 bg-slate-200 dark:bg-slate-800 hidden sm:block" />
           
-          <CustomSelect
-            value={params.role || "all"}
-            onValueChange={(val) => setFilter("role", val === "all" ? undefined : val)}
-            triggerClassName="w-[150px]"
-            isLoading={isLoadingRoles}
-            options={[
-              { value: "all", label: "All Roles" },
-              ...(rolesData || []).map(r => ({ value: r.name, label: r.name.replace("_", " ").replace(/\b\w/g, l => l.toUpperCase()) }))
-            ]}
+          <ComboBox
+            value={params.role || ""}
+            onValueChange={(val) => setFilter("role", val === "" ? undefined : val)}
+            placeholder="All Roles"
+            options={roleComboBox.options}
+            onSearch={roleComboBox.onSearch}
+            onLoadMore={roleComboBox.onLoadMore}
+            onReset={roleComboBox.onReset}
+            hasMore={roleComboBox.hasMore}
+            isLoading={roleComboBox.isLoading}
+            isLoadingMore={roleComboBox.isLoadingMore}
+            triggerClassName="w-[180px]"
           />
 
           <CustomSelect
@@ -168,14 +179,11 @@ const UsersListPage = () => {
       <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
         <Table
           page={page}
-          pageSize={limit}
+          pageSize={pageSize}
           totalPages={data?.pagination?.totalPages || 1}
           totalData={data?.pagination?.totalData || 0}
           onPageChange={setPage}
-          onPageSizeChange={(newLimit) => {
-            setLimit(newLimit)
-            setPage(1)
-          }}
+          onPageSizeChange={setPageSize}
         >
           <TableHeader>
             <TableRow>
@@ -190,7 +198,7 @@ const UsersListPage = () => {
               )}
             </TableRow>
           </TableHeader>
-          <TableBody loading={isLoading} columnCount={(canUpdateUser || canDeleteUser) ? 7 : 6} rowCount={limit}>
+          <TableBody loading={isLoading} fetching={isFetching && !isLoading} columnCount={(canUpdateUser || canDeleteUser) ? 7 : 6} rowCount={pageSize}>
             {!isLoading && data?.data.map((user) => (
               <TableRow key={user.id}>
                 <TableCell className="font-semibold text-slate-900 dark:text-slate-100">
