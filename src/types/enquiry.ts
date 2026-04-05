@@ -18,6 +18,10 @@ export interface Enquiry {
   height?: string
   weight?: string
   education?: string
+  gender?: string
+  parents_contact?: string
+  caste?: string
+  address?: string
   status: EnquiryStatus
   created_at: string
   updated_at: string
@@ -38,6 +42,10 @@ export interface CreateEnquiryPayload {
   height?: string
   weight?: string
   education?: string
+  gender?: string
+  parents_contact?: string
+  caste?: string
+  address?: string
 }
 
 export type UpdateEnquiryPayload = Partial<CreateEnquiryPayload> & {
