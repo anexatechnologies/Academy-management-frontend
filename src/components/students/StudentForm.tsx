@@ -147,6 +147,13 @@ export const StudentForm = ({
     setValue("personal_contact", enquiryData.personal_contact)
     if (enquiryData.email) setValue("email", enquiryData.email)
     if (enquiryData.height) setValue("height", enquiryData.height)
+    if (enquiryData.gender) setValue("gender", enquiryData.gender as any)
+    if (enquiryData.caste) setValue("caste", enquiryData.caste)
+    if (enquiryData.address) setValue("address", enquiryData.address)
+    if (enquiryData.parents_contact) setValue("father_contact", enquiryData.parents_contact)
+    if (enquiryData.education) {
+      setValue("qualifications.0.subject_discipline", enquiryData.education)
+    }
   }, [enquiryData, setValue])
 
   // Batch ComboBox for Section 4

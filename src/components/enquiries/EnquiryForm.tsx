@@ -2,7 +2,11 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { Input } from "@/components/ui/input"
+import { CustomSelect } from "@/components/ui/custom-select"
+import { Textarea } from "@/components/ui/textarea"
 import { FormFooter } from "@/components/ui/form-footer"
+import { GENDER_TYPES } from "@/utils/student-constants"
+import { Controller } from "react-hook-form"
 import type { UseFormSetError } from "react-hook-form"
 import type { Enquiry } from "@/types/enquiry"
 
@@ -15,6 +19,13 @@ const enquirySchema = z.object({
     height: z.string().optional(),
     weight: z.string().optional(),
     education: z.string().optional(),
+    gender: z.string().optional().or(z.literal("")),
+    parents_contact: z.string().optional().or(z.literal("")).refine(
+        (val) => !val || (val.length >= 10 && val.length <= 15),
+        "Parents contact must be between 10 and 15 digits"
+    ),
+    caste: z.string().optional().or(z.literal("")),
+    address: z.string().optional().or(z.literal("")),
 })
 
 export type EnquiryFormValues = z.infer<typeof enquirySchema>
@@ -37,6 +48,7 @@ export function EnquiryForm({
     const {
         register,
         handleSubmit,
+        control,
         setError,
         formState: { errors },
     } = useForm<EnquiryFormValues>({
@@ -51,6 +63,10 @@ export function EnquiryForm({
                 height: initialValues.height ?? "",
                 weight: initialValues.weight ?? "",
                 education: initialValues.education ?? "",
+                gender: initialValues.gender ?? "",
+                parents_contact: initialValues.parents_contact ?? "",
+                caste: initialValues.caste ?? "",
+                address: initialValues.address ?? "",
             }
             : {
                 first_name: "",
@@ -61,6 +77,10 @@ export function EnquiryForm({
                 height: "",
                 weight: "",
                 education: "",
+                gender: "Male",
+                parents_contact: "",
+                caste: "",
+                address: "",
             },
     })
 
@@ -111,6 +131,31 @@ export function EnquiryForm({
                                 error={errors.education?.message}
                                 disabled={isLoading}
                             />
+                            <div className="md:col-span-1">
+                                <Controller
+                                    name="gender"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <CustomSelect
+                                            label="Gender"
+                                            placeholder="Select gender"
+                                            options={GENDER_TYPES as any}
+                                            value={field.value}
+                                            onValueChange={field.onChange}
+                                            error={errors.gender?.message}
+                                            disabled={isLoading}
+                                        />
+                                    )}
+                                />
+                            </div>
+                            <Input
+                                {...register("caste")}
+                                label="Caste"
+                                placeholder="Enter caste"
+                                className="h-10 rounded-lg text-sm"
+                                error={errors.caste?.message}
+                                disabled={isLoading}
+                            />
                         </div>
                     </div>
 
@@ -146,6 +191,28 @@ export function EnquiryForm({
                                 error={errors.email?.message}
                                 disabled={isLoading}
                             />
+                            <Input
+                                {...register("parents_contact")}
+                                label="Parents Contact"
+                                placeholder="Enter 10-15 digit number"
+                                className="h-10 rounded-lg text-sm"
+                                maxLength={15}
+                                onInput={(e: React.FormEvent<HTMLInputElement>) => {
+                                    e.currentTarget.value = e.currentTarget.value.replace(/\D/g, "").slice(0, 15)
+                                }}
+                                error={errors.parents_contact?.message}
+                                disabled={isLoading}
+                            />
+                            <div className="md:col-span-2">
+                                <Textarea
+                                    {...register("address")}
+                                    label="Address"
+                                    placeholder="Enter full address"
+                                    className="min-h-[100px] resize-none rounded-xl text-sm"
+                                    error={errors.address?.message}
+                                    disabled={isLoading}
+                                />
+                            </div>
                         </div>
                     </div>
 
