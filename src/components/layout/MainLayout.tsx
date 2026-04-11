@@ -79,7 +79,7 @@ const MainLayout = () => {
                 <div className="h-4 w-px bg-slate-200 dark:bg-slate-800 lg:hidden" />
                 <div className="flex items-center gap-2 overflow-hidden flex-1 min-w-0">
                   <h2 className="text-sm font-medium text-slate-400 uppercase tracking-wider whitespace-nowrap">
-                    Academy Management
+                    Pawan Academy
                   </h2>
                   <HeaderBreadcrumbs />
                 </div>

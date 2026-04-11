@@ -11,6 +11,7 @@ export const STUDENT_CATEGORIES = [
   { label: "VJ/NT", value: "VJ/NT" },
   { label: "SBC", value: "SBC" },
   { label: "EWS", value: "EWS" },
+  { label: "Other", value: "Other" },
 ] as const
 
 export const RELIGIONS = [

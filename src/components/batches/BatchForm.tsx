@@ -46,19 +46,19 @@ export const BatchForm = ({
     resolver: zodResolver(batchSchema) as any,
     defaultValues: initialValues
       ? {
-          ...Object.fromEntries(
-            Object.entries(initialValues).map(([k, v]) => [k, v === null ? (typeof initialValues[k as keyof Batch] === 'number' ? 0 : "") : v])
-          ),
-        } as any
+        ...Object.fromEntries(
+          Object.entries(initialValues).map(([k, v]) => [k, v === null ? (typeof initialValues[k as keyof Batch] === 'number' ? 0 : "") : v])
+        ),
+      } as any
       : {
-          course_id: 0,
-          name: "",
-          capacity: 0,
-          hall_no: "",
-          start_date: "",
-          end_date: "",
-          staff_id: 0,
-        },
+        course_id: 0,
+        name: "",
+        capacity: 0,
+        hall_no: "",
+        start_date: "",
+        end_date: "",
+        staff_id: 0,
+      },
   })
 
   const courseComboBox = useCourseComboBox()
