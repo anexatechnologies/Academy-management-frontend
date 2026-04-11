@@ -102,7 +102,7 @@ export const StudentForm = ({
       } as any
       : {
         gender: "",
-        category: "Open/General",
+        category: "",
         adhar_no: "",
         place_of_birth: "",
         height: "",
@@ -385,6 +385,8 @@ export const StudentForm = ({
             qualifications: sanitizedQualifications.length > 0 ? sanitizedQualifications : undefined,
           }
           onSubmit(submission as StudentFormValues, setError)
+        }, () => {
+          toast.error("Please fill in all required fields before submitting.")
         })}
         className="relative flex flex-col"
       >
@@ -634,7 +636,7 @@ export const StudentForm = ({
                   <Label className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 ml-0.5">Category</Label>
                   <CustomSelect
                     options={[...STUDENT_CATEGORIES]}
-                    value={watch("category") || "Open/General"}
+                    value={watch("category") || ""}
                     triggerClassName="w-full h-11 rounded-lg bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 shadow-none text-sm"
                     onValueChange={(value) => setValue("category", value)}
                     disabled={isLoading}
@@ -715,6 +717,16 @@ export const StudentForm = ({
                   className="rounded-lg text-sm"
                   error={errors.pincode?.message}
                   disabled={isLoading}
+                  maxLength={6}
+                  inputMode="numeric"
+                  onKeyDown={(e) => {
+                    if (
+                      !/[0-9]/.test(e.key) &&
+                      !["Backspace", "Delete", "ArrowLeft", "ArrowRight", "Tab"].includes(e.key)
+                    ) {
+                      e.preventDefault()
+                    }
+                  }}
                 />
 
                 <div className="md:col-span-2 space-y-1.5">

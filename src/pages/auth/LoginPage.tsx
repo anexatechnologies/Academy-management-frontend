@@ -61,7 +61,7 @@ const LoginPage = () => {
         <div className="space-y-8">
           <div className="space-y-2 text-center md:text-left">
             <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
-              Academy Admin
+              Pawan Academy Admin
             </h1>
             <p className="text-slate-500 dark:text-slate-400">
               Welcome back! Please enter your details.
@@ -116,9 +116,9 @@ const LoginPage = () => {
           </form>
 
           <p className="text-center text-sm text-slate-500 dark:text-slate-400 mt-8">
-            Academy Management System • v1.0
+            Pawan Academy Management System • v1.0
           </p>
-        </div>
+        </div>  
       </div>
     </div>
   )

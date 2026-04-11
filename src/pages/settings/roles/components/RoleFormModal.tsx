@@ -220,7 +220,8 @@ const RoleFormModal = ({ isOpen, onClose, roleId }: RoleFormModalProps) => {
         )}
 
         <div className="p-6 pt-5 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-950 shrink-0">
-          <FormFooter 
+          <FormFooter
+            formId={isLoadingData ? undefined : "role-form"}
             isLoading={isSaving}
             onCancel={onClose}
             submitLabel={isEdit ? "Update Privileges" : "Finalize Role"}
