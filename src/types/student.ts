@@ -106,6 +106,8 @@ export interface CreateStudentPayload {
   caste?: string | null
   qualifications?: Qualification[]
   batch_ids?: number[]
+  /** Links new student registration to the source enquiry */
+  enquiry_id?: number
 }
 
 export type UpdateStudentPayload = Partial<CreateStudentPayload>
