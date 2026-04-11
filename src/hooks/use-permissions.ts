@@ -16,7 +16,8 @@ export const usePermissions = () => {
     }
 
     return auth.user.permissions.some(
-      (p) => p.module === module && p.action === action
+      (p) =>
+        p.module === module && (p.action === action || p.action === "manage")
     )
   }
 

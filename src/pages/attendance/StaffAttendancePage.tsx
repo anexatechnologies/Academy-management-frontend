@@ -20,6 +20,7 @@ import { DatePickerInput } from "@/components/ui/date-picker"
 import { format } from "date-fns"
 import ManualStaffAttendanceModal from "./components/ManualStaffAttendanceModal"
 import type { StaffAttendanceFilters } from "@/types/attendance"
+import { usePermissions } from "@/hooks/use-permissions"
 
 type SearchFilters = {
   staff_id: string | undefined
@@ -31,6 +32,8 @@ type SearchFilters = {
 const StaffAttendancePage = () => {
   const { page, pageSize, setPage, setPageSize, setTotal } = usePagination()
   const [isManualModalOpen, setIsManualModalOpen] = useState(false)
+  const { hasPermission } = usePermissions()
+  const canMarkManualAttendance = hasPermission("attendance", "create")
 
   const { search, setSearch, params, setFilter, resetFilters } = useSearchFilter<SearchFilters>({
     initialFilters: {
@@ -112,15 +115,17 @@ const StaffAttendancePage = () => {
         </div>
       }
       actions={
-        <div className="flex items-center gap-2">
-          <Button
-            onClick={() => setIsManualModalOpen(true)}
-            className="rounded-xl shadow-lg shadow-primary/20 h-10"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Mark Attendance
-          </Button>
-        </div>
+        canMarkManualAttendance ? (
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={() => setIsManualModalOpen(true)}
+              className="rounded-xl shadow-lg shadow-primary/20 h-10"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Mark Attendance
+            </Button>
+          </div>
+        ) : undefined
       }
     >
       <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
@@ -200,10 +205,12 @@ const StaffAttendancePage = () => {
         </Table>
       </div>
 
-      <ManualStaffAttendanceModal
-        isOpen={isManualModalOpen}
-        onClose={() => setIsManualModalOpen(false)}
-      />
+      {canMarkManualAttendance && (
+        <ManualStaffAttendanceModal
+          isOpen={isManualModalOpen}
+          onClose={() => setIsManualModalOpen(false)}
+        />
+      )}
     </BodyLayout>
   )
 }
