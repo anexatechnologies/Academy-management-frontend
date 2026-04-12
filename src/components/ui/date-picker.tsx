@@ -1,10 +1,16 @@
 import * as React from "react"
+import { createPortal } from "react-dom"
 import DatePicker from "react-datepicker"
 import type { DatePickerProps } from "react-datepicker"
 import "react-datepicker/dist/react-datepicker.css"
 import { CalendarIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Label } from "@/components/ui/label"
+
+// Renders the calendar popper directly in document.body so it escapes any
+// overflow:hidden or CSS transform stacking contexts (e.g. animated dialogs).
+const PortalPopper = ({ children }: { children: React.ReactNode }) =>
+  createPortal(children, document.body)
 
 /**
  * Converts a Date that may be UTC-midnight (e.g. new Date("2026-01-15")) into a
@@ -90,8 +96,8 @@ export function DatePickerInput({
               className
             )}
             wrapperClassName="w-full"
-            popperProps={{ strategy: "fixed" }}
-            popperPlacement="bottom-end"
+            popperContainer={PortalPopper}
+            popperPlacement="bottom-start"
             {...(props as any)}
           />
         </div>

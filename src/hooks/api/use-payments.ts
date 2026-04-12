@@ -47,6 +47,21 @@ export const useRefundPayment = (studentId?: number) => {
   })
 }
 
+export const useUpdateInstallmentDueDate = () => {
+  const axiosPrivate = useAxiosPrivate()
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({ installmentId, due_date }: { installmentId: number; due_date: string }) => {
+      const { data } = await axiosPrivate.put(`/payments/installments/${installmentId}/due-date`, { due_date })
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["pending-payments"] })
+    },
+  })
+}
+
 export const usePendingPayments = (params: {
   page?: number
   limit?: number

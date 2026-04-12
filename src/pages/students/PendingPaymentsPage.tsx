@@ -1,7 +1,8 @@
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import {
   AlertCircle,
+  CalendarClock,
   Clock,
   ExternalLink,
   History,
@@ -31,11 +32,19 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { DateCell } from "@/components/ui/date-cell"
+import DatePicker from "react-datepicker"
+import "react-datepicker/dist/react-datepicker.css"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn, formatCurrency } from "@/lib/utils"
-import { usePendingPayments } from "@/hooks/api/use-payments"
+import { usePendingPayments, useUpdateInstallmentDueDate } from "@/hooks/api/use-payments"
 import { useStudent } from "@/hooks/api/use-students"
 import { usePayments } from "@/hooks/api/use-payments"
 import { usePermissions } from "@/hooks/use-permissions"
@@ -45,6 +54,7 @@ import { BatchRefundDialog } from "@/components/students/BatchRefundDialog"
 import { useCertificates } from "@/hooks/api/use-certificates"
 import type { PendingPayment, PaymentType } from "@/types/payment"
 import type { Installment } from "@/types/student"
+import { format } from "date-fns"
 import { toast } from "sonner"
 import {
   Tooltip,
@@ -78,6 +88,96 @@ function ordinal(n: number) {
   const s = ["th", "st", "nd", "rd"]
   const v = n % 100
   return n + (s[(v - 20) % 10] || s[v] || s[0])
+}
+
+// ─── Change Due Date Modal ────────────────────────────────────────────────────
+interface ChangeDueDateModalProps {
+  record: PendingPayment | null
+  onClose: () => void
+}
+
+const ChangeDueDateModal = ({ record, onClose }: ChangeDueDateModalProps) => {
+  const updateDueDate = useUpdateInstallmentDueDate()
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null)
+
+  useEffect(() => {
+    setSelectedDate(record?.due_date ? new Date(record.due_date) : null)
+  }, [record])
+
+  const handleConfirm = async () => {
+    if (!record || !selectedDate) return
+    try {
+      await updateDueDate.mutateAsync({
+        installmentId: record.id,
+        due_date: format(selectedDate, "yyyy-MM-dd"),
+      })
+      toast.success("Due date updated successfully")
+      onClose()
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || "Failed to update due date")
+    }
+  }
+
+  return (
+    <Dialog open={!!record} onOpenChange={(open) => { if (!open) onClose() }}>
+      <DialogContent className="sm:max-w-[380px] p-0 border-none shadow-2xl rounded-2xl overflow-hidden">
+        <DialogHeader className="px-6 pt-6 pb-3">
+          <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-3">
+            <CalendarClock className="h-6 w-6 text-primary" />
+          </div>
+          <DialogTitle className="text-center text-xl font-bold">Change Due Date</DialogTitle>
+          {record && (
+            <p className="text-center text-sm text-slate-500 mt-1">
+              {record.student_name} · <span className="font-medium text-slate-700 dark:text-slate-300">{record.course_name}</span>
+            </p>
+          )}
+        </DialogHeader>
+
+        {/* Inline calendar — no popup, no portal, no outside-click conflicts */}
+        <div className="flex justify-center px-4 pb-2 [&_.react-datepicker]:border-0 [&_.react-datepicker]:shadow-none [&_.react-datepicker]:font-sans [&_.react-datepicker__month-container]:w-full [&_.react-datepicker]:w-full">
+          <DatePicker
+            inline
+            selected={selectedDate}
+            onChange={(date: Date | null) => setSelectedDate(date)}
+            showMonthDropdown
+            showYearDropdown
+            dropdownMode="select"
+            disabled={updateDueDate.isPending}
+          />
+        </div>
+
+        {/* Selected date display */}
+        <div className="mx-6 mb-4 px-4 py-2.5 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 flex items-center gap-2.5">
+          <CalendarClock className="h-4 w-4 text-slate-400 shrink-0" />
+          <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+            {selectedDate
+              ? format(selectedDate, "MMMM d, yyyy")
+              : <span className="text-slate-400 font-normal">No date selected</span>
+            }
+          </span>
+        </div>
+
+        <div className="flex gap-3 px-6 pb-6">
+          <Button
+            variant="outline"
+            className="flex-1"
+            onClick={onClose}
+            disabled={updateDueDate.isPending}
+          >
+            Cancel
+          </Button>
+          <Button
+            className="flex-1"
+            onClick={handleConfirm}
+            disabled={!selectedDate || updateDueDate.isPending}
+          >
+            {updateDueDate.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+            Confirm
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
 }
 
 // ─── Detail sheet ─────────────────────────────────────────────────────────────
@@ -444,10 +544,10 @@ const SORT_OPTIONS = [
 
 export default function PendingPaymentsPage() {
   const navigate = useNavigate()
-  const { 
-    canReadPayments: canRead, 
-    canUpdateStudent: canPay, 
-    canDeletePayments: canRefund 
+  const {
+    canReadPayments: canRead,
+    canUpdateStudent: canPay,
+    canDeletePayments: canRefund
   } = usePermissions()
 
   const [search, setSearch] = useState("")
@@ -458,6 +558,7 @@ export default function PendingPaymentsPage() {
 
   const [detailRecord, setDetailRecord] = useState<PendingPayment | null>(null)
   const [quickPayRecord, setQuickPayRecord] = useState<PendingPayment | null>(null)
+  const [changeDateRecord, setChangeDateRecord] = useState<PendingPayment | null>(null)
 
   const resetFilters = () => {
     setSearch("")
@@ -466,10 +567,10 @@ export default function PendingPaymentsPage() {
     setPage(1)
   }
 
-  const { data, isLoading, isFetching } = usePendingPayments({ 
-    page, 
-    limit, 
-    search: search || undefined, 
+  const { data, isLoading, isFetching } = usePendingPayments({
+    page,
+    limit,
+    search: search || undefined,
     status: status || undefined,
     sort: sort === "newest" ? undefined : sort
   })
@@ -490,7 +591,7 @@ export default function PendingPaymentsPage() {
   const pendingCount = data?.data?.filter(d => d.status === "pending").length ?? 0
 
   return (
-    <BodyLayout 
+    <BodyLayout
       breadcrumbs={breadcrumbs}
       toolbar={
         <div className="flex items-center gap-3 px-2 py-2">
@@ -522,7 +623,7 @@ export default function PendingPaymentsPage() {
               className="h-10 w-10 text-slate-500 hover:text-slate-900 dark:hover:text-slate-100 shrink-0 rounded-full"
               title="Clear filters"
             >
-               <X className="h-4 w-4" />
+              <X className="h-4 w-4" />
             </Button>
           )}
         </div>
@@ -609,14 +710,14 @@ export default function PendingPaymentsPage() {
                       <div className="flex flex-col gap-1">
                         <span className={cn(
                           "w-fit px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider",
-                          row.payment_type === "instalment" 
+                          row.payment_type === "instalment"
                             ? "bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400"
                             : "bg-indigo-50 text-indigo-700 dark:bg-indigo-900/20 dark:text-indigo-400"
                         )}>
                           {row.payment_type === "instalment" ? "EMI" : "One-Time"}
                         </span>
                         <p className="text-xs text-slate-500 font-medium">
-                          {row.payment_type === "instalment" 
+                          {row.payment_type === "instalment"
                             ? `${ordinal(row.installment_number)} Installment`
                             : "Full/Monthly"
                           }
@@ -657,6 +758,21 @@ export default function PendingPaymentsPage() {
                             <TooltipContent><p>View details and record payment</p></TooltipContent>
                           </Tooltip>
                         )}
+                        {row.payment_type === "instalment" && canPay && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setChangeDateRecord(row)}
+                                className="h-8 w-8 p-0 rounded-lg border-slate-200 dark:border-slate-700 text-slate-500 hover:text-primary hover:border-primary/40 hover:bg-primary/5"
+                              >
+                                <CalendarClock className="h-3.5 w-3.5" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent><p>Edit Due Date</p></TooltipContent>
+                          </Tooltip>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -679,6 +795,9 @@ export default function PendingPaymentsPage() {
 
       {/* Quick pay */}
       <QuickPaySheet record={quickPayRecord} onClose={() => setQuickPayRecord(null)} />
+
+      {/* Change Due Date */}
+      <ChangeDueDateModal record={changeDateRecord} onClose={() => setChangeDateRecord(null)} />
     </BodyLayout>
   )
 }
