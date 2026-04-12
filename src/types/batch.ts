@@ -11,6 +11,10 @@ export interface Batch {
   staff_name: string
   course_fees: string | number
   status: "active" | "inactive"
+  ground_start_time: string | null
+  ground_end_time: string | null
+  lecture_start_time: string | null
+  lecture_end_time: string | null
   created_at: string
   updated_at: string
 }
@@ -23,6 +27,10 @@ export interface CreateBatchPayload {
   start_date: string
   end_date: string
   staff_id: number
+  ground_start_time?: string | null
+  ground_end_time?: string | null
+  lecture_start_time?: string | null
+  lecture_end_time?: string | null
 }
 
 export type UpdateBatchPayload = Partial<CreateBatchPayload>
