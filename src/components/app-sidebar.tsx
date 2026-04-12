@@ -87,6 +87,11 @@ const items = [
     icon: FileText,
   },
   {
+    title: "Expense Manager",
+    url: "/expenses",
+    icon: IndianRupee,
+  },
+  {
     title: "Announcements",
     url: "/announcements",
     icon: Megaphone,
@@ -162,6 +167,7 @@ export function AppSidebar() {
                   "/enquiries": "enquiries",
                   "/configure": "configure",
                   "/roles": "roles",
+                  "/expenses": "expenses",
                 }
                 const moduleName = moduleMap[item.url]
                 if (moduleName && !hasPermission(moduleName, "read")) {

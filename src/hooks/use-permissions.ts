@@ -16,7 +16,8 @@ export const usePermissions = () => {
     }
 
     return auth.user.permissions.some(
-      (p) => p.module === module && p.action === action
+      (p) =>
+        p.module === module && (p.action === action || p.action === "manage")
     )
   }
 
@@ -52,5 +53,9 @@ export const usePermissions = () => {
     canDeleteStudent: hasPermission("students", "delete"),
     canReadPayments: hasPermission("payments", "read"),
     canDeletePayments: hasPermission("payments", "delete"),
+    canCreateExpense: hasPermission("expenses", "create"),
+    canReadExpenses: hasPermission("expenses", "read"),
+    canUpdateExpense: hasPermission("expenses", "update"),
+    canDeleteExpense: hasPermission("expenses", "delete"),
   }
 }

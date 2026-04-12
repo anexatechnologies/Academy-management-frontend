@@ -36,6 +36,7 @@ import EnquiryCreatePage from "@/pages/enquiries/EnquiryCreatePage"
 import EnquiryEditPage from "@/pages/enquiries/EnquiryEditPage"
 import EnquiryViewPage from "@/pages/enquiries/EnquiryViewPage"
 import AnnouncementPage from "@/pages/announcements/AnnouncementPage"
+import ExpensesPage from "@/pages/expenses/ExpensesPage"
 import { PageTitle } from "@/components/PageTitle"
 
 function App() {
@@ -91,6 +92,7 @@ function App() {
               <Route path="/announcements" element={<AnnouncementPage />} />
             </Route>
             <Route path="/reports" element={<ReportsPage />} />
+            <Route path="/expenses" element={<ExpensesPage />} />
 
             <Route path="/configure" element={<Navigate to="/settings" replace />} />
             <Route path="/settings/fees" element={<Navigate to="/settings" replace />} />

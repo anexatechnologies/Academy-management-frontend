@@ -7,6 +7,7 @@ import { StudentForm } from "@/components/students/StudentForm"
 import { useCreateStudent, useDownloadAdmissionForm } from "@/hooks/api/use-students"
 import { usePermissions } from "@/hooks/use-permissions"
 import { handleApiError } from "@/utils/api-error"
+import type { CreateStudentPayload } from "@/types/student"
 import type { StudentFormValues } from "@/validations/student"
 import type { UseFormSetError } from "react-hook-form"
 import {
@@ -90,11 +91,12 @@ const StudentCreatePage = () => {
   const onSubmit = async (values: StudentFormValues, setError: UseFormSetError<StudentFormValues>) => {
     try {
       const fullName = values.name || `${values.first_name} ${values.middle_name} ${values.last_name}`.replace(/\s+/g, " ").trim()
+      const resolvedEnquiryId = values.enquiry_id ?? enquiryId
       const result = await createStudent.mutateAsync({
         ...values,
         name: fullName,
-        ...(enquiryId ? { enquiry_id: enquiryId } : {}),
-      })
+        ...(resolvedEnquiryId != null ? { enquiry_id: resolvedEnquiryId } : {}),
+      } as CreateStudentPayload)
       const newId = parseCreatedStudentId(result)
       toast.success("Student registered successfully")
       resetCreateFormAfterSuccess()
