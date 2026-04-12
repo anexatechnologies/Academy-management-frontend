@@ -1,10 +1,11 @@
+import { useState } from "react"
 import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
@@ -27,6 +28,7 @@ const paymentSchema = z.object({
   payment_mode: z.enum(["Cash", "Online", "UPI", "Card", "Bank Transfer"]),
   payment_type: z.enum(["instalment", "monthly"]),
   transaction_reference: z.string().optional().or(z.literal("")),
+  next_due_date: z.any().optional().nullable(),
 })
 
 type PaymentFormValues = z.infer<typeof paymentSchema>
@@ -53,7 +55,8 @@ export const PaymentDialog = ({
   installments = [],
 }: PaymentDialogProps) => {
   const recordPayment = useRecordPayment(id)
-  
+  const [calendarOpen, setCalendarOpen] = useState(false)
+
   const {
     register,
     handleSubmit,
@@ -94,11 +97,18 @@ export const PaymentDialog = ({
     }
 
     try {
-      const formattedValues = {
+      const formattedValues: any = {
         ...values,
         payment_date: format(values.payment_date, "yyyy-MM-dd"),
       }
-      await recordPayment.mutateAsync(formattedValues as any)
+
+      if (formattedValues.next_due_date instanceof Date) {
+        formattedValues.next_due_date = format(formattedValues.next_due_date, "yyyy-MM-dd")
+      } else {
+        delete formattedValues.next_due_date
+      }
+
+      await recordPayment.mutateAsync(formattedValues)
       toast.success("Payment recorded successfully")
       reset()
       onClose()
@@ -116,7 +126,13 @@ export const PaymentDialog = ({
   ]
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open && calendarOpen) return
+        if (!open) onClose()
+      }}
+    >
       <DialogContent className="sm:max-w-[450px] p-0 overflow-hidden border-none shadow-2xl rounded-2xl">
         <DialogHeader className="p-8 pb-4">
           <div className="mx-auto w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mb-4">
@@ -192,6 +208,8 @@ export const PaymentDialog = ({
                   label="Payment Date"
                   value={field.value}
                   onChange={field.onChange}
+                  onCalendarOpen={() => setCalendarOpen(true)}
+                  onCalendarClose={() => setCalendarOpen(false)}
                   error={errors.payment_date?.message as string}
                   required
                   disabled={recordPayment.isPending}
@@ -222,6 +240,23 @@ export const PaymentDialog = ({
                 placeholder="Enter reference..."
                 error={errors.transaction_reference?.message as string}
                 disabled={recordPayment.isPending}
+              />
+            )}
+
+            {paymentType === "instalment" && (
+              <Controller
+                name="next_due_date"
+                control={control}
+                render={({ field }) => (
+                  <DatePickerInput
+                    label="Next Due Date (Optional)"
+                    value={field.value ?? null}
+                    onChange={field.onChange}
+                    onCalendarOpen={() => setCalendarOpen(true)}
+                    onCalendarClose={() => setCalendarOpen(false)}
+                    disabled={recordPayment.isPending}
+                  />
+                )}
               />
             )}
           </div>

@@ -42,9 +42,9 @@ import { EXPENSE_TYPES, type Expense } from "@/types/expense"
 const expenseSchema = z.object({
   expense_type: z.string().min(1, "Expense type is required"),
   amount: z
-    .number({ invalid_type_error: "Amount is required" })
+    .number({ error: "Amount is required" })
     .positive("Amount must be greater than 0"),
-  expense_date: z.date({ required_error: "Date is required" }),
+  expense_date: z.date({ error: "Date is required" }),
   paid_to: z.string().optional(),
   remarks: z.string().optional(),
   gst_no: z.string().optional(),

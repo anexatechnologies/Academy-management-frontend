@@ -7,6 +7,7 @@ import { handleApiError } from "@/utils/api-error"
 import { Loader2 } from "lucide-react"
 import type { StudentFormValues } from "@/validations/student"
 import type { UseFormSetError } from "react-hook-form"
+import type { Qualification } from "@/types/student"
 
 const StudentEditPage = () => {
   const { id } = useParams()
@@ -21,6 +22,7 @@ const StudentEditPage = () => {
       await updateStudent.mutateAsync({
         ...values,
         name: fullName || undefined,
+        qualifications: values.qualifications as Qualification[] | undefined,
       })
       toast.success("Student updated successfully")
       navigate("/students")
