@@ -13,6 +13,8 @@ interface FormFooterProps {
   cancelHref?: string
   className?: string
   fixed?: boolean // If true, fixes to the bottom of the screen instead of flowing with content
+  /** Associates the submit button with a form by id when the footer sits outside `<form>`. */
+  formId?: string
 }
 
 export function FormFooter({
@@ -24,6 +26,7 @@ export function FormFooter({
   cancelHref,
   className,
   fixed = false,
+  formId,
 }: FormFooterProps) {
   const navigate = useNavigate()
 
@@ -65,6 +68,7 @@ export function FormFooter({
         </Button>
         <Button
           type="submit"
+          form={formId}
           disabled={isLoading}
           className="flex-1 sm:flex-none h-11 px-8 rounded-xl font-medium shadow-lg shadow-primary/20"
         >

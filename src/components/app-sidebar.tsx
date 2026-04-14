@@ -47,11 +47,6 @@ const items = [
     icon: LayoutDashboard,
   },
   {
-    title: "User Management",
-    url: "/users",
-    icon: Users,
-  },
-  {
     title: "Course Management",
     url: "/courses",
     icon: BookOpen,
@@ -62,14 +57,14 @@ const items = [
     icon: Layers,
   },
   {
-    title: "Student Management",
-    url: "/students",
-    icon: GraduationCap,
-  },
-  {
     title: "Enquiry Management",
     url: "/enquiries",
     icon: ClipboardList,
+  },
+  {
+    title: "Student Management",
+    url: "/students",
+    icon: GraduationCap,
   },
   {
     title: "Staff Management",
@@ -92,6 +87,11 @@ const items = [
     icon: FileText,
   },
   {
+    title: "Expense Manager",
+    url: "/expenses",
+    icon: IndianRupee,
+  },
+  {
     title: "Announcements",
     url: "/announcements",
     icon: Megaphone,
@@ -100,6 +100,11 @@ const items = [
     title: "Roles & Permissions",
     url: "/roles",
     icon: Shield,
+  },
+  {
+    title: "User Management",
+    url: "/users",
+    icon: Users,
   },
 ]
 
@@ -130,9 +135,14 @@ export function AppSidebar() {
   return (
     <Sidebar variant="sidebar" collapsible="icon">
       <SidebarHeader className="h-[73px] flex-row items-center justify-between px-4 border-b group-data-[collapsible=icon]:justify-center">
-        <div className="flex items-center gap-2 font-bold text-xl text-primary transition-all group-data-[collapsible=icon]:hidden">
-          <BookOpen className="h-6 w-6" />
-          <span>Academy OS</span>
+        <div className="flex items-center gap-2 font-bold text-lg text-primary transition-all group-data-[collapsible=icon]:hidden">
+          <img
+            src="/academy-logo.jpeg"
+            height={60}
+            width={30}
+            alt="logo"
+          />
+          <span>Pawan Academy</span>
         </div>
         <SidebarTrigger className="h-8 w-8 text-muted-foreground hover:text-primary transition-colors shrink-0" />
       </SidebarHeader>
@@ -157,6 +167,7 @@ export function AppSidebar() {
                   "/enquiries": "enquiries",
                   "/configure": "configure",
                   "/roles": "roles",
+                  "/expenses": "expenses",
                 }
                 const moduleName = moduleMap[item.url]
                 if (moduleName && !hasPermission(moduleName, "read")) {
@@ -183,9 +194,9 @@ export function AppSidebar() {
                             <item.icon />
                             <span className="flex-1 truncate text-left">{item.title}</span>
                             <ChevronRight className="ml-auto h-4 w-4 shrink-0 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90 group-data-[collapsible=icon]:hidden" />
-                           </SidebarMenuButton>
+                          </SidebarMenuButton>
                         </CollapsibleTrigger>
-                        
+
                         {hasPermission("students", "create") && (
                           <div className="absolute right-6 top-1/2 -translate-y-1/2 opacity-0 group-hover/item:opacity-100 transition-opacity z-10 group-data-[collapsible=icon]:hidden">
                             <Link
@@ -309,31 +320,32 @@ export function AppSidebar() {
 
                 return (
                   <SidebarMenuItem key={item.title} className="group/item relative">
-                  <SidebarMenuButton
-                    asChild
-                    tooltip={item.title}
-                    isActive={item.url === '/' ? location.pathname === '/' : location.pathname.startsWith(item.url)}
-                    className={canCreate ? "pr-10" : ""}
-                  >
-                    <Link to={item.url} className="flex w-full items-center gap-2">
-                      <item.icon />
-                      <span className="flex-1 truncate text-left">{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-
-                  {canCreate && (
-                    <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover/item:opacity-100 transition-opacity z-10 group-data-[collapsible=icon]:hidden">
-                      <Link
-                        to={`${item.url}/new`}
-                        className="flex h-6 w-6 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-500 shadow-sm transition-colors hover:bg-primary hover:text-white dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400 dark:hover:bg-primary"
-                        title={`Add ${item.title.split(' ')[0]}`}
-                      >
-                        <Plus className="h-4 w-4" />
+                    <SidebarMenuButton
+                      asChild
+                      tooltip={item.title}
+                      isActive={item.url === '/' ? location.pathname === '/' : location.pathname.startsWith(item.url)}
+                      className={canCreate ? "pr-10" : ""}
+                    >
+                      <Link to={item.url} className="flex w-full items-center gap-2">
+                        <item.icon />
+                        <span className="flex-1 truncate text-left">{item.title}</span>
                       </Link>
-                    </div>
-                  )}
-                </SidebarMenuItem>
-              )})}
+                    </SidebarMenuButton>
+
+                    {canCreate && (
+                      <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover/item:opacity-100 transition-opacity z-10 group-data-[collapsible=icon]:hidden">
+                        <Link
+                          to={`${item.url}/new`}
+                          className="flex h-6 w-6 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-500 shadow-sm transition-colors hover:bg-primary hover:text-white dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400 dark:hover:bg-primary"
+                          title={`Add ${item.title.split(' ')[0]}`}
+                        >
+                          <Plus className="h-4 w-4" />
+                        </Link>
+                      </div>
+                    )}
+                  </SidebarMenuItem>
+                )
+              })}
 
               {/* Settings collapsible item */}
               <Collapsible
@@ -367,7 +379,7 @@ export function AppSidebar() {
                       {settingsItems.map((sub) => {
                         // Exact match only — prevents parent routes matching child routes
                         const isActive = location.pathname === sub.url
-                        
+
                         // Check permission for sub-items
                         const subModuleMap: Record<string, string> = {
                           "/settings": "settings",

@@ -40,7 +40,7 @@ export const CourseForm = ({ initialValues, onSubmit, isLoading, isEdit }: Cours
           <Input
             label="Course Name"
             required={true}
-            placeholder="e.g. Full Stack Web Development"
+            placeholder="e.g. Police Training"
             {...register("name")}
             error={errors.name?.message}
             disabled={isLoading}
@@ -51,12 +51,19 @@ export const CourseForm = ({ initialValues, onSubmit, isLoading, isEdit }: Cours
           <Input
             label="Course Fees"
             required={true}
-            type="number"
-            step="any"
-            placeholder="0.00"
+            placeholder="Enter Course Fees"
             {...register("fees", { valueAsNumber: true })}
             error={errors.fees?.message}
             disabled={isLoading}
+            maxLength={10}
+            onKeyDown={(e) => {
+              if (
+                !/[0-9.]/.test(e.key) &&
+                !["Backspace", "Delete", "ArrowLeft", "ArrowRight", "Tab"].includes(e.key)
+              ) {
+                e.preventDefault()
+              }
+            }}
           />
         </div>
       </div>

@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
-import { ArrowLeft, Edit, Calendar, Users, MapPin } from "lucide-react"
+import { ArrowLeft, Edit, Calendar, Users, MapPin, Clock } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import BodyLayout from "@/components/layout/BodyLayout"
 import { useBatch } from "@/hooks/api/use-batches"
@@ -11,6 +11,16 @@ import { BatchStudentsList } from "@/components/batches/BatchStudentsList"
 import { BatchAssignModal } from "@/components/batches/BatchAssignModal"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
+
+const formatTime = (time?: string | null) => {
+  if (!time) return null
+  const [hoursStr, minStr] = time.split(":")
+  if (!hoursStr || !minStr) return time
+  let h = parseInt(hoursStr, 10)
+  const ampm = h >= 12 ? "PM" : "AM"
+  h = h % 12 || 12
+  return `${h.toString().padStart(2, "0")}:${minStr} ${ampm}`
+}
 
 const BatchViewPage = () => {
   const { id } = useParams()
@@ -94,6 +104,74 @@ const BatchViewPage = () => {
               </div>
             </CardContent>
           </Card>
+
+          {/* Attendance Timings */}
+          {(batch.ground_start_time || batch.ground_end_time || batch.lecture_start_time || batch.lecture_end_time) && (
+            <Card className="shadow-sm border-none bg-white dark:bg-slate-950">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Clock className="h-5 w-5 text-primary" /> Attendance Timings
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {(batch.ground_start_time || batch.ground_end_time) && (
+                    <div className="bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/30 rounded-xl p-4 space-y-3">
+                      <div className="flex items-center gap-2">
+                        <span className="h-5 w-5 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                        </span>
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">Ground Timings</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-0.5">Start</span>
+                          <span className="text-base font-bold text-slate-800 dark:text-slate-100">
+                            {formatTime(batch.ground_start_time) ?? <span className="text-slate-400 font-normal text-sm">—</span>}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-0.5">End</span>
+                          <span className="text-base font-bold text-slate-800 dark:text-slate-100">
+                            {formatTime(batch.ground_end_time) ?? <span className="text-slate-400 font-normal text-sm">—</span>}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {(batch.lecture_start_time || batch.lecture_end_time) && (
+                    <div className="bg-blue-50/60 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900/30 rounded-xl p-4 space-y-3">
+                      <div className="flex items-center gap-2">
+                        <span className="h-5 w-5 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center">
+                          <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                        </span>
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-blue-700 dark:text-blue-400">Lecture Timings</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-0.5">Start</span>
+                          <span className="text-base font-bold text-slate-800 dark:text-slate-100">
+                            {formatTime(batch.lecture_start_time) ?? <span className="text-slate-400 font-normal text-sm">—</span>}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-0.5">End</span>
+                          <span className="text-base font-bold text-slate-800 dark:text-slate-100">
+                            {formatTime(batch.lecture_end_time) ?? <span className="text-slate-400 font-normal text-sm">—</span>}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <p className="mt-3 text-[11px] text-slate-400 flex items-center gap-1.5">
+                  <Clock className="w-3 h-3 shrink-0" />
+                  The biometric system applies a ± 30-minute buffer around each window when matching punches.
+                </p>
+              </CardContent>
+            </Card>
+          )}
 
           <Card className="shadow-sm border-none bg-white dark:bg-slate-950">
             <CardHeader className="flex flex-row items-center justify-between">

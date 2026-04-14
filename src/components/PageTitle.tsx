@@ -6,7 +6,7 @@ export function PageTitle() {
 
   useEffect(() => {
     const path = location.pathname
-    let title = "Academy Management"
+    let title = "Pawan Academy"
 
     // Exact routes
     const exactTitles: Record<string, string> = {
@@ -54,7 +54,7 @@ export function PageTitle() {
     }
 
     // Set title
-    document.title = `${title} | Academy Management`
+    document.title = `${title} | Pawan Academy`
   }, [location.pathname])
 
   return null

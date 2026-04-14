@@ -26,8 +26,8 @@ const PermissionsGrid = ({
         const isSomeSelected = modulePermissionIds.some((id) => selectedIds.includes(id)) && !isAllSelected
 
         return (
-          <div 
-            key={moduleName} 
+          <div
+            key={moduleName}
             className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden"
           >
             {/* Module Header (Select All logic) */}

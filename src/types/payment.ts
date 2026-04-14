@@ -28,6 +28,7 @@ export interface RecordPaymentPayload {
   payment_type?: PaymentType
   transaction_reference?: string
   due_date?: string
+  next_due_date?: string | null
   status?: PaymentStatus
 }
 

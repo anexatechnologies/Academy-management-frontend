@@ -1,10 +1,42 @@
 import * as React from "react"
+import { createPortal } from "react-dom"
 import DatePicker from "react-datepicker"
 import type { DatePickerProps } from "react-datepicker"
 import "react-datepicker/dist/react-datepicker.css"
 import { CalendarIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Label } from "@/components/ui/label"
+
+// Renders the calendar popper directly in document.body so it escapes any
+// overflow:hidden or CSS transform stacking contexts (e.g. animated dialogs).
+const PortalPopper = ({ children }: { children: React.ReactNode }) =>
+  createPortal(children, document.body)
+
+/**
+ * Converts a Date that may be UTC-midnight (e.g. new Date("2026-01-15")) into a
+ * local-midnight Date so react-datepicker displays the correct calendar day.
+ */
+function normalizeToLocal(date: Date | null | undefined): Date | null {
+  if (!date) return null
+  if (
+    date.getUTCHours() === 0 &&
+    date.getUTCMinutes() === 0 &&
+    date.getUTCSeconds() === 0 &&
+    date.getMilliseconds() === 0
+  ) {
+    return new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate())
+  }
+  return date
+}
+
+/**
+ * After the user picks a local date, returns a Date whose UTC components match
+ * the local calendar date so that `date.toISOString().split('T')[0]` always
+ * returns the correct YYYY-MM-DD string regardless of timezone.
+ */
+function normalizeToUTCMidnight(date: Date): Date {
+  return new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
+}
 
 interface CustomDatePickerProps extends Omit<DatePickerProps, "onChange" | "value" | "selected"> {
   label?: string
@@ -48,8 +80,8 @@ export function DatePickerInput({
           </div>
           <DatePicker
             id={inputId}
-            selected={value}
-            onChange={(date: Date | null) => onChange(date)}
+            selected={normalizeToLocal(value)}
+            onChange={(date: Date | null) => onChange(date ? normalizeToUTCMidnight(date) : null)}
             placeholderText={placeholder}
             dateFormat="MMM d, yyyy"
             showMonthDropdown
@@ -64,8 +96,8 @@ export function DatePickerInput({
               className
             )}
             wrapperClassName="w-full"
-            popperProps={{ strategy: "fixed" }}
-            popperPlacement="bottom-end"
+            popperContainer={PortalPopper}
+            popperPlacement="bottom-start"
             {...(props as any)}
           />
         </div>
