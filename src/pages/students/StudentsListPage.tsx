@@ -294,7 +294,16 @@ const StudentsListPage = () => {
                           {student.name}
                         </span>
                       )}
-                      <span className="text-[11px] text-slate-500 font-mono tracking-wider">{student.student_id}</span>
+                      {(student.registration_no || student.attendance_id) && (
+                        <span className="text-[10px] text-slate-500 font-mono tracking-wider leading-tight">
+                          {[
+                            student.registration_no ? `Reg. ${student.registration_no}` : null,
+                            student.attendance_id ? `Att. Id ${student.attendance_id}` : null,
+                          ]
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </TableCell>
