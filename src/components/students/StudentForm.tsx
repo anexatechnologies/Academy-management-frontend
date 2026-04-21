@@ -24,7 +24,7 @@ import { useEnquiry } from "@/hooks/api/use-enquiries"
 import type { EnrolledBatch } from "@/types/student"
 import { useFeeSettings } from "@/hooks/api/use-fee-settings"
 import { useState, useMemo, useEffect, useCallback, useRef } from "react"
-import { differenceInMonths, isValid } from "date-fns"
+import { differenceInMonths, format, isValid } from "date-fns"
 import { cn } from "@/lib/utils"
 import type { UseFormSetError } from "react-hook-form"
 import type { Student } from "@/types/student"
@@ -43,6 +43,10 @@ const DEGREE_OPTIONS: { label: string; value: "S.S.C." | "H.S.C." | "Degree" | "
   { label: "Degree", value: "Degree" },
   { label: "Post Graduate", value: "Post Graduate" },
 ]
+
+const getTodayYmd = () => format(new Date(), "yyyy-MM-dd")
+
+const emptyStr = (v: unknown) => (typeof v === "string" ? v.trim() : "")
 
 type DiscountType = "flat" | "percent"
 
@@ -76,10 +80,18 @@ export const StudentForm = ({
       studentSchema
     ) as any,
     defaultValues: initialValues
-      ? {
-        ...Object.fromEntries(
-          Object.entries(initialValues).map(([k, v]) => [k, v === null ? "" : v])
-        ),
+      ? ({
+        ...(() => {
+          const merged = Object.fromEntries(
+            Object.entries(initialValues).map(([k, v]) => [k, v === null ? "" : v])
+          ) as Record<string, unknown>
+          return {
+            ...merged,
+            nationality: emptyStr(merged.nationality) || "Indian",
+            state: emptyStr(merged.state) || "Maharashtra",
+            registration_date: emptyStr(merged.registration_date) || getTodayYmd(),
+          }
+        })(),
         // Derive split name fields from the existing full name
         ...(initialValues.name
           ? (() => {
@@ -100,7 +112,7 @@ export const StudentForm = ({
         discount_amount: null,
         discount_percentage: null,
         enquiry_id: undefined,
-      } as any
+      } as any)
       : {
         gender: "",
         category: "",
@@ -114,6 +126,9 @@ export const StudentForm = ({
         discount_amount: null,
         discount_percentage: null,
         enquiry_id: enquiryId,
+        registration_date: getTodayYmd(),
+        nationality: "Indian",
+        state: "Maharashtra",
       },
   })
 

@@ -160,8 +160,11 @@
   @apply !font-sans !border !border-primary/20 !rounded-[20px] !shadow-2xl !bg-white dark:!bg-slate-900 !p-4 !pt-5 !pb-5;
 }
 
+/* Radix modal dialogs set body { pointer-events: none }; inherited by portaled
+   calendars unless we opt back in — otherwise clicks never reach the picker. */
 .react-datepicker-popper {
   z-index: 50 !important;
+  pointer-events: auto !important;
 }
 .react-datepicker-popper[data-placement^=bottom] {
   @apply !pt-3;
