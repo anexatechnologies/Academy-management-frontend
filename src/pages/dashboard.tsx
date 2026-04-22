@@ -1,5 +1,6 @@
+import type { ReactNode } from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Users, UserCheck, IndianRupee, Gift, AlertCircle, Send } from "lucide-react"
+import { Users, UserCheck, IndianRupee, Gift, AlertCircle, Send, type LucideIcon } from "lucide-react"
 import { 
   useStudentCount, 
   useAttendanceSummary, 
@@ -40,7 +41,15 @@ export default function Dashboard() {
   const { mutate: sendWishes, isPending: isSendingWishes } = useSendBirthdayWishes()
   const { mutate: sendReminders, isPending: isSendingReminders } = useSendDueFeesReminders()
 
-  const stats = [
+  type DashboardStat = {
+    title: string
+    value: ReactNode
+    icon: LucideIcon
+    description: ReactNode
+    isLoading: boolean
+  }
+
+  const stats: DashboardStat[] = [
     {
       title: "Total Students",
       value: studentCount?.total || 0,
@@ -63,20 +72,61 @@ export default function Dashboard() {
     },
     {
       title: "Today's Attendance",
-      value: attendance ? `${attendance.ground.present + attendance.lecture.present}` : 0,
+      value: attendance ? (
+        <div className="grid grid-cols-2 gap-4 sm:gap-6">
+          <div className="space-y-0.5">
+            <p className="text-xs font-medium text-muted-foreground">Ground</p>
+            <p className="text-2xl font-bold tabular-nums">{attendance.ground.present}</p>
+            <p className="text-[11px] text-muted-foreground">present</p>
+          </div>
+          <div className="space-y-0.5">
+            <p className="text-xs font-medium text-muted-foreground">Lecture</p>
+            <p className="text-2xl font-bold tabular-nums">{attendance.lecture.present}</p>
+            <p className="text-[11px] text-muted-foreground">present</p>
+          </div>
+        </div>
+      ) : (
+        0
+      ),
       icon: UserCheck,
-      description: (
+      description: attendance ? (
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 pt-1">
+          <div className="space-y-1">
+            <div className="flex justify-between gap-1 text-[11px] leading-tight">
+              <span className="text-emerald-600 font-medium">{attendance.ground.present} present</span>
+              <span className="text-rose-500 font-medium">{attendance.ground.absent} absent</span>
+            </div>
+            <div className="h-1.5 w-full bg-rose-100 dark:bg-rose-950 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-emerald-500"
+                style={{
+                  width: `${attendance.total_active_students ? (attendance.ground.present / attendance.total_active_students) * 100 : 0}%`,
+                }}
+              />
+            </div>
+          </div>
+          <div className="space-y-1">
+            <div className="flex justify-between gap-1 text-[11px] leading-tight">
+              <span className="text-emerald-600 font-medium">{attendance.lecture.present} present</span>
+              <span className="text-rose-500 font-medium">{attendance.lecture.absent} absent</span>
+            </div>
+            <div className="h-1.5 w-full bg-rose-100 dark:bg-rose-950 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-emerald-500"
+                style={{
+                  width: `${attendance.total_active_students ? (attendance.lecture.present / attendance.total_active_students) * 100 : 0}%`,
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      ) : (
         <div className="space-y-1">
           <div className="flex justify-between text-xs">
-            <span className="text-emerald-500 font-medium">{attendance ? (attendance.ground.present + attendance.lecture.present) : 0} present</span>
-            <span className="text-rose-500 font-medium">{attendance ? attendance.total_active_students - (attendance.ground.present + attendance.lecture.present) : 0} absent</span>
+            <span className="text-emerald-500 font-medium">0 present</span>
+            <span className="text-rose-500 font-medium">0 absent</span>
           </div>
-          <div className="h-1.5 w-full bg-rose-100 dark:bg-rose-950 rounded-full overflow-hidden flex">
-            <div 
-              className="h-full bg-emerald-500" 
-              style={{ width: `${attendance?.total_active_students ? (((attendance.ground.present + attendance.lecture.present) / attendance.total_active_students) * 100) : 0}%` }} 
-            />
-          </div>
+          <div className="h-1.5 w-full bg-rose-100 dark:bg-rose-950 rounded-full overflow-hidden" />
         </div>
       ),
       isLoading: isLoadingAttendance,
