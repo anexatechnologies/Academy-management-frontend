@@ -24,6 +24,7 @@
     "echarts": "^6.0.0",
     "echarts-for-react": "^3.0.6",
     "lucide-react": "^0.564.0",
+    "motion": "^12.38.0",
     "radix-ui": "^1.4.3",
     "react": "^19.2.0",
     "react-datepicker": "^9.1.0",

@@ -5,6 +5,19 @@ import LoginPage from "@/pages/auth/LoginPage"
 import ForgotPasswordPage from "@/pages/auth/ForgotPasswordPage"
 import ResetPasswordPage from "@/pages/auth/ResetPasswordPage"
 import Dashboard from "@/pages/dashboard"
+
+// Landing page layout + pages
+import LandingLayout from "@/landing/LandingLayout"
+import LandingHome from "@/landing/pages/Home"
+import LandingCourses from "@/landing/pages/Courses"
+import LandingCourseDetail from "@/landing/pages/CourseDetail"
+import LandingContact from "@/landing/pages/Contact"
+import LandingAbout from "@/landing/pages/About"
+import LandingFacilities from "@/landing/pages/Facilities"
+import LandingAdmissions from "@/landing/pages/Admissions"
+import LandingAdvertisements from "@/landing/pages/Advertisements"
+import LandingGallery from "@/landing/pages/Gallery"
+import LandingResults from "@/landing/pages/Results"
 import UsersListPage from "@/pages/users/UsersListPage"
 import UserCreatePage from "@/pages/users/UserCreatePage"
 import UserEditPage from "@/pages/users/UserEditPage"
@@ -44,15 +57,29 @@ function App() {
     <BrowserRouter>
       <PageTitle />
       <Routes>
-        {/* Public Routes */}
+        {/* Public Landing Routes */}
+        <Route element={<LandingLayout />}>
+          <Route path="/" element={<LandingHome />} />
+          <Route path="/about" element={<LandingAbout />} />
+          <Route path="/admissions" element={<LandingAdmissions />} />
+          <Route path="/facilities" element={<LandingFacilities />} />
+          <Route path="/academics" element={<LandingCourses />} />
+          <Route path="/academics/:id" element={<LandingCourseDetail />} />
+          <Route path="/contact" element={<LandingContact />} />
+          <Route path="/gallery" element={<LandingGallery />} />
+          <Route path="/advertisements" element={<LandingAdvertisements />} />
+          <Route path="/results" element={<LandingResults />} />
+        </Route>
+
+        {/* Public Admin Auth Routes */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
 
-        {/* Protected Routes */}
+        {/* Protected Admin Routes */}
         <Route element={<ProtectedRoute />}>
           <Route element={<MainLayout />}>
-            <Route path="/" element={<Dashboard />} />
+            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/users" element={<UsersListPage />} />
             <Route path="/users/new" element={<UserCreatePage />} />
             <Route path="/users/edit/:id" element={<UserEditPage />} />
@@ -101,6 +128,9 @@ function App() {
             <Route path="/roles" element={<RolesListPage />} />
           </Route>
         </Route>
+
+        {/* Unauthorized — redirect to landing */}
+        <Route path="/unauthorized" element={<Navigate to="/" replace />} />
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />

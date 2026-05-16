@@ -43,7 +43,7 @@ import { NavUser } from "@/components/nav-user"
 const items = [
   {
     title: "Dashboard",
-    url: "/",
+    url: "/dashboard",
     icon: LayoutDashboard,
   },
   {
@@ -154,7 +154,7 @@ export function AppSidebar() {
               {items.map((item) => {
                 // Determine module name from URL or add it to items array
                 const moduleMap: Record<string, string> = {
-                  "/": "dashboard",
+                  "/dashboard": "dashboard",
                   "/users": "users",
                   "/courses": "courses",
                   "/batches": "batches",
@@ -323,7 +323,7 @@ export function AppSidebar() {
                     <SidebarMenuButton
                       asChild
                       tooltip={item.title}
-                      isActive={item.url === '/' ? location.pathname === '/' : location.pathname.startsWith(item.url)}
+                      isActive={item.url === '/dashboard' ? location.pathname === '/dashboard' : location.pathname.startsWith(item.url)}
                       className={canCreate ? "pr-10" : ""}
                     >
                       <Link to={item.url} className="flex w-full items-center gap-2">
