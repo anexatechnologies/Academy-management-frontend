@@ -105,10 +105,10 @@ const ChangeDueDateModal = ({ record, onClose }: ChangeDueDateModalProps) => {
   }, [record])
 
   const handleConfirm = async () => {
-    if (!record || !selectedDate) return
+    if (!record || !record.id || !selectedDate) return
     try {
       await updateDueDate.mutateAsync({
-        installmentId: record.id,
+        installmentId: record.id as number,
         due_date: format(selectedDate, "yyyy-MM-dd"),
       })
       toast.success("Due date updated successfully")
