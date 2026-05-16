@@ -27,6 +27,7 @@ export const useRecordPayment = (studentId?: number) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["payments", studentId] })
       queryClient.invalidateQueries({ queryKey: ["students", studentId] })
+      queryClient.invalidateQueries({ queryKey: ["pending-payments"] })
     },
   })
 }

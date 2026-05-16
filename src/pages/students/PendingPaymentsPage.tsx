@@ -337,7 +337,7 @@ const DetailSheet = ({ record, onClose, canPay, canRefund }: DetailSheetProps) =
                 <Card className="shadow-sm border-slate-200 dark:border-slate-800 overflow-hidden rounded-2xl">
                   <CardHeader className="py-3 px-5 border-b border-slate-100 dark:border-slate-800/60">
                     <CardTitle className="text-sm font-bold flex items-center gap-2 text-slate-800 dark:text-slate-100">
-                      <Layers className="h-4 w-4 text-primary" /> EMI Schedule
+                      <Layers className="h-4 w-4 text-primary" /> Payment Schedule
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="p-0">
@@ -634,7 +634,7 @@ export default function PendingPaymentsPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
             <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Pending Payments</h1>
-            <p className="text-sm text-slate-500 mt-0.5">All outstanding installments across all students</p>
+            <p className="text-sm text-slate-500 mt-0.5">All outstanding payments across all students</p>
           </div>
           {!isLoading && (
             <div className="flex items-center gap-2 flex-wrap">
@@ -691,7 +691,7 @@ export default function PendingPaymentsPage() {
                 </TableRow>
               ) : (
                 data?.data?.map((row) => (
-                  <TableRow key={row.id} className="group">
+                  <TableRow key={row.id ?? `course-${row.student_course_id}`} className="group">
                     <TableCell>
                       <div>
                         <button
@@ -714,7 +714,7 @@ export default function PendingPaymentsPage() {
                             ? "bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400"
                             : "bg-indigo-50 text-indigo-700 dark:bg-indigo-900/20 dark:text-indigo-400"
                         )}>
-                          {row.payment_type === "instalment" ? "EMI" : "One-Time"}
+                          {row.payment_type === "instalment" ? "Scheduled" : "One-Time"}
                         </span>
                         <p className="text-xs text-slate-500 font-medium">
                           {row.payment_type === "instalment"

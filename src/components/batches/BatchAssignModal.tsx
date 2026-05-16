@@ -247,7 +247,7 @@ export function BatchAssignModal({ batchId, isOpen, onClose }: BatchAssignModalP
                   <CustomSelect
                     options={[
                       { label: "One-Time (Full payment)", value: "one-time" },
-                      { label: "Instalment (EMI)", value: "installment" },
+                      { label: "Installment Plan", value: "installment" },
                     ]}
                     value={feeMode}
                     onValueChange={(val: any) => setFeeMode(val)}
@@ -558,7 +558,7 @@ export function BatchAssignModal({ batchId, isOpen, onClose }: BatchAssignModalP
                     {feeSummary.emiBreakdown.length > 0 && (
                       <div className="border border-amber-200/60 dark:border-amber-800/40 rounded-xl overflow-hidden bg-amber-50/50 dark:bg-amber-900/10 p-4 space-y-3 shadow-sm">
                         <p className="text-[11px] font-bold text-amber-600 dark:text-amber-500 uppercase tracking-widest flex items-center gap-1.5 border-b border-amber-200/60 dark:border-amber-800/40 pb-2">
-                          <Calculator className="h-4 w-4" /> EMI Schedule Preview
+                          <Calculator className="h-4 w-4" /> Payment Schedule Preview
                         </p>
                         {feeSummary.emiBreakdown.map((emi, i) => (
                           <div key={i} className="flex items-center justify-between rounded-lg bg-white dark:bg-slate-900 border border-amber-200/60 dark:border-amber-800/40 px-3 py-2.5 shadow-sm">

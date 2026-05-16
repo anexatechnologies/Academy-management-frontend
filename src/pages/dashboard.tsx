@@ -292,8 +292,10 @@ export default function Dashboard() {
                 </TableHeader>
                 <TableBody loading={isLoadingPayments} fetching={isFetchingPayments && !isLoadingPayments} columnCount={4} rowCount={pPageSize}>
                   {!isLoadingPayments && payments?.data?.map((payment) => (
-                    <TableRow key={payment.id}>
-                      <TableCell className="px-6 font-medium text-slate-500">#{payment.id}</TableCell>
+                    <TableRow key={payment.id ?? `course-${payment.student_course_id}`}>
+                      <TableCell className="px-6 font-medium text-slate-500">
+                        {payment.id ? `#${payment.id}` : "—"}
+                      </TableCell>
                       <TableCell className="px-6">
                         <div className="font-semibold">{payment.student_name}</div>
                         <div className="text-xs text-muted-foreground">{payment.personal_contact}</div>

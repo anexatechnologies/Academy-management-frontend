@@ -49,7 +49,7 @@ export interface RefundPayload {
 }
 
 export interface PendingPayment {
-  id: number
+  id: number | null
   student_id: number
   student_name: string
   student_roll_no: string
