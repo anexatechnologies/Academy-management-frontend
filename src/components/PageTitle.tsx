@@ -10,10 +10,22 @@ export function PageTitle() {
 
     // Exact routes
     const exactTitles: Record<string, string> = {
-      "/": "Dashboard",
+      // Landing pages
+      "/": "Welcome",
+      "/about": "About Us",
+      "/admissions": "Admissions",
+      "/facilities": "Facilities",
+      "/academics": "Academics",
+      "/contact": "Contact",
+      "/gallery": "Gallery",
+      "/advertisements": "Job Updates",
+      "/results": "Results",
+      // Admin auth
       "/login": "Login",
       "/forgot-password": "Forgot Password",
       "/reset-password": "Reset Password",
+      // Admin pages
+      "/dashboard": "Dashboard",
       "/users": "User Management",
       "/users/new": "Add User",
       "/courses": "Course Management",
@@ -41,7 +53,8 @@ export function PageTitle() {
       title = exactTitles[path]
     } else {
       // Dynamic routes
-      if (path.startsWith("/users/edit/")) title = "Edit User"
+      if (path.startsWith("/academics/")) title = "Course Details"
+      else if (path.startsWith("/users/edit/")) title = "Edit User"
       else if (path.startsWith("/courses/edit/")) title = "Edit Course"
       else if (path.startsWith("/batches/edit/")) title = "Edit Batch"
       else if (path.startsWith("/batches/view/")) title = "Batch Details"

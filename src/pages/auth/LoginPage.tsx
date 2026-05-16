@@ -40,7 +40,7 @@ const LoginPage = () => {
     onSuccess: (data) => {
       toast.success("Login successful!")
       setAuth({ token: data.token, user: data.user })
-      navigate("/", { replace: true })
+      navigate("/dashboard", { replace: true })
     },
     onError: (error: unknown, variables) => {
       handleApiError(error, variables.setError)
