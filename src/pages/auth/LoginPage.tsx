@@ -1,3 +1,4 @@
+import { useEffect } from "react"
 import { useMutation } from "@tanstack/react-query"
 import { toast } from "sonner"
 import { useNavigate, Link } from "react-router-dom"
@@ -20,8 +21,14 @@ const loginSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>
 
 const LoginPage = () => {
-  const { setAuth } = useAuth()
+  const { auth, setAuth } = useAuth()
   const navigate = useNavigate()
+
+  useEffect(() => {
+    if (auth.token) {
+      navigate("/dashboard", { replace: true })
+    }
+  }, [auth.token, navigate])
 
   const {
     register,
