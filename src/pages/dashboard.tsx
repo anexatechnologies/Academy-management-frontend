@@ -1,6 +1,6 @@
-import type { ReactNode } from "react"
+import { useState, type ReactNode } from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Users, UserCheck, IndianRupee, Gift, AlertCircle, Send, type LucideIcon } from "lucide-react"
+import { Users, UserCheck, IndianRupee, Gift, AlertCircle, Send, Printer, Loader2, type LucideIcon } from "lucide-react"
 import { 
   useStudentCount, 
   useAttendanceSummary, 
@@ -18,6 +18,17 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { StudentDemographicsChart } from "./dashboard/components/StudentDemographicsChart"
 import { AttendanceOverviewChart } from "./dashboard/components/AttendanceOverviewChart"
 import { MonthlyFeesPerformanceTable } from "./dashboard/components/MonthlyFeesPerformanceTable"
+import { useCertificates } from "@/hooks/api/use-certificates"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { DateCell } from "@/components/ui/date-cell"
+import { toast } from "sonner"
+import { useUpdateInstallmentDueDate } from "@/hooks/api/use-payments"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import DatePicker from "react-datepicker"
+import "react-datepicker/dist/react-datepicker.css"
+import { format } from "date-fns"
+import { CalendarClock } from "lucide-react"
+import { useEffect } from "react"
 
 export default function Dashboard() {
   const { canReadFinancials } = usePermissions()
@@ -40,6 +51,10 @@ export default function Dashboard() {
 
   const { mutate: sendWishes, isPending: isSendingWishes } = useSendBirthdayWishes()
   const { mutate: sendReminders, isPending: isSendingReminders } = useSendDueFeesReminders()
+
+  const [printingId, setPrintingId] = useState<number | string | null>(null)
+  const [changeDateRecord, setChangeDateRecord] = useState<any | null>(null)
+  const { downloadCertificate } = useCertificates()
 
   type DashboardStat = {
     title: string
@@ -284,13 +299,16 @@ export default function Dashboard() {
               >
                 <TableHeader className="bg-slate-50/50 dark:bg-slate-900/50">
                   <TableRow>
-                    <TableHead className="w-[100px] px-6">ID</TableHead>
-                    <TableHead className="px-6">Student</TableHead>
-                    <TableHead className="px-6">Amount</TableHead>
-                    <TableHead className="px-6 text-right">Status</TableHead>
+                    <TableHead className="w-[80px] px-6">ID</TableHead>
+                    <TableHead className="px-6 text-xs font-bold uppercase tracking-wider">Student</TableHead>
+                    <TableHead className="px-6 text-xs font-bold uppercase tracking-wider">Parent Contact</TableHead>
+                    <TableHead className="px-6 text-xs font-bold uppercase tracking-wider">Amount</TableHead>
+                    <TableHead className="px-6 text-xs font-bold uppercase tracking-wider">Due Date</TableHead>
+                    <TableHead className="px-6 text-xs font-bold uppercase tracking-wider">Status</TableHead>
+                    <TableHead className="px-6 text-right text-xs font-bold uppercase tracking-wider">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
-                <TableBody loading={isLoadingPayments} fetching={isFetchingPayments && !isLoadingPayments} columnCount={4} rowCount={pPageSize}>
+                <TableBody loading={isLoadingPayments} fetching={isFetchingPayments && !isLoadingPayments} columnCount={7} rowCount={pPageSize}>
                   {!isLoadingPayments && payments?.data?.map((payment) => (
                     <TableRow key={payment.id ?? `course-${payment.student_course_id}`}>
                       <TableCell className="px-6 font-medium text-slate-500">
@@ -300,7 +318,13 @@ export default function Dashboard() {
                         <div className="font-semibold">{payment.student_name}</div>
                         <div className="text-xs text-muted-foreground">{payment.personal_contact}</div>
                       </TableCell>
+                      <TableCell className="px-6 text-sm">
+                        {payment.father_contact || payment.mother_contact || "—"}
+                      </TableCell>
                       <TableCell className="px-6 font-medium">₹{payment.amount}</TableCell>
+                      <TableCell className="px-6 text-xs text-slate-500 whitespace-nowrap">
+                        <DateCell date={payment.due_date} />
+                      </TableCell>
                       <TableCell className="px-6 text-right">
                         <span className={`px-2 py-1 rounded-md text-[10px] font-semibold tracking-wider uppercase ${
                             payment.status === 'overdue' 
@@ -309,6 +333,53 @@ export default function Dashboard() {
                           }`}>
                             {payment.status}
                           </span>
+                      </TableCell>
+                      <TableCell className="px-6 text-right">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              disabled={printingId === (payment.sort_id ?? payment.id ?? 0)}
+                              onClick={async () => {
+                                try {
+                                  setPrintingId(payment.sort_id ?? payment.id ?? 0)
+                                  await downloadCertificate("pending-fees-report", {
+                                    id: payment.sort_id || payment.id || undefined,
+                                    status: payment.status,
+                                    sort: "newest"
+                                  })
+                                  toast.success("Report generated")
+                                } catch {
+                                  toast.error("Failed to generate report")
+                                } finally {
+                                  setPrintingId(null)
+                                }
+                              }}
+                              className="h-8 w-8 p-0 rounded-lg text-slate-500 hover:text-primary hover:bg-primary/5"
+                            >
+                              {printingId === (payment.id || payment.student_course_id) ? (
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                              ) : (
+                                <Printer className="h-3.5 w-3.5" />
+                              )}
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent><p>Print Fee Detail</p></TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => setChangeDateRecord(payment)}
+                              className="h-8 w-8 p-0 rounded-lg text-slate-500 hover:text-primary hover:bg-primary/5"
+                            >
+                              <CalendarClock className="h-3.5 w-3.5" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent><p>Edit Due Date</p></TooltipContent>
+                        </Tooltip>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -331,6 +402,96 @@ export default function Dashboard() {
           <MonthlyFeesPerformanceTable />
         </div>
       )}
+
+      <ChangeDueDateModal record={changeDateRecord} onClose={() => setChangeDateRecord(null)} />
     </div>
+  )
+}
+
+// ─── Change Due Date Modal (Internal) ──────────────────────────────────────────
+interface ChangeDueDateProps {
+  record: any | null
+  onClose: () => void
+}
+
+const ChangeDueDateModal = ({ record, onClose }: ChangeDueDateProps) => {
+  const updateDueDate = useUpdateInstallmentDueDate()
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null)
+
+  useEffect(() => {
+    setSelectedDate(record?.due_date ? new Date(record.due_date) : null)
+  }, [record])
+
+  const handleConfirm = async () => {
+    if (!record || !(record.id || record.sort_id) || !selectedDate) return
+    try {
+      await updateDueDate.mutateAsync({
+        installmentId: (record.id || record.sort_id) as number,
+        due_date: format(selectedDate, "yyyy-MM-dd"),
+      })
+      toast.success("Due date updated successfully")
+      onClose()
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || "Failed to update due date")
+    }
+  }
+
+  return (
+    <Dialog open={!!record} onOpenChange={(open) => { if (!open) onClose() }}>
+      <DialogContent className="sm:max-w-[380px] p-0 border-none shadow-2xl rounded-2xl overflow-hidden">
+        <DialogHeader className="px-6 pt-6 pb-3">
+          <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-3">
+            <CalendarClock className="h-6 w-6 text-primary" />
+          </div>
+          <DialogTitle className="text-center text-xl font-bold">Change Due Date</DialogTitle>
+          {record && (
+            <p className="text-center text-sm text-slate-500 mt-1 px-4">
+              {record.student_name}
+            </p>
+          )}
+        </DialogHeader>
+
+        <div className="flex justify-center px-4 pb-2 [&_.react-datepicker]:border-0 [&_.react-datepicker]:shadow-none [&_.react-datepicker]:font-sans [&_.react-datepicker__month-container]:w-full [&_.react-datepicker]:w-full">
+          <DatePicker
+            inline
+            selected={selectedDate}
+            onChange={(date: Date | null) => setSelectedDate(date)}
+            showMonthDropdown
+            showYearDropdown
+            dropdownMode="select"
+            disabled={updateDueDate.isPending}
+          />
+        </div>
+
+        <div className="mx-6 mb-4 px-4 py-2.5 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 flex items-center gap-2.5">
+          <CalendarClock className="h-4 w-4 text-slate-400 shrink-0" />
+          <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+            {selectedDate
+              ? format(selectedDate, "MMMM d, yyyy")
+              : <span className="text-slate-400 font-normal">No date selected</span>
+            }
+          </span>
+        </div>
+
+        <div className="flex gap-3 px-6 pb-6">
+          <Button
+            variant="outline"
+            className="flex-1 rounded-xl"
+            onClick={onClose}
+            disabled={updateDueDate.isPending}
+          >
+            Cancel
+          </Button>
+          <Button
+            className="flex-1 rounded-xl"
+            onClick={handleConfirm}
+            disabled={!selectedDate || updateDueDate.isPending}
+          >
+            {updateDueDate.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+            Confirm
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   )
 }

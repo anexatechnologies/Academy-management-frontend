@@ -62,6 +62,9 @@ export interface PendingPayment {
   due_date: string
   status: "pending" | "overdue"
   payment_type: PaymentType
+  father_contact?: string
+  mother_contact?: string
+  sort_id?: number | string
 }
 
 export interface PendingPaymentsResponse {
