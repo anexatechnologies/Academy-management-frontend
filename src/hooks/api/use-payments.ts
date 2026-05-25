@@ -59,6 +59,7 @@ export const useUpdateInstallmentDueDate = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["pending-payments"] })
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] })
     },
   })
 }
