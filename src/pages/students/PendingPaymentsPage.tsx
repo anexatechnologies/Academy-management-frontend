@@ -105,10 +105,10 @@ const ChangeDueDateModal = ({ record, onClose }: ChangeDueDateModalProps) => {
   }, [record])
 
   const handleConfirm = async () => {
-    if (!record || !selectedDate) return
+    if (!record || !(record.id || record.sort_id) || !selectedDate) return
     try {
       await updateDueDate.mutateAsync({
-        installmentId: record.id,
+        installmentId: (record.id || record.sort_id) as number,
         due_date: format(selectedDate, "yyyy-MM-dd"),
       })
       toast.success("Due date updated successfully")
@@ -337,7 +337,7 @@ const DetailSheet = ({ record, onClose, canPay, canRefund }: DetailSheetProps) =
                 <Card className="shadow-sm border-slate-200 dark:border-slate-800 overflow-hidden rounded-2xl">
                   <CardHeader className="py-3 px-5 border-b border-slate-100 dark:border-slate-800/60">
                     <CardTitle className="text-sm font-bold flex items-center gap-2 text-slate-800 dark:text-slate-100">
-                      <Layers className="h-4 w-4 text-primary" /> EMI Schedule
+                      <Layers className="h-4 w-4 text-primary" /> Payment Schedule
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="p-0">
@@ -559,6 +559,10 @@ export default function PendingPaymentsPage() {
   const [detailRecord, setDetailRecord] = useState<PendingPayment | null>(null)
   const [quickPayRecord, setQuickPayRecord] = useState<PendingPayment | null>(null)
   const [changeDateRecord, setChangeDateRecord] = useState<PendingPayment | null>(null)
+  const [isPrinting, setIsPrinting] = useState(false)
+  const [printingId, setPrintingId] = useState<number | string | null>(null)
+
+  const { downloadCertificate } = useCertificates()
 
   const resetFilters = () => {
     setSearch("")
@@ -626,6 +630,30 @@ export default function PendingPaymentsPage() {
               <X className="h-4 w-4" />
             </Button>
           )}
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={async () => {
+              try {
+                setIsPrinting(true)
+                await downloadCertificate("pending-fees-report", {
+                  status: status || undefined,
+                  search: search || undefined,
+                  sort: sort === "newest" ? undefined : sort
+                })
+              } catch (error) {
+                toast.error("Failed to generate report")
+              } finally {
+                setIsPrinting(false)
+              }
+            }}
+            disabled={isPrinting || isLoading}
+            className="h-10 px-4 rounded-xl border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 gap-2"
+          >
+            {isPrinting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Printer className="h-4 w-4" />}
+            Print Report
+          </Button>
         </div>
       }
     >
@@ -634,7 +662,7 @@ export default function PendingPaymentsPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
             <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Pending Payments</h1>
-            <p className="text-sm text-slate-500 mt-0.5">All outstanding installments across all students</p>
+            <p className="text-sm text-slate-500 mt-0.5">All outstanding payments across all students</p>
           </div>
           {!isLoading && (
             <div className="flex items-center gap-2 flex-wrap">
@@ -667,6 +695,7 @@ export default function PendingPaymentsPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Student</TableHead>
+                <TableHead>Parent Contact / Contact</TableHead>
                 <TableHead>Course</TableHead>
                 <TableHead>Payment Details</TableHead>
                 <TableHead className="text-right">Amount Due</TableHead>
@@ -676,7 +705,7 @@ export default function PendingPaymentsPage() {
                 <TableHead className="text-center">Actions</TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody loading={isLoading} fetching={isFetching && !isLoading} columnCount={8} rowCount={limit}>
+            <TableBody loading={isLoading} fetching={isFetching && !isLoading} columnCount={9} rowCount={limit}>
               {!isLoading && data?.data?.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={8} className="text-center py-20">
@@ -691,7 +720,7 @@ export default function PendingPaymentsPage() {
                 </TableRow>
               ) : (
                 data?.data?.map((row) => (
-                  <TableRow key={row.id} className="group">
+                  <TableRow key={row.id ?? `course-${row.student_course_id}`} className="group">
                     <TableCell>
                       <div>
                         <button
@@ -701,6 +730,16 @@ export default function PendingPaymentsPage() {
                           {row.student_name}
                         </button>
                         <p className="text-xs text-slate-400 font-medium mt-0.5">#{row.student_roll_no}</p>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div>
+                        <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                          {row.father_contact || row.mother_contact || row.student_contact || "—"}
+                        </p>
+                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">
+                          {row.father_contact ? "Father" : row.mother_contact ? "Mother" : "Personal"}
+                        </p>
                       </div>
                     </TableCell>
                     <TableCell className="font-medium text-slate-700 dark:text-slate-300 max-w-[180px] truncate">
@@ -714,7 +753,7 @@ export default function PendingPaymentsPage() {
                             ? "bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400"
                             : "bg-indigo-50 text-indigo-700 dark:bg-indigo-900/20 dark:text-indigo-400"
                         )}>
-                          {row.payment_type === "instalment" ? "EMI" : "One-Time"}
+                          {row.payment_type === "instalment" ? "Scheduled" : "One-Time"}
                         </span>
                         <p className="text-xs text-slate-500 font-medium">
                           {row.payment_type === "instalment"
@@ -758,7 +797,7 @@ export default function PendingPaymentsPage() {
                             <TooltipContent><p>View details and record payment</p></TooltipContent>
                           </Tooltip>
                         )}
-                        {row.payment_type === "instalment" && canPay && (
+                        {canPay && (
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Button
@@ -773,6 +812,38 @@ export default function PendingPaymentsPage() {
                             <TooltipContent><p>Edit Due Date</p></TooltipContent>
                           </Tooltip>
                         )}
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              disabled={printingId === (row.sort_id ?? row.id ?? 0)}
+                              onClick={async () => {
+                                try {
+                                  setPrintingId(row.sort_id ?? row.id ?? 0)
+                                  await downloadCertificate("pending-fees-report", {
+                                    id: row.sort_id || row.id || undefined,
+                                    status: row.status,
+                                    sort: "newest"
+                                  })
+                                  toast.success("Report generated")
+                                } catch {
+                                  toast.error("Failed to generate report")
+                                } finally {
+                                  setPrintingId(null)
+                                }
+                              }}
+                              className="h-8 w-8 p-0 rounded-lg border-slate-200 dark:border-slate-700 text-slate-500 hover:text-primary hover:border-primary/40 hover:bg-primary/5"
+                            >
+                              {printingId === (row.id || row.student_course_id) ? (
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                              ) : (
+                                <Printer className="h-3.5 w-3.5" />
+                              )}
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent><p>Print Individual Report</p></TooltipContent>
+                        </Tooltip>
                       </div>
                     </TableCell>
                   </TableRow>

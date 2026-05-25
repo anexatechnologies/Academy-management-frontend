@@ -34,13 +34,17 @@ export interface BirthdayStudent {
 }
 
 export interface DuePayment {
-  id: number
+  id: number | null
   student_id: number
+  student_course_id?: number
   student_name: string
   personal_contact: string
   amount: string
   due_date: string
   status: "pending" | "overdue"
+  father_contact?: string
+  mother_contact?: string
+  sort_id?: number | string
 }
 
 export interface PaginatedResponse<T> {

@@ -27,6 +27,7 @@ export const useRecordPayment = (studentId?: number) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["payments", studentId] })
       queryClient.invalidateQueries({ queryKey: ["students", studentId] })
+      queryClient.invalidateQueries({ queryKey: ["pending-payments"] })
     },
   })
 }
@@ -58,6 +59,7 @@ export const useUpdateInstallmentDueDate = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["pending-payments"] })
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] })
     },
   })
 }

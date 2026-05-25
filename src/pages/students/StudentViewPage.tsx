@@ -497,7 +497,7 @@ const StudentViewPage = () => {
                       {batch.installments?.length > 0 && (
                         <div className="px-6 py-5">
                           <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                            <CreditCard className="h-3.5 w-3.5" /> EMI Schedule
+                            <CreditCard className="h-3.5 w-3.5" /> Payment Schedule
                           </h4>
                           <Table paginationRequired={false}>
                             <TableHeader>

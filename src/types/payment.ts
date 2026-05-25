@@ -49,7 +49,7 @@ export interface RefundPayload {
 }
 
 export interface PendingPayment {
-  id: number
+  id: number | null
   student_id: number
   student_name: string
   student_roll_no: string
@@ -62,6 +62,9 @@ export interface PendingPayment {
   due_date: string
   status: "pending" | "overdue"
   payment_type: PaymentType
+  father_contact?: string
+  mother_contact?: string
+  sort_id?: number | string
 }
 
 export interface PendingPaymentsResponse {

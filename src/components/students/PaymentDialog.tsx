@@ -77,8 +77,14 @@ export const PaymentDialog = ({
   })
 
   const paymentMode = watch("payment_mode")
-
+  const paymentAmount = watch("amount")
   const nextPendingInstallment = installments.find((i) => i.status === "pending")
+  
+  const reschedulingThreshold = (paymentType === "instalment" && nextPendingInstallment)
+    ? Number(nextPendingInstallment.amount_due)
+    : remainingAmount
+
+  const isPartialPayment = paymentAmount > 0 && paymentAmount < (reschedulingThreshold - 0.01)
 
   const handlePayNextEMI = () => {
     if (nextPendingInstallment) {
@@ -96,6 +102,11 @@ export const PaymentDialog = ({
       return
     }
 
+    if (isPartialPayment && !values.next_due_date) {
+      toast.error("Please set a Next Reminder Date for the remaining balance.")
+      return
+    }
+
     try {
       const formattedValues: any = {
         ...values,
@@ -104,6 +115,8 @@ export const PaymentDialog = ({
 
       if (formattedValues.next_due_date instanceof Date) {
         formattedValues.next_due_date = format(formattedValues.next_due_date, "yyyy-MM-dd")
+      } else if (values.next_due_date) {
+        formattedValues.next_due_date = format(new Date(values.next_due_date), "yyyy-MM-dd")
       } else {
         delete formattedValues.next_due_date
       }
@@ -133,7 +146,7 @@ export const PaymentDialog = ({
         if (!open) onClose()
       }}
     >
-      <DialogContent className="sm:max-w-[450px] p-0 overflow-hidden border-none shadow-2xl rounded-2xl">
+      <DialogContent className="sm:max-w-[600px] p-0 overflow-hidden border-none shadow-2xl rounded-2xl bg-white dark:bg-slate-950">
         <DialogHeader className="p-8 pb-4">
           <div className="mx-auto w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mb-4">
             <IndianRupee className="h-7 w-7 text-primary" />
@@ -150,7 +163,8 @@ export const PaymentDialog = ({
           </div>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="px-8 pb-8 space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col h-full max-h-[85vh]">
+          <div className="px-8 pb-4 space-y-4 overflow-y-auto flex-1 h-full">
           {/* Quick-fill buttons */}
           {(nextPendingInstallment || remainingAmount > 0) && (
             <div className="flex gap-2">
@@ -167,7 +181,7 @@ export const PaymentDialog = ({
                   disabled={recordPayment.isPending}
                 >
                   <Zap className="h-3.5 w-3.5 mr-1.5" />
-                  Pay Next EMI · ₹{formatCurrency(nextPendingInstallment.amount_due)}
+                  Pay Scheduled Amount · ₹{formatCurrency(nextPendingInstallment.amount_due)}
                 </Button>
               )}
               <Button
@@ -184,6 +198,21 @@ export const PaymentDialog = ({
                 <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />
                 Pay Full · ₹{formatCurrency(remainingAmount)}
               </Button>
+            </div>
+          )}
+
+          {isPartialPayment && (
+            <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4 animate-in fade-in zoom-in duration-300">
+              <div className="flex gap-3">
+                <Zap className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <p className="text-sm font-bold text-amber-800 dark:text-amber-300">Rescheduling Balance</p>
+                  <p className="text-xs text-amber-600 dark:text-amber-400 leading-relaxed font-medium">
+                    You are recording a partial payment of ₹{formatCurrency(paymentAmount)}. 
+                    The remaining balance of <span className="font-bold">₹{formatCurrency(remainingAmount - paymentAmount)}</span> will be rescheduled.
+                  </p>
+                </div>
+              </div>
             </div>
           )}
 
@@ -243,30 +272,36 @@ export const PaymentDialog = ({
               />
             )}
 
-            {paymentType === "instalment" && (
+            {(paymentType === "instalment" || isPartialPayment) && (
               <Controller
                 name="next_due_date"
                 control={control}
                 render={({ field }) => (
                   <DatePickerInput
-                    label="Next Due Date (Optional)"
+                    label={isPartialPayment ? "Next Reminder Date (Mandatory)" : "Next Due Date (Optional)"}
                     value={field.value ?? null}
                     onChange={field.onChange}
                     onCalendarOpen={() => setCalendarOpen(true)}
                     onCalendarClose={() => setCalendarOpen(false)}
                     disabled={recordPayment.isPending}
+                    required={isPartialPayment}
+                    error={isPartialPayment && !field.value ? "Next reminder date is required" : ""}
                   />
                 )}
               />
             )}
           </div>
 
-          <FormFooter
-            isLoading={recordPayment.isPending}
-            submitLabel="Confirm Payment"
-            onCancel={onClose}
-            className="pt-4 border-t-0 mt-2"
-          />
+          </div>
+
+          <div className="px-8 pb-8 pt-2 bg-white dark:bg-slate-950 rounded-b-2xl border-t border-slate-100 dark:border-slate-800">
+            <FormFooter
+              isLoading={recordPayment.isPending}
+              submitLabel="Confirm Payment"
+              onCancel={onClose}
+              className="pt-0 border-t-0 mt-0"
+            />
+          </div>
         </form>
       </DialogContent>
     </Dialog>
