@@ -591,8 +591,8 @@ export default function PendingPaymentsPage() {
 
   const totalData = data?.pagination?.totalData ?? 0
   const totalPages = data?.pagination?.totalPages ?? 1
-  const overdueCount = data?.data?.filter(d => d.status === "overdue").length ?? 0
-  const pendingCount = data?.data?.filter(d => d.status === "pending").length ?? 0
+  const overdueCount = data?.summary?.overdueCount ?? data?.data?.filter(d => d.status === "overdue").length ?? 0
+  const pendingCount = data?.summary?.pendingCount ?? data?.data?.filter(d => d.status === "pending").length ?? 0
 
   return (
     <BodyLayout
