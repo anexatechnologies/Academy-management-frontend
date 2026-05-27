@@ -55,6 +55,7 @@ export default function Dashboard() {
   const [printingId, setPrintingId] = useState<number | string | null>(null)
   const [changeDateRecord, setChangeDateRecord] = useState<any | null>(null)
   const { downloadCertificate } = useCertificates()
+  const [isPrintingReport, setIsPrintingReport] = useState(false)
 
   type DashboardStat = {
     title: string
@@ -276,15 +277,44 @@ export default function Dashboard() {
                 <CardDescription>Pending or overdue payments for today</CardDescription>
               </div>
               {payments && payments.count && payments.count > 0 ? (
-                <Button
-                  size="sm"
-                  onClick={() => sendReminders()}
-                  disabled={isSendingReminders}
-                  className="h-8"
-                >
-                  <Send className="mr-2 h-4 w-4" />
-                  {isSendingReminders ? "Sending..." : "Send Reminders"}
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={async () => {
+                      try {
+                        setIsPrintingReport(true)
+                        await downloadCertificate("pending-fees-report", {
+                          status: "overdue",
+                          sort: "newest"
+                        })
+                        toast.success("Report generated")
+                      } catch {
+                        toast.error("Failed to generate report")
+                      } finally {
+                        setIsPrintingReport(false)
+                      }
+                    }}
+                    disabled={isPrintingReport || isLoadingPayments}
+                    className="h-8 gap-1.5"
+                  >
+                    {isPrintingReport ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Printer className="h-3.5 w-3.5" />
+                    )}
+                    Print Overdue
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => sendReminders()}
+                    disabled={isSendingReminders}
+                    className="h-8"
+                  >
+                    <Send className="mr-2 h-4 w-4" />
+                    {isSendingReminders ? "Sending..." : "Send Reminders"}
+                  </Button>
+                </div>
               ) : null}
             </CardHeader>
             <CardContent className="px-0 pb-0">

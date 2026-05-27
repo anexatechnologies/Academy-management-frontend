@@ -76,4 +76,8 @@ export interface PendingPaymentsResponse {
     limit: number
   }
   data: PendingPayment[]
+  summary?: {
+    pendingCount: number
+    overdueCount: number
+  }
 }
