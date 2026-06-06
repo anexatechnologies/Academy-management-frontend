@@ -25,7 +25,7 @@ const StudentEditPage = () => {
         qualifications: values.qualifications as Qualification[] | undefined,
       })
       toast.success("Student updated successfully")
-      navigate("/students")
+      navigate(`/students/view/${id}?tab=financials`)
     } catch (error) {
       handleApiError(error, setError)
     }

@@ -73,8 +73,11 @@ export const studentSchema = z.object({
   // Section 3: Academic Qualifications (optional; rows with no data are ignored)
   qualifications: z.array(qualificationEntrySchema).optional(),
 
-  // Section 4: Batches
-  batch_ids: z.array(z.number()).optional(),
+  // Section 4: Course
+  course_id: z.coerce.number().min(1, "Course selection is required"),
+
+  // Section 5: Batches (one batch per enrollment)
+  batch_ids: z.array(z.number()).min(1, "Please select a batch").max(1, "Only one batch can be selected per enrollment"),
 
   // Fee & Discount (per registration)
   fee_mode: z.enum(["one-time", "installment"]).default("one-time"),

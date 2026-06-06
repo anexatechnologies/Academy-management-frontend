@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { useParams, useNavigate } from "react-router-dom"
+import { useParams, useNavigate, useSearchParams } from "react-router-dom"
 import { 
   ArrowLeft, 
   Edit, 
@@ -47,6 +47,8 @@ import { usePermissions } from "@/hooks/use-permissions"
 const StudentViewPage = () => {
   const { id } = useParams()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const initialTab = searchParams.get("tab") === "financials" ? "financials" : "general"
   const { data: student, isLoading } = useStudent(Number(id))
   const { data: payments } = usePayments(Number(id))
   const { downloadCertificate } = useCertificates()
@@ -102,7 +104,7 @@ const StudentViewPage = () => {
   return (
     <BodyLayout breadcrumbs={breadcrumbs}>
       <div className="max-w-5xl animate-in fade-in duration-500 pb-12">
-        <Tabs defaultValue="general" className="w-full">
+        <Tabs defaultValue={initialTab} className="w-full">
           {/* Sticky Header & Navigation */}
           <div className="sticky -top-6 z-30 bg-white dark:bg-slate-950 pt-2 border-b border-slate-200 dark:border-slate-800 transition-all duration-300 shadow-none">
             {/* Header Section */}

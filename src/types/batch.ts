@@ -2,6 +2,7 @@ export interface Batch {
   id: number
   course_id: number
   course_name: string
+  courses?: { id: number; name: string; fees: number }[]
   name: string
   capacity: number
   hall_no: string
@@ -20,7 +21,7 @@ export interface Batch {
 }
 
 export interface CreateBatchPayload {
-  course_id: number
+  course_ids: number[]
   name: string
   capacity: number
   hall_no: string
