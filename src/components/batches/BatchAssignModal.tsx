@@ -75,6 +75,7 @@ export function BatchAssignModal({ batchId, isOpen, onClose }: BatchAssignModalP
   const [discountType, setDiscountType] = useState<"flat" | "percent">("flat")
   const [discountAmount, setDiscountAmount] = useState<string>("")
   const [discountPercent, setDiscountPercent] = useState<string>("")
+  const [selectedCourseId, setSelectedCourseId] = useState<number>(-1)
 
   const assignStudents = useAssignStudentsToBatch(batchId)
   const { data: batch } = useBatch(batchId)
@@ -83,8 +84,17 @@ export function BatchAssignModal({ batchId, isOpen, onClose }: BatchAssignModalP
   const feeSummary = useMemo(() => {
     if (!batch) return null
 
-    const baseFee = batch.course_fees !== undefined ? batch.course_fees : 0
-    const rawSubtotal = typeof baseFee === "string" ? parseFloat(baseFee) : (baseFee || 0)
+    // Determine base fee: sum all courses if "All" selected, else use selected course
+    const courses = batch.courses || []
+    let rawSubtotal = 0
+    if (selectedCourseId === -1) {
+      // All courses: sum all course fees
+      rawSubtotal = courses.reduce((sum, c) => sum + (typeof c.fees === "string" ? parseFloat(c.fees) : (c.fees || 0)), 0)
+    } else {
+      const selectedCourse = courses.find(c => c.id === selectedCourseId)
+      const baseFee = selectedCourse?.fees ?? batch.course_fees ?? 0
+      rawSubtotal = typeof baseFee === "string" ? parseFloat(baseFee) : (baseFee || 0)
+    }
 
     let discountValue = 0
     if (discountType === "flat" && discountAmount && !isNaN(Number(discountAmount))) {
@@ -130,7 +140,7 @@ export function BatchAssignModal({ batchId, isOpen, onClose }: BatchAssignModalP
       emiBreakdown,
       feeMode
     }
-  }, [batch, feeSettings, discountType, discountAmount, discountPercent, feeMode])
+  }, [batch, selectedCourseId, feeSettings, discountType, discountAmount, discountPercent, feeMode])
 
   const handleSearch = (value: string) => {
     setSearch(value)
@@ -168,6 +178,8 @@ export function BatchAssignModal({ batchId, isOpen, onClose }: BatchAssignModalP
         student_ids: selectedStudentIds,
         force,
         fee_mode: feeMode,
+        // Omit course_id when enrolling in all courses (backend handles it)
+        ...(selectedCourseId !== -1 ? { course_id: selectedCourseId } : {}),
         discount_amount: discountType === "flat" && discountAmount ? Number(discountAmount) : null,
         discount_percentage: discountType === "percent" && discountPercent ? Number(discountPercent) : null,
       })
@@ -209,6 +221,7 @@ export function BatchAssignModal({ batchId, isOpen, onClose }: BatchAssignModalP
     setDiscountType("flat")
     setDiscountAmount("")
     setDiscountPercent("")
+    setSelectedCourseId(-1)
     setIsPreviewDialogOpen(false)
     onClose()
   }
@@ -230,6 +243,34 @@ export function BatchAssignModal({ batchId, isOpen, onClose }: BatchAssignModalP
               </SheetDescription>
             </SheetHeader>
             <div className="mt-4 flex flex-col gap-4">
+              {/* Course selector — optional when batch has multiple courses */}
+              {batch?.courses && batch.courses.length > 0 && (
+                <div className="space-y-1.5">
+                  <Label className="text-[13px] font-semibold text-slate-700 dark:text-slate-300">
+                    Enroll For Course
+                    <span className="text-[11px] font-normal text-slate-400 ml-1.5">(optional — defaults to all courses)</span>
+                  </Label>
+                  <CustomSelect
+                    options={[
+                      {
+                        label: `All Courses (combined fee — ₹${batch.courses.reduce((s, c) => s + (typeof c.fees === "string" ? parseFloat(c.fees) : (c.fees || 0)), 0).toLocaleString()})`,
+                        value: "-1",
+                      },
+                      ...batch.courses.map(c => ({
+                        label: `${c.name} — ₹${Number(c.fees).toLocaleString()}`,
+                        value: String(c.id),
+                      }))
+                    ]}
+                    value={selectedCourseId !== null && selectedCourseId !== -1 ? String(selectedCourseId) : "-1"}
+                    onValueChange={(val) => {
+                      setSelectedCourseId(Number(val))
+                      setAssignError(null)
+                    }}
+                    triggerClassName="h-10 text-sm"
+                    placeholder="All Courses (default)"
+                  />
+                </div>
+              )}
               <div className="grid grid-cols-2 gap-4 items-end">
                 <div className="space-y-1.5 focus-within:relative z-30">
                   <div className="flex items-center justify-between">
