@@ -98,14 +98,14 @@ export const PaymentDialog = ({
   const nextPendingInstallment = installments.find((i) => i.status === "pending")
   
   const reschedulingThreshold = (paymentType === "instalment" && nextPendingInstallment)
-    ? Number(nextPendingInstallment.amount_due)
+    ? Math.max(0, Number(nextPendingInstallment.amount_due) - calculatedDiscount)
     : actualRemainingAmount
 
   const isPartialPayment = paymentAmount > 0 && paymentAmount < (reschedulingThreshold - 0.01)
 
   const handlePayNextEMI = () => {
     if (nextPendingInstallment) {
-      setValue("amount", Number(nextPendingInstallment.amount_due))
+      setValue("amount", Math.max(0, Number(nextPendingInstallment.amount_due) - calculatedDiscount))
     }
   }
 
@@ -236,7 +236,7 @@ export const PaymentDialog = ({
                   <p className="text-sm font-bold text-amber-800 dark:text-amber-300">Rescheduling Balance</p>
                   <p className="text-xs text-amber-600 dark:text-amber-400 leading-relaxed font-medium">
                     You are recording a partial payment of ₹{formatCurrency(paymentAmount)}. 
-                    The remaining balance of <span className="font-bold">₹{formatCurrency(remainingAmount - paymentAmount)}</span> will be rescheduled.
+                    The remaining balance of <span className="font-bold">₹{formatCurrency(actualRemainingAmount - paymentAmount)}</span> will be rescheduled.
                   </p>
                 </div>
               </div>
