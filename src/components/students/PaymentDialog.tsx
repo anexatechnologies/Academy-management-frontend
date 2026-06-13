@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
@@ -29,6 +29,8 @@ const paymentSchema = z.object({
   payment_type: z.enum(["instalment", "monthly"]),
   transaction_reference: z.string().optional().or(z.literal("")),
   next_due_date: z.any().optional().nullable(),
+  discount_amount: z.number().optional().nullable(),
+  discount_type: z.enum(["flat", "percent"]).optional().nullable(),
 })
 
 type PaymentFormValues = z.infer<typeof paymentSchema>
@@ -73,16 +75,31 @@ export const PaymentDialog = ({
       payment_date: new Date(),
       payment_mode: "Cash",
       payment_type: paymentType,
+      discount_amount: 0,
+      discount_type: "flat",
     },
   })
 
   const paymentMode = watch("payment_mode")
   const paymentAmount = watch("amount")
+  const discountAmount = watch("discount_amount") || 0
+  const discountType = watch("discount_type") || "flat"
+
+  const calculatedDiscount = useMemo(() => {
+    if (discountType === "flat") {
+      return Math.min(discountAmount, remainingAmount)
+    } else {
+      return Math.min((remainingAmount * discountAmount) / 100, remainingAmount)
+    }
+  }, [discountAmount, discountType, remainingAmount])
+
+  const actualRemainingAmount = Math.max(0, remainingAmount - calculatedDiscount)
+
   const nextPendingInstallment = installments.find((i) => i.status === "pending")
   
   const reschedulingThreshold = (paymentType === "instalment" && nextPendingInstallment)
     ? Number(nextPendingInstallment.amount_due)
-    : remainingAmount
+    : actualRemainingAmount
 
   const isPartialPayment = paymentAmount > 0 && paymentAmount < (reschedulingThreshold - 0.01)
 
@@ -93,12 +110,12 @@ export const PaymentDialog = ({
   }
 
   const handlePayFullBalance = () => {
-    setValue("amount", Number(remainingAmount))
+    setValue("amount", Number(actualRemainingAmount))
   }
 
   const onSubmit = async (values: PaymentFormValues) => {
-    if (values.amount > remainingAmount) {
-      toast.error(`Payment amount exceeds remaining balance. Max allowable: ₹${formatCurrency(remainingAmount)}`)
+    if (values.amount > actualRemainingAmount) {
+      toast.error(`Payment amount exceeds net remaining balance. Max allowable: ₹${formatCurrency(actualRemainingAmount)}`)
       return
     }
 
@@ -111,6 +128,8 @@ export const PaymentDialog = ({
       const formattedValues: any = {
         ...values,
         payment_date: format(values.payment_date, "yyyy-MM-dd"),
+        discount_amount: values.discount_amount ? Number(values.discount_amount) : 0,
+        discount_type: values.discount_amount ? values.discount_type : "flat",
       }
 
       if (formattedValues.next_due_date instanceof Date) {
@@ -146,7 +165,7 @@ export const PaymentDialog = ({
         if (!open) onClose()
       }}
     >
-      <DialogContent className="sm:max-w-[600px] p-0 overflow-hidden border-none shadow-2xl rounded-2xl bg-white dark:bg-slate-950">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col p-0 overflow-hidden border-none shadow-2xl rounded-2xl bg-white dark:bg-slate-950">
         <DialogHeader className="p-8 pb-4">
           <div className="mx-auto w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mb-4">
             <IndianRupee className="h-7 w-7 text-primary" />
@@ -157,14 +176,22 @@ export const PaymentDialog = ({
           <div className="text-center text-slate-500 mt-2 font-medium">
             For Course: <span className="text-slate-900 dark:text-slate-200 font-bold">{courseName}</span>
           </div>
-          <div className="mt-3 px-4 py-2 bg-slate-50 dark:bg-slate-900/50 rounded-lg inline-flex items-center gap-2 mx-auto">
-            <span className="text-[11px] uppercase font-bold text-slate-400 tracking-wider">Remaining Balance:</span>
-            <span className="text-sm font-bold text-slate-900 dark:text-slate-200">₹{formatCurrency(remainingAmount)}</span>
+          <div className="mt-3 flex flex-col items-center gap-1.5 mx-auto">
+            <div className="px-4 py-2 bg-slate-50 dark:bg-slate-900/50 rounded-lg inline-flex items-center gap-2">
+              <span className="text-[11px] uppercase font-bold text-slate-400 tracking-wider">Remaining Balance:</span>
+              <span className="text-sm font-bold text-slate-900 dark:text-slate-200">₹{formatCurrency(remainingAmount)}</span>
+            </div>
+            {calculatedDiscount > 0 && (
+              <div className="flex items-center gap-4 text-xs font-semibold">
+                <span className="text-rose-500">Discount: -₹{formatCurrency(calculatedDiscount)}</span>
+                <span className="text-emerald-600 dark:text-emerald-400">Net Balance: ₹{formatCurrency(actualRemainingAmount)}</span>
+              </div>
+            )}
           </div>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col h-full max-h-[85vh]">
-          <div className="px-8 pb-4 space-y-4 overflow-y-auto flex-1 h-full">
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+          <div className="px-8 pb-4 space-y-4 overflow-y-auto flex-1">
           {/* Quick-fill buttons */}
           {(nextPendingInstallment || remainingAmount > 0) && (
             <div className="flex gap-2">
@@ -190,13 +217,13 @@ export const PaymentDialog = ({
                 size="sm"
                 className={cn(
                   "flex-1 h-9 text-xs font-semibold border-emerald-300 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-all duration-200",
-                  Number(watch("amount")) === Number(remainingAmount) && "bg-emerald-100 dark:bg-emerald-900/40 border-emerald-500/60 shadow-inner"
+                  Number(watch("amount")) === Number(actualRemainingAmount) && "bg-emerald-100 dark:bg-emerald-900/40 border-emerald-500/60 shadow-inner"
                 )}
                 onClick={handlePayFullBalance}
                 disabled={recordPayment.isPending}
               >
                 <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />
-                Pay Full · ₹{formatCurrency(remainingAmount)}
+                Pay Full · ₹{formatCurrency(actualRemainingAmount)}
               </Button>
             </div>
           )}
@@ -228,6 +255,46 @@ export const PaymentDialog = ({
               required
               disabled={recordPayment.isPending}
             />
+
+            {/* Discount Section */}
+            <div className="grid grid-cols-3 gap-3 border border-slate-100 dark:border-slate-800 rounded-xl p-3 bg-slate-50/50 dark:bg-slate-900/30">
+              <div className="col-span-1">
+                <Controller
+                  name="discount_type"
+                  control={control}
+                  render={({ field }) => (
+                    <CustomSelect
+                      label="Discount Type"
+                      options={[
+                        { label: "Flat (₹)", value: "flat" },
+                        { label: "Percent (%)", value: "percent" },
+                      ]}
+                      value={field.value ?? "flat"}
+                      onValueChange={field.onChange}
+                      disabled={recordPayment.isPending}
+                    />
+                  )}
+                />
+              </div>
+              <div className="col-span-2">
+                <Input
+                  {...register("discount_amount", { valueAsNumber: true })}
+                  type="number"
+                  step="any"
+                  label="Apply Discount"
+                  leftIcon={
+                    discountType === "flat" ? (
+                      <IndianRupee className="h-4 w-4" />
+                    ) : (
+                      <span className="text-xs font-bold text-slate-400">%</span>
+                    )
+                  }
+                  placeholder="0.00"
+                  error={errors.discount_amount?.message as string}
+                  disabled={recordPayment.isPending}
+                />
+              </div>
+            </div>
 
             <Controller
               name="payment_date"
@@ -294,7 +361,7 @@ export const PaymentDialog = ({
 
           </div>
 
-          <div className="px-8 pb-8 pt-2 bg-white dark:bg-slate-950 rounded-b-2xl border-t border-slate-100 dark:border-slate-800">
+          <div className="px-8 pb-8 pt-2 bg-white dark:bg-slate-950 rounded-b-2xl border-t border-slate-100 dark:border-slate-800 shrink-0">
             <FormFooter
               isLoading={recordPayment.isPending}
               submitLabel="Confirm Payment"
