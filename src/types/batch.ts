@@ -68,6 +68,7 @@ export interface AssignBatchStudentPayload {
   force?: boolean
   fee_mode?: "one-time" | "installment"
   course_id?: number
+  course_ids?: number[]
   discount_amount?: number | null
   discount_percentage?: number | null
 }
