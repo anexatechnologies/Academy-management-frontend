@@ -1205,7 +1205,7 @@ export const StudentForm = ({
                                       }
                                       setValue("course_ids", nextIds, { shouldValidate: true })
                                     }}
-                                    label={`${course.name} (₹${course.fees})`}
+                                    label={course.name}
                                     labelClassName="text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer"
                                   />
                                 </div>
