@@ -10,7 +10,7 @@ import { FormFooter } from "@/components/ui/form-footer"
 import { DatePickerInput } from "@/components/ui/date-picker"
 import { ComboBox } from "@/components/ui/combobox"
 import { DeleteButton } from "@/components/ui/delete-button"
-import { X, IndianRupee, Calculator, Percent, Camera, ClipboardList, Plus, RefreshCw } from "lucide-react"
+import { X, IndianRupee, Calculator, Percent, Camera, ClipboardList, Plus, RefreshCw, AlertTriangle } from "lucide-react"
 import {
   TooltipProvider,
 } from "@/components/ui/tooltip"
@@ -108,7 +108,9 @@ export const StudentForm = ({
           initialValues.qualifications && initialValues.qualifications.length > 0
             ? initialValues.qualifications
             : [],
-        course_id: initialValues?.batches?.[0]?.course_id || "",
+        course_ids: initialValues?.batches
+          ? Array.from(new Set(initialValues.batches.map(eb => eb.course_id)))
+          : [],
         batch_ids: initialValues.batches ? initialValues.batches.map(eb => eb.batch_id) : [],
         fee_mode: "one-time",
         discount_amount: null,
@@ -123,7 +125,7 @@ export const StudentForm = ({
         height: "",
         caste: "",
         qualifications: [],
-        course_id: "",
+        course_ids: [],
         batch_ids: [],
         fee_mode: "one-time",
         discount_amount: null,
@@ -362,20 +364,21 @@ export const StudentForm = ({
   const { data: batchesData, isLoading: isBatchesLoading } = useBatches({ limit: 1000, status: "active" })
   const allBatches = useMemo(() => batchesData?.data || [], [batchesData])
 
-  // Get selected course details
-  const watchedCourseId = watch("course_id")
-  const selectedCourse = useMemo(() => {
-    return courses.find(c => c.id === Number(watchedCourseId))
-  }, [courses, watchedCourseId])
+  // Get selected courses details
+  const watchedCourseIds = watch("course_ids") || []
+  const selectedCourses = useMemo(() => {
+    return courses.filter(c => watchedCourseIds.map(Number).includes(c.id))
+  }, [courses, watchedCourseIds])
 
-  // Filter active batches to only those containing the selected course
+  // Filter active batches to only those containing any of the selected courses
   const activeBatches = useMemo(() => {
-    if (!watchedCourseId) return []
+    if (!watchedCourseIds || watchedCourseIds.length === 0) return []
+    const courseIdNums = watchedCourseIds.map(Number)
     return allBatches.filter(b => {
-      const courseIdNum = Number(watchedCourseId)
-      return (b as any).course_ids?.includes(courseIdNum) || (b as any).courses?.some((c: any) => c.id === courseIdNum)
+      const batchCourseIds = (b as any).course_ids || (b as any).courses?.map((c: any) => c.id) || [b.course_id]
+      return batchCourseIds.some((id: number) => courseIdNums.includes(id))
     })
-  }, [allBatches, watchedCourseId])
+  }, [allBatches, watchedCourseIds])
 
   // Fetch the latest student to display the last registration and attendance numbers
   const { data: studentsResponse } = useStudents({ limit: 1 })
@@ -384,30 +387,25 @@ export const StudentForm = ({
   const handleBatchCheckboxChange = useCallback((batch: any, checked: boolean) => {
     const batchId = batch.id
     if (checked) {
-      // Radio behavior: deselect all existing batches, then select the new one
-      const existingLocked = selectedBatches.find(b => b.is_removable === false)
-      if (existingLocked) {
-        toast.error("Cannot change batch — payment has already started for the current batch.")
-        return
-      }
-      setSelectedBatches([{
+      if (selectedBatchIds.includes(batchId)) return
+      setSelectedBatches((prev) => [...prev, {
         ...batch,
         batch_id: batchId,
         batch_name: batch.name,
         course_base_fees: batch.course_fees,
         is_removable: true
       } as any])
-      setValue("batch_ids", [batchId])
+      setValue("batch_ids", [...selectedBatchIds, batchId])
     } else {
       const batchItem = selectedBatches.find(b => b.id === batchId)
       if (batchItem?.is_removable === false) {
         toast.error("This batch cannot be removed as payment has already started.")
         return
       }
-      setSelectedBatches([])
-      setValue("batch_ids", [])
+      setSelectedBatches((prev) => prev.filter((b) => b.id !== batchId))
+      setValue("batch_ids", selectedBatchIds.filter((id) => id !== batchId))
     }
-  }, [selectedBatches, setValue])
+  }, [selectedBatchIds, selectedBatches, setValue])
 
   // Fee calculation logic
   const { data: feeSettings } = useFeeSettings()
@@ -416,10 +414,13 @@ export const StudentForm = ({
   const watchedDiscountPercent = watch("discount_percentage")
 
   const feeSummary = useMemo(() => {
-    if (!selectedCourse) return null
+    if (selectedCourses.length === 0) return null
 
-    // 1. Raw subtotal is the selected course fees
-    const rawSubtotal = typeof selectedCourse.fees === "string" ? parseFloat(selectedCourse.fees) : (selectedCourse.fees || 0)
+    // 1. Raw subtotal is the sum of selected courses fees
+    const rawSubtotal = selectedCourses.reduce((sum, c) => {
+      const fee = typeof c.fees === "string" ? parseFloat(c.fees) : (c.fees || 0)
+      return sum + fee
+    }, 0)
 
     // 2. Apply discount — BEFORE tax
     let discountValue = 0
@@ -463,7 +464,7 @@ export const StudentForm = ({
 
     // 6. EMI preview (when installment fee_mode chosen)
     const emiBreakdown = [{
-      batchName: selectedCourse.name,
+      batchName: selectedCourses.map(c => c.name).join(" + "),
       installments: durationMonths,
       perInstallment: monthlyTotal,
     }]
@@ -482,12 +483,38 @@ export const StudentForm = ({
       emiBreakdown,
       feeMode: activeFeeMode
     }
-  }, [selectedCourse, selectedBatches, feeSettings, watchedDiscountAmount, watchedDiscountPercent, watchedFeeMode])
+  }, [selectedCourses, selectedBatches, feeSettings, watchedDiscountAmount, watchedDiscountPercent, watchedFeeMode])
 
   return (
     <TooltipProvider>
       <form
         onSubmit={handleSubmit((values) => {
+          // Check if at least one batch is selected for each selected course
+          const selectedBatchObjects = allBatches.filter(b => values.batch_ids?.includes(b.id))
+          const missingBatchesCourses: string[] = []
+
+          values.course_ids.forEach(courseId => {
+            const courseObj = courses.find(c => c.id === courseId)
+            const hasBatchForCourse = selectedBatchObjects.some(b => {
+              const batchCourseIds = (b as any).course_ids || (b as any).courses?.map((c: any) => c.id) || [b.course_id]
+              return batchCourseIds.includes(courseId)
+            })
+            if (!hasBatchForCourse && courseObj) {
+              missingBatchesCourses.push(courseObj.name)
+            }
+          })
+
+          if (missingBatchesCourses.length > 0) {
+            toast.error(
+              `Please select at least one batch for course(s): ${missingBatchesCourses.join(", ")}`
+            )
+            setError("batch_ids", {
+              type: "custom",
+              message: `Select at least one batch for: ${missingBatchesCourses.join(", ")}`
+            })
+            return
+          }
+
           const fullName = `${values.first_name} ${values.middle_name} ${values.last_name}`
             .replace(/\s+/g, " ")
             .trim()
@@ -502,6 +529,7 @@ export const StudentForm = ({
             ...values,
             name: fullName,
             qualifications: sanitizedQualifications.length > 0 ? sanitizedQualifications : undefined,
+            course_id: values.course_ids[0], // backward compatibility
           }
           onSubmit(submission as StudentFormValues, setError)
         }, () => {
@@ -1120,43 +1148,130 @@ export const StudentForm = ({
                     </div>
 
                     <div className="space-y-4">
-                      <div className="space-y-1.5">
-                        <Label
-                          className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 ml-0.5"
-                          required={!isEdit}
-                        >
-                          Select Course
-                        </Label>
-                        <ComboBox
-                          placeholder="Search and select course..."
-                          value={String(watch("course_id") || "")}
-                          onValueChange={(val) => {
-                            setValue("course_id", val ? Number(val) : (undefined as any), { shouldValidate: true })
-                            setValue("batch_ids", [])
-                            setSelectedBatches([])
-                          }}
-                          options={courses.map(c => ({ value: String(c.id), label: c.name }))}
-                          searchPlaceholder="Search courses..."
-                          emptyText="No courses found."
-                          triggerClassName="w-full h-11 rounded-lg bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 shadow-none text-sm"
-                        />
-                      </div>
+                        <div className="flex items-center justify-between">
+                          <Label
+                            className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 ml-0.5"
+                            required={!isEdit}
+                          >
+                            Select Courses
+                          </Label>
+                          {courses.length > 0 && (
+                            <Checkbox
+                              id="select-all-courses"
+                              checked={
+                                courses.length > 0 &&
+                                (watchedCourseIds || []).length === courses.length
+                              }
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setValue("course_ids", courses.map(c => c.id), { shouldValidate: true })
+                                } else {
+                                  setValue("course_ids", [], { shouldValidate: true })
+                                  setValue("batch_ids", [])
+                                  setSelectedBatches([])
+                                }
+                              }}
+                              label="Select All"
+                              labelClassName="text-xs font-semibold text-slate-600 dark:text-slate-400 cursor-pointer"
+                            />
+                          )}
+                        </div>
 
-                      {errors.course_id && <p className="text-[11px] text-rose-500 font-medium">{errors.course_id.message as string}</p>}
-
-                      {selectedCourse && (
-                        <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
-                          <div className="flex items-center justify-between p-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30">
-                            <div className="flex items-center gap-3">
-                              <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary text-xs font-bold">
-                                {selectedCourse.name.charAt(0)}
-                              </div>
-                              <div>
-                                <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{selectedCourse.name}</p>
-                                <p className="text-xs text-muted-foreground">Course Fees: ₹{selectedCourse.fees}</p>
-                              </div>
-                            </div>
+                        {courses.length === 0 ? (
+                          <div className="text-sm text-rose-500">No active courses found.</div>
+                        ) : (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 max-h-[200px] overflow-y-auto">
+                            {courses.map((course) => {
+                              const isChecked = (watchedCourseIds || []).includes(course.id)
+                              return (
+                                <div key={course.id} className="flex items-center space-x-2">
+                                  <Checkbox
+                                    id={`course-${course.id}`}
+                                    checked={isChecked}
+                                    onCheckedChange={(checked) => {
+                                      const currentIds = watchedCourseIds || []
+                                      let nextIds: number[] = []
+                                      if (checked) {
+                                        nextIds = [...currentIds, course.id]
+                                      } else {
+                                        nextIds = currentIds.filter(id => id !== course.id)
+                                        // Remove any batches belonging to the deselected course
+                                        const nextSelectedBatches = selectedBatches.filter(b => {
+                                          const batchCourseIds = (b as any).course_ids || (b as any).courses?.map((c: any) => c.id) || [b.course_id]
+                                          return batchCourseIds.some((id: number) => nextIds.includes(id))
+                                        })
+                                        setSelectedBatches(nextSelectedBatches)
+                                        setValue("batch_ids", nextSelectedBatches.map(b => b.id), { shouldValidate: true })
+                                      }
+                                      setValue("course_ids", nextIds, { shouldValidate: true })
+                                    }}
+                                    label={`${course.name} (₹${course.fees})`}
+                                    labelClassName="text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer"
+                                  />
+                                </div>
+                              )
+                            })}
                           </div>
+                        )}
+                        {errors.course_ids && (
+                          <p className="text-[11px] text-rose-500 font-medium mt-1">
+                            {errors.course_ids.message as string}
+                          </p>
+                        )}
+
+                        {/* Course warnings if no active batches exist for a selected course */}
+                        {selectedCourses.map((c) => {
+                          const hasBatches = allBatches.some((b) => {
+                            const batchCourseIds = (b as any).course_ids || (b as any).courses?.map((bc: any) => bc.id) || [b.course_id]
+                            return batchCourseIds.includes(c.id)
+                          })
+                          if (!hasBatches) {
+                            return (
+                              <div key={c.id} className="flex items-start gap-2 p-3 rounded-lg border border-amber-200 dark:border-amber-900 bg-amber-50/50 dark:bg-amber-950/20 text-amber-800 dark:text-amber-300 text-xs mt-2">
+                                <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+                                <div>
+                                  <span className="font-bold">No active batches found for course "{c.name}".</span> Please create a batch for this course in Batch Management first.
+                                </div>
+                              </div>
+                            )
+                          }
+                          return null
+                        })}
+
+                        {selectedCourses.length > 0 && (
+                          <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                            <div className="space-y-2">
+                              {selectedCourses.map((course) => (
+                                <div key={course.id} className="flex items-center justify-between p-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30">
+                                  <div className="flex items-center gap-3">
+                                    <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary text-xs font-bold">
+                                      {course.name.charAt(0)}
+                                    </div>
+                                    <div>
+                                      <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{course.name}</p>
+                                      <p className="text-xs text-muted-foreground">Course Fees: ₹{course.fees}</p>
+                                    </div>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const nextIds = watchedCourseIds.filter(id => id !== course.id)
+                                      setValue("course_ids", nextIds, { shouldValidate: true })
+                                      // Remove any batches belonging to the deselected course
+                                      const nextSelectedBatches = selectedBatches.filter(b => {
+                                        const batchCourseIds = (b as any).course_ids || (b as any).courses?.map((c: any) => c.id) || [b.course_id]
+                                        return batchCourseIds.some((id: number) => nextIds.includes(id))
+                                      })
+                                      setSelectedBatches(nextSelectedBatches)
+                                      setValue("batch_ids", nextSelectedBatches.map(b => b.id), { shouldValidate: true })
+                                    }}
+                                    className="text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 p-1.5 rounded-lg transition-colors cursor-pointer"
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
 
                           {/* Fee Mode */}
                           <Controller
@@ -1245,15 +1360,15 @@ export const StudentForm = ({
 
                     <div className="space-y-4">
                       <Label className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 ml-0.5">
-                        Select Batch <span className="text-[10px] font-normal text-slate-400 ml-1">(select one)</span>
+                        Select Batch <span className="text-[10px] font-normal text-slate-400 ml-1">(select one or more)</span>
                       </Label>
 
                       {isBatchesLoading ? (
                         <div className="text-sm text-slate-400">Loading active batches...</div>
-                      ) : !watchedCourseId ? (
-                        <div className="text-sm text-slate-400">Please select a course first.</div>
+                      ) : watchedCourseIds.length === 0 ? (
+                        <div className="text-sm text-slate-400">Please select at least one course first.</div>
                       ) : activeBatches.length === 0 ? (
-                        <div className="text-sm text-amber-500">No active batches found for this course.</div>
+                        <div className="text-sm text-amber-500">No active batches found for the selected course(s).</div>
                       ) : (
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 max-h-[300px] overflow-y-auto">
                           {activeBatches.map((batch) => {
