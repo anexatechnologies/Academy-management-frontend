@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { useParams, useNavigate } from "react-router-dom"
+import { useParams, useNavigate, useSearchParams } from "react-router-dom"
 import { 
   ArrowLeft, 
   Edit, 
@@ -47,6 +47,8 @@ import { usePermissions } from "@/hooks/use-permissions"
 const StudentViewPage = () => {
   const { id } = useParams()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const initialTab = searchParams.get("tab") === "financials" ? "financials" : "general"
   const { data: student, isLoading } = useStudent(Number(id))
   const { data: payments } = usePayments(Number(id))
   const { downloadCertificate } = useCertificates()
@@ -102,7 +104,7 @@ const StudentViewPage = () => {
   return (
     <BodyLayout breadcrumbs={breadcrumbs}>
       <div className="max-w-5xl animate-in fade-in duration-500 pb-12">
-        <Tabs defaultValue="general" className="w-full">
+        <Tabs defaultValue={initialTab} className="w-full">
           {/* Sticky Header & Navigation */}
           <div className="sticky -top-6 z-30 bg-white dark:bg-slate-950 pt-2 border-b border-slate-200 dark:border-slate-800 transition-all duration-300 shadow-none">
             {/* Header Section */}
@@ -316,76 +318,101 @@ const StudentViewPage = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-0">
-                  {student.batches && student.batches.length > 0 ? (
-                    <div className="w-full relative">
-                      <Table paginationRequired={false}>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Course</TableHead>
-                            <TableHead>Batch</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead className="text-right">Total Fees</TableHead>
-                            <TableHead className="text-right">Fee Paid</TableHead>
-                            <TableHead className="text-right">Balance</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {student.batches.map((batch: any) => (
-                            <TableRow key={batch.id}>
-                              <TableCell className="font-semibold text-slate-900 dark:text-slate-100">
-                                {batch.course_name}
-                              </TableCell>
-                              <TableCell className="font-medium text-primary">
-                                {batch.batch_name}
-                              </TableCell>
-                              <TableCell>
-                                {(() => {
-                                  const isEndDatePassed = new Date(batch.end_date) < new Date()
-                                  const hasPendingFees = Number(batch.fees_remaining) > 0
-
-                                  if (isEndDatePassed && hasPendingFees) {
-                                    return (
-                                      <span className="px-2.5 py-0.5 text-[10px] uppercase font-bold tracking-wider rounded-md bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
-                                        Fee Due
-                                      </span>
-                                    )
-                                  } else if (isEndDatePassed && !hasPendingFees) {
-                                    return (
-                                      <span className="px-2.5 py-0.5 text-[10px] uppercase font-bold tracking-wider rounded-md bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400">
-                                        Completed
-                                      </span>
-                                    )
-                                  } else {
-                                    return (
-                                      <span className="px-2.5 py-0.5 text-[10px] uppercase font-bold tracking-wider rounded-md bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
-                                        Active
-                                      </span>
-                                    )
-                                  }
-                                })()}
-                              </TableCell>
-                              <TableCell className="text-right font-medium text-slate-900 dark:text-slate-100">
-                                ₹{formatCurrency(batch.total_fees_with_tax)}
-                              </TableCell>
-                              <TableCell className="text-right font-bold text-emerald-600">
-                                ₹{formatCurrency(batch.fees_paid)}
-                              </TableCell>
-                              <TableCell className="text-right font-bold text-rose-600">
-                                ₹{formatCurrency(batch.fees_remaining)}
-                              </TableCell>
+                  {(() => {
+                    const rawBatches = student.batches || []
+                    if (rawBatches.length === 0) {
+                      return (
+                        <div className="text-center py-12">
+                          <div className="inline-flex items-center justify-center h-12 w-12 rounded-full bg-slate-50 dark:bg-slate-900 mb-3 ring-8 ring-slate-50/50 dark:ring-slate-900/50">
+                            <BookOpen className="h-5 w-5 text-slate-400" />
+                          </div>
+                          <p className="text-sm font-medium text-slate-500">No courses enrolled yet.</p>
+                        </div>
+                      )
+                    }
+                    const groupedBatchesMap = new Map<number, any>()
+                    rawBatches.forEach((b: any) => {
+                      const scId = b.student_course_id
+                      if (!groupedBatchesMap.has(scId)) {
+                        groupedBatchesMap.set(scId, {
+                          ...b,
+                          batch_names: [b.batch_name]
+                        })
+                      } else {
+                        const existing = groupedBatchesMap.get(scId)
+                        if (b.batch_name && !existing.batch_names.includes(b.batch_name)) {
+                          existing.batch_names.push(b.batch_name)
+                        }
+                      }
+                    })
+                    const displayBatches = Array.from(groupedBatchesMap.values()).map(b => ({
+                      ...b,
+                      batch_name: b.batch_names.join(", ")
+                    }))
+                    return (
+                      <div className="w-full relative">
+                        <Table paginationRequired={false}>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Course</TableHead>
+                              <TableHead>Batch</TableHead>
+                              <TableHead>Status</TableHead>
+                              <TableHead className="text-right">Total Fees</TableHead>
+                              <TableHead className="text-right">Fee Paid</TableHead>
+                              <TableHead className="text-right">Balance</TableHead>
                             </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  ) : (
-                    <div className="text-center py-12">
-                      <div className="inline-flex items-center justify-center h-12 w-12 rounded-full bg-slate-50 dark:bg-slate-900 mb-3 ring-8 ring-slate-50/50 dark:ring-slate-900/50">
-                        <BookOpen className="h-5 w-5 text-slate-400" />
+                          </TableHeader>
+                          <TableBody>
+                            {displayBatches.map((batch: any) => (
+                              <TableRow key={batch.student_course_id}>
+                                <TableCell className="font-semibold text-slate-900 dark:text-slate-100">
+                                  {batch.course_name}
+                                </TableCell>
+                                <TableCell className="font-medium text-primary">
+                                  {batch.batch_name}
+                                </TableCell>
+                                <TableCell>
+                                  {(() => {
+                                    const isEndDatePassed = new Date(batch.end_date) < new Date()
+                                    const hasPendingFees = Number(batch.fees_remaining) > 0
+
+                                    if (isEndDatePassed && hasPendingFees) {
+                                      return (
+                                        <span className="px-2.5 py-0.5 text-[10px] uppercase font-bold tracking-wider rounded-md bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                                          Fee Due
+                                        </span>
+                                      )
+                                    } else if (isEndDatePassed && !hasPendingFees) {
+                                      return (
+                                        <span className="px-2.5 py-0.5 text-[10px] uppercase font-bold tracking-wider rounded-md bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400">
+                                          Completed
+                                        </span>
+                                      )
+                                    } else {
+                                      return (
+                                        <span className="px-2.5 py-0.5 text-[10px] uppercase font-bold tracking-wider rounded-md bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+                                          Active
+                                        </span>
+                                      )
+                                    }
+                                  })()}
+                                </TableCell>
+                                <TableCell className="text-right font-medium text-slate-900 dark:text-slate-100">
+                                  ₹{formatCurrency(batch.total_fees_with_tax)}
+                                </TableCell>
+                                <TableCell className="text-right font-bold text-emerald-600">
+                                  ₹{formatCurrency(batch.fees_paid)}
+                                </TableCell>
+                                <TableCell className="text-right font-bold text-rose-600">
+                                  ₹{formatCurrency(batch.fees_remaining)}
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
                       </div>
-                      <p className="text-sm font-medium text-slate-500">No courses enrolled yet.</p>
-                    </div>
-                  )}
+                    )
+                  })()}
                 </CardContent>
               </Card>
             </div>
@@ -393,7 +420,26 @@ const StudentViewPage = () => {
 
           <TabsContent value="financials" className="mt-6 outline-none space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {(() => {
-              const batches = student.batches || []
+              const rawBatches = student.batches || []
+              const groupedBatchesMap = new Map<number, any>()
+              rawBatches.forEach((b: any) => {
+                const scId = b.student_course_id
+                if (!groupedBatchesMap.has(scId)) {
+                  groupedBatchesMap.set(scId, {
+                    ...b,
+                    batch_names: [b.batch_name]
+                  })
+                } else {
+                  const existing = groupedBatchesMap.get(scId)
+                  if (b.batch_name && !existing.batch_names.includes(b.batch_name)) {
+                    existing.batch_names.push(b.batch_name)
+                  }
+                }
+              })
+              const batches = Array.from(groupedBatchesMap.values()).map(b => ({
+                ...b,
+                batch_name: b.batch_names.join(", ")
+              }))
               const totalFees = batches.reduce((s: number, b: any) => s + Number(b.total_fees_with_tax || 0), 0)
               const totalPaid = batches.reduce((s: number, b: any) => s + Number(b.fees_paid || 0), 0)
               const totalRemaining = batches.reduce((s: number, b: any) => s + Number(b.fees_remaining || 0), 0)
@@ -415,7 +461,7 @@ const StudentViewPage = () => {
 
                   {/* Section 2: Course Cards with EMI Schedule */}
                   {batches.length > 0 ? batches.map((batch: any) => (
-                    <Card key={batch.id} className="shadow-sm border-slate-200 dark:border-slate-800 overflow-hidden rounded-2xl">
+                    <Card key={batch.student_course_id} className="shadow-sm border-slate-200 dark:border-slate-800 overflow-hidden rounded-2xl">
                       <div className="p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800">
                         <div className="flex items-center gap-4">
                           <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary text-xl font-bold shrink-0">

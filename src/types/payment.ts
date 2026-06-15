@@ -30,6 +30,8 @@ export interface RecordPaymentPayload {
   due_date?: string
   next_due_date?: string | null
   status?: PaymentStatus
+  discount_amount?: number | null
+  discount_type?: "flat" | "percent" | null
 }
 
 export interface PaymentListResponse {

@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { useStudents } from "@/hooks/api/use-students"
 import { useAssignStudentsToBatch, useBatch } from "@/hooks/api/use-batches"
 import { useFeeSettings } from "@/hooks/api/use-fee-settings"
@@ -71,20 +71,32 @@ export function BatchAssignModal({ batchId, isOpen, onClose }: BatchAssignModalP
   const [isPreviewDialogOpen, setIsPreviewDialogOpen] = useState(false)
 
   // Fee & Discount State
-  const [feeMode, setFeeMode] = useState<"one-time" | "installment">("one-time")
-  const [discountType, setDiscountType] = useState<"flat" | "percent">("flat")
-  const [discountAmount, setDiscountAmount] = useState<string>("")
-  const [discountPercent, setDiscountPercent] = useState<string>("")
-
   const assignStudents = useAssignStudentsToBatch(batchId)
   const { data: batch } = useBatch(batchId)
   const { data: feeSettings } = useFeeSettings()
 
+  const [feeMode, setFeeMode] = useState<"one-time" | "installment">("one-time")
+  const [discountType, setDiscountType] = useState<"flat" | "percent">("flat")
+  const [discountAmount, setDiscountAmount] = useState<string>("")
+  const [discountPercent, setDiscountPercent] = useState<string>("")
+  const [selectedCourseIds, setSelectedCourseIds] = useState<number[]>([])
+
+  useEffect(() => {
+    if (isOpen && batch?.courses) {
+      setSelectedCourseIds(batch.courses.map(c => c.id))
+    }
+  }, [isOpen, batch])
+
   const feeSummary = useMemo(() => {
     if (!batch) return null
 
-    const baseFee = batch.course_fees !== undefined ? batch.course_fees : 0
-    const rawSubtotal = typeof baseFee === "string" ? parseFloat(baseFee) : (baseFee || 0)
+    // Determine base fee: sum the fees of all selected courses
+    const courses = batch.courses || []
+    const selectedCourses = courses.filter(c => selectedCourseIds.includes(c.id))
+    const rawSubtotal = selectedCourses.reduce((sum, c) => {
+      const baseFee = c.fees ?? 0
+      return sum + (typeof baseFee === "string" ? parseFloat(baseFee) : (baseFee || 0))
+    }, 0)
 
     let discountValue = 0
     if (discountType === "flat" && discountAmount && !isNaN(Number(discountAmount))) {
@@ -130,7 +142,7 @@ export function BatchAssignModal({ batchId, isOpen, onClose }: BatchAssignModalP
       emiBreakdown,
       feeMode
     }
-  }, [batch, feeSettings, discountType, discountAmount, discountPercent, feeMode])
+  }, [batch, selectedCourseIds, feeSettings, discountType, discountAmount, discountPercent, feeMode])
 
   const handleSearch = (value: string) => {
     setSearch(value)
@@ -162,12 +174,18 @@ export function BatchAssignModal({ batchId, isOpen, onClose }: BatchAssignModalP
       setAssignError("Please select at least one student.")
       return
     }
+    if (selectedCourseIds.length === 0) {
+      setAssignError("Please select at least one course.")
+      return
+    }
 
     try {
       await assignStudents.mutateAsync({
         student_ids: selectedStudentIds,
         force,
         fee_mode: feeMode,
+        course_ids: selectedCourseIds,
+        course_id: selectedCourseIds[0], // backward compatibility
         discount_amount: discountType === "flat" && discountAmount ? Number(discountAmount) : null,
         discount_percentage: discountType === "percent" && discountPercent ? Number(discountPercent) : null,
       })
@@ -209,6 +227,7 @@ export function BatchAssignModal({ batchId, isOpen, onClose }: BatchAssignModalP
     setDiscountType("flat")
     setDiscountAmount("")
     setDiscountPercent("")
+    setSelectedCourseIds([])
     setIsPreviewDialogOpen(false)
     onClose()
   }
@@ -230,6 +249,56 @@ export function BatchAssignModal({ batchId, isOpen, onClose }: BatchAssignModalP
               </SheetDescription>
             </SheetHeader>
             <div className="mt-4 flex flex-col gap-4">
+              {/* Course selector — checkbox checklist */}
+              {batch?.courses && batch.courses.length > 0 && (
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-[13px] font-semibold text-slate-700 dark:text-slate-300">
+                      Enroll For Courses
+                    </Label>
+                    <Checkbox
+                      id="assign-select-all-courses"
+                      checked={
+                        (batch?.courses || []).length > 0 &&
+                        selectedCourseIds.length === (batch?.courses || []).length
+                      }
+                      onCheckedChange={(checked) => {
+                        if (checked && batch?.courses) {
+                          setSelectedCourseIds(batch.courses.map(c => c.id))
+                        } else {
+                          setSelectedCourseIds([])
+                        }
+                        setAssignError(null)
+                      }}
+                      label="Select All"
+                      labelClassName="text-xs font-semibold text-slate-600 dark:text-slate-400 cursor-pointer"
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 max-h-[120px] overflow-y-auto">
+                    {batch?.courses?.map((c) => {
+                      const isChecked = selectedCourseIds.includes(c.id)
+                      return (
+                        <div key={c.id} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`assign-course-${c.id}`}
+                            checked={isChecked}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setSelectedCourseIds(prev => [...prev, c.id])
+                              } else {
+                                setSelectedCourseIds(prev => prev.filter(id => id !== c.id))
+                              }
+                              setAssignError(null)
+                            }}
+                            label={`${c.name} — ₹${Number(c.fees).toLocaleString()}`}
+                            labelClassName="text-xs font-semibold text-slate-700 dark:text-slate-300 cursor-pointer"
+                          />
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
               <div className="grid grid-cols-2 gap-4 items-end">
                 <div className="space-y-1.5 focus-within:relative z-30">
                   <div className="flex items-center justify-between">

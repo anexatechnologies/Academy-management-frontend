@@ -7,7 +7,9 @@ import { Input } from "@/components/ui/input"
 import { FormFooter } from "@/components/ui/form-footer"
 import { DatePickerInput } from "@/components/ui/date-picker"
 import { ComboBox } from "@/components/ui/combobox"
-import { useCourseComboBox, useStaffComboBox } from "@/hooks/use-combobox-data"
+import { useStaffComboBox } from "@/hooks/use-combobox-data"
+import { useCourses } from "@/hooks/api/use-courses"
+import { Checkbox } from "@/components/ui/checkbox"
 import type { Batch } from "@/types/batch"
 
 const timeOrEmpty = z
@@ -17,7 +19,7 @@ const timeOrEmpty = z
   .transform((val) => val || null)
 
 const batchSchema = z.object({
-  course_id: z.coerce.number().min(1, "Course is required"),
+  course_ids: z.array(z.number()).min(1, "At least one course is required"),
   name: z.string().min(1, "Batch name is required"),
   capacity: z.coerce.number().min(1, "Capacity must be at least 1"),
   hall_no: z.string().min(1, "Hall number is required"),
@@ -57,7 +59,7 @@ export const BatchForm = ({
     resolver: zodResolver(batchSchema) as any,
     defaultValues: initialValues
       ? {
-          course_id: initialValues.course_id,
+          course_ids: initialValues.courses ? initialValues.courses.map((c) => c.id) : [initialValues.course_id],
           name: initialValues.name,
           capacity: initialValues.capacity,
           hall_no: initialValues.hall_no,
@@ -70,7 +72,7 @@ export const BatchForm = ({
           lecture_end_time: initialValues.lecture_end_time ?? "",
         }
       : {
-          course_id: 0,
+          course_ids: [],
           name: "",
           capacity: 0,
           hall_no: "",
@@ -84,7 +86,8 @@ export const BatchForm = ({
         },
   })
 
-  const courseComboBox = useCourseComboBox()
+  const { data: coursesData, isLoading: isCoursesLoading } = useCourses({ limit: 1000, status: "active" })
+  const courses = coursesData?.data || []
   const staffComboBox = useStaffComboBox()
 
   return (
@@ -99,24 +102,66 @@ export const BatchForm = ({
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-              <ComboBox
-                label="Course"
-                required={true}
-                placeholder="Select a course"
-                value={String(watch("course_id") || "")}
-                onValueChange={(val) => setValue("course_id", Number(val), { shouldValidate: true })}
-                options={courseComboBox.options}
-                onSearch={courseComboBox.onSearch}
-                onLoadMore={courseComboBox.onLoadMore}
-                onReset={courseComboBox.onReset}
-                hasMore={courseComboBox.hasMore}
-                isLoading={courseComboBox.isLoading}
-                isLoadingMore={courseComboBox.isLoadingMore}
-                searchPlaceholder="Search courses..."
-                emptyText="No courses found."
-                disabled={isLoading}
-                error={errors.course_id?.message}
-              />
+              <div className="space-y-4 md:col-span-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                    Associated Courses <span className="text-rose-500">*</span>
+                  </label>
+                  {courses.length > 0 && (
+                    <Checkbox
+                      id="select-all-courses"
+                      checked={
+                        courses.length > 0 &&
+                        (watch("course_ids") || []).length === courses.length
+                      }
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setValue("course_ids", courses.map(c => c.id), { shouldValidate: true })
+                        } else {
+                          setValue("course_ids", [], { shouldValidate: true })
+                        }
+                      }}
+                      label="Select All"
+                      labelClassName="text-xs font-semibold text-slate-600 dark:text-slate-400 cursor-pointer"
+                    />
+                  )}
+                </div>
+
+                {isCoursesLoading ? (
+                  <div className="text-sm text-slate-400">Loading courses...</div>
+                ) : courses.length === 0 ? (
+                  <div className="text-sm text-rose-500">No active courses found. Please create courses first.</div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 max-h-[200px] overflow-y-auto">
+                    {courses.map((course) => {
+                      const isChecked = (watch("course_ids") || []).includes(course.id)
+                      return (
+                        <div key={course.id} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`course-${course.id}`}
+                            checked={isChecked}
+                            onCheckedChange={(checked) => {
+                              const currentIds = watch("course_ids") || []
+                              if (checked) {
+                                setValue("course_ids", [...currentIds, course.id], { shouldValidate: true })
+                              } else {
+                                setValue("course_ids", currentIds.filter(id => id !== course.id), { shouldValidate: true })
+                              }
+                            }}
+                            label={`${course.name} (₹${course.fees})`}
+                            labelClassName="text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer"
+                          />
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+                {errors.course_ids && (
+                  <p className="text-[11px] text-rose-500 font-medium mt-1">
+                    {errors.course_ids.message}
+                  </p>
+                )}
+              </div>
 
               <Input
                 {...register("name")}

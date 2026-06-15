@@ -10,17 +10,18 @@ import { FormFooter } from "@/components/ui/form-footer"
 import { DatePickerInput } from "@/components/ui/date-picker"
 import { ComboBox } from "@/components/ui/combobox"
 import { DeleteButton } from "@/components/ui/delete-button"
-import { X, IndianRupee, Calculator, Percent, Camera, ClipboardList, Plus } from "lucide-react"
+import { X, IndianRupee, Calculator, Percent, Camera, ClipboardList, Plus, RefreshCw, AlertTriangle } from "lucide-react"
 import {
-  Tooltip,
-  TooltipContent,
   TooltipProvider,
-  TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { studentSchema, type StudentFormValues } from "@/validations/student"
 import { GENDER_TYPES, STUDENT_CATEGORIES, RELIGIONS, HEARD_ABOUT_US } from "@/utils/student-constants"
-import { useBatchComboBox, useEnquiryComboBox } from "@/hooks/use-combobox-data"
+import { useEnquiryComboBox } from "@/hooks/use-combobox-data"
 import { useEnquiry } from "@/hooks/api/use-enquiries"
+import { useCourses } from "@/hooks/api/use-courses"
+import { useBatches } from "@/hooks/api/use-batches"
+import { useStudents } from "@/hooks/api/use-students"
+import { Checkbox } from "@/components/ui/checkbox"
 import type { EnrolledBatch } from "@/types/student"
 import { useFeeSettings } from "@/hooks/api/use-fee-settings"
 import { useState, useMemo, useEffect, useCallback, useRef } from "react"
@@ -107,7 +108,10 @@ export const StudentForm = ({
           initialValues.qualifications && initialValues.qualifications.length > 0
             ? initialValues.qualifications
             : [],
-        batch_ids: [],
+        course_ids: initialValues?.batches
+          ? Array.from(new Set(initialValues.batches.map(eb => eb.course_id)))
+          : [],
+        batch_ids: initialValues.batches ? initialValues.batches.map(eb => eb.batch_id) : [],
         fee_mode: "one-time",
         discount_amount: null,
         discount_percentage: null,
@@ -121,6 +125,7 @@ export const StudentForm = ({
         height: "",
         caste: "",
         qualifications: [],
+        course_ids: [],
         batch_ids: [],
         fee_mode: "one-time",
         discount_amount: null,
@@ -139,8 +144,61 @@ export const StudentForm = ({
 
   const [discountType, setDiscountType] = useState<DiscountType>("flat")
   const [isWebcamOpen, setIsWebcamOpen] = useState(false)
+  const [facingMode, setFacingMode] = useState<"user" | "environment">("user")
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
+
+  const toggleFacingMode = useCallback(() => {
+    setFacingMode((prev) => (prev === "user" ? "environment" : "user"))
+  }, [])
+
+  const compressAndCropImage = useCallback((fileOrBlob: Blob | File, callback: (compressedFile: File) => void) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const targetWidth = 450;
+        const targetHeight = 600;
+        canvas.width = targetWidth;
+        canvas.height = targetHeight;
+        
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
+
+        const imgAspect = img.width / img.height;
+        const targetAspect = targetWidth / targetHeight;
+
+        let sourceX = 0;
+        let sourceY = 0;
+        let sourceWidth = img.width;
+        let sourceHeight = img.height;
+
+        if (imgAspect > targetAspect) {
+          sourceWidth = img.height * targetAspect;
+          sourceX = (img.width - sourceWidth) / 2;
+        } else {
+          sourceHeight = img.width / targetAspect;
+          sourceY = (img.height - sourceHeight) / 2;
+        }
+
+        ctx.drawImage(img, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, targetWidth, targetHeight);
+
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              const compressedFile = new File([blob], "photo.jpg", { type: "image/jpeg" });
+              callback(compressedFile);
+            }
+          },
+          "image/jpeg",
+          0.8
+        );
+      };
+      img.src = e.target?.result as string;
+    };
+    reader.readAsDataURL(fileOrBlob);
+  }, []);
 
   const handleDiscountTypeChange = useCallback((type: DiscountType) => {
     setDiscountType(type)
@@ -182,8 +240,6 @@ export const StudentForm = ({
     }
   }, [enquiryData, setValue, append, watch])
 
-  // Batch ComboBox for Section 4
-  const batchComboBox = useBatchComboBox({ activeOnly: true })
   const [selectedBatches, setSelectedBatches] = useState<EnrolledBatch[]>([])
 
   // Sync selected batches when initialValues load
@@ -204,35 +260,7 @@ export const StudentForm = ({
   }, [initialValues, setValue])
   const selectedBatchIds = watch("batch_ids") || []
 
-  const handleBatchSelect = (batchIdStr: string) => {
-    if (!batchIdStr) return
-    const batchId = Number(batchIdStr)
-    if (selectedBatchIds.includes(batchId)) return
 
-    // Find the batch from the combobox options data
-    const batch = batchComboBox.rawData?.find((b) => b.id === batchId)
-    if (batch) {
-      setSelectedBatches((prev) => [...prev, {
-        ...batch,
-        batch_id: batch.id,
-        batch_name: batch.name,
-        course_base_fees: batch.course_fees,
-        is_removable: true
-      } as any])
-      setValue("batch_ids", [...selectedBatchIds, batchId])
-    }
-  }
-
-  const handleBatchRemove = (batchId: number) => {
-    const batch = selectedBatches.find(b => b.id === batchId)
-    if (batch?.is_removable === false) {
-      toast.error("This batch cannot be removed as payment has already started.")
-      return
-    }
-
-    setSelectedBatches((prev) => prev.filter((b) => b.id !== batchId))
-    setValue("batch_ids", selectedBatchIds.filter((id) => id !== batchId))
-  }
 
   // Webcam helpers
   const stopWebcamStream = () => {
@@ -259,16 +287,34 @@ export const StudentForm = ({
           return
         }
 
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true })
+        if (streamRef.current) {
+          streamRef.current.getTracks().forEach((track) => track.stop())
+        }
+
+        const constraints = {
+          video: { facingMode: facingMode }
+        }
+
+        const stream = await navigator.mediaDevices.getUserMedia(constraints)
         streamRef.current = stream
         if (videoRef.current) {
           videoRef.current.srcObject = stream
           await videoRef.current.play()
         }
       } catch (error) {
-        console.error("Error accessing webcam:", error)
-        toast.error("Unable to access camera. Please check permissions.")
-        setIsWebcamOpen(false)
+        console.error("Error accessing webcam with constraints:", error)
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ video: true })
+          streamRef.current = stream
+          if (videoRef.current) {
+            videoRef.current.srcObject = stream
+            await videoRef.current.play()
+          }
+        } catch (fbError) {
+          console.error("Webcam fallback error:", fbError)
+          toast.error("Unable to access camera. Please check permissions.")
+          setIsWebcamOpen(false)
+        }
       }
     }
 
@@ -277,8 +323,7 @@ export const StudentForm = ({
     return () => {
       stopWebcamStream()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isWebcamOpen])
+  }, [isWebcamOpen, facingMode])
 
   const handleCaptureFromWebcam = () => {
     const video = videoRef.current
@@ -286,7 +331,7 @@ export const StudentForm = ({
 
     const canvas = document.createElement("canvas")
     const width = video.videoWidth || 480
-    const height = video.videoHeight || 480
+    const height = video.videoHeight || 640
     canvas.width = width
     canvas.height = height
 
@@ -298,17 +343,69 @@ export const StudentForm = ({
     canvas.toBlob(
       (blob) => {
         if (!blob) return
-        const file = new File([blob], "webcam-photo.jpg", { type: "image/jpeg" })
-        setValue("photo", file)
-        const previewUrl = URL.createObjectURL(file)
-        setValue("photo_url", previewUrl)
-        setIsWebcamOpen(false)
-        stopWebcamStream()
+        compressAndCropImage(blob, (compressedFile) => {
+          setValue("photo", compressedFile)
+          const previewUrl = URL.createObjectURL(compressedFile)
+          setValue("photo_url", previewUrl)
+          setIsWebcamOpen(false)
+          stopWebcamStream()
+        })
       },
       "image/jpeg",
       0.9
     )
   }
+
+  // Load courses
+  const { data: coursesData } = useCourses({ limit: 1000, status: "active" })
+  const courses = useMemo(() => coursesData?.data || [], [coursesData])
+
+  // Load batches
+  const { data: batchesData, isLoading: isBatchesLoading } = useBatches({ limit: 1000, status: "active" })
+  const allBatches = useMemo(() => batchesData?.data || [], [batchesData])
+
+  // Get selected courses details
+  const watchedCourseIds = watch("course_ids") || []
+  const selectedCourses = useMemo(() => {
+    return courses.filter(c => watchedCourseIds.map(Number).includes(c.id))
+  }, [courses, watchedCourseIds])
+
+  // Filter active batches to only those containing any of the selected courses
+  const activeBatches = useMemo(() => {
+    if (!watchedCourseIds || watchedCourseIds.length === 0) return []
+    const courseIdNums = watchedCourseIds.map(Number)
+    return allBatches.filter(b => {
+      const batchCourseIds = (b as any).course_ids || (b as any).courses?.map((c: any) => c.id) || [b.course_id]
+      return batchCourseIds.some((id: number) => courseIdNums.includes(id))
+    })
+  }, [allBatches, watchedCourseIds])
+
+  // Fetch the latest student to display the last registration and attendance numbers
+  const { data: studentsResponse } = useStudents({ limit: 1 })
+  const latestStudent = studentsResponse?.data?.[0]
+
+  const handleBatchCheckboxChange = useCallback((batch: any, checked: boolean) => {
+    const batchId = batch.id
+    if (checked) {
+      if (selectedBatchIds.includes(batchId)) return
+      setSelectedBatches((prev) => [...prev, {
+        ...batch,
+        batch_id: batchId,
+        batch_name: batch.name,
+        course_base_fees: batch.course_fees,
+        is_removable: true
+      } as any])
+      setValue("batch_ids", [...selectedBatchIds, batchId])
+    } else {
+      const batchItem = selectedBatches.find(b => b.id === batchId)
+      if (batchItem?.is_removable === false) {
+        toast.error("This batch cannot be removed as payment has already started.")
+        return
+      }
+      setSelectedBatches((prev) => prev.filter((b) => b.id !== batchId))
+      setValue("batch_ids", selectedBatchIds.filter((id) => id !== batchId))
+    }
+  }, [selectedBatchIds, selectedBatches, setValue])
 
   // Fee calculation logic
   const { data: feeSettings } = useFeeSettings()
@@ -317,13 +414,12 @@ export const StudentForm = ({
   const watchedDiscountPercent = watch("discount_percentage")
 
   const feeSummary = useMemo(() => {
-    if (selectedBatches.length === 0) return null
+    if (selectedCourses.length === 0) return null
 
-    // 1. Raw subtotal (sum of base fees across all batches)
-    const rawSubtotal = selectedBatches.reduce((acc, batch) => {
-      const baseFee = batch.course_base_fees !== undefined ? batch.course_base_fees : (batch.course_fees || 0)
-      const fee = typeof baseFee === "string" ? parseFloat(baseFee) : (baseFee || 0)
-      return acc + fee
+    // 1. Raw subtotal is the sum of selected courses fees
+    const rawSubtotal = selectedCourses.reduce((sum, c) => {
+      const fee = typeof c.fees === "string" ? parseFloat(c.fees) : (c.fees || 0)
+      return sum + fee
     }, 0)
 
     // 2. Apply discount — BEFORE tax
@@ -340,40 +436,38 @@ export const StudentForm = ({
     const taxAmount = (subtotal * taxPercent) / 100
     const total = subtotal + taxAmount
 
-    // 4. Monthly calculations (always compute for preview)
-    const batchBreakdowns = selectedBatches.map((batch) => {
-      const baseFee = batch.course_base_fees !== undefined ? batch.course_base_fees : (batch.course_fees || 0)
-      const rawFee = typeof baseFee === "string" ? parseFloat(baseFee) : (baseFee || 0)
-      // Apply discount proportionally per batch
-      const batchDiscount = rawSubtotal > 0 ? (rawFee / rawSubtotal) * discountValue : 0
-      const fee = rawFee - batchDiscount
-
+    // 4. Monthly/Installment duration calculations
+    // Use the maximum duration of the selected batches, default to 1 month if no batches are selected
+    let durationMonths = 1
+    selectedBatches.forEach((batch) => {
       const start = new Date(batch.start_date)
       const end = new Date(batch.end_date)
-
-      let months = 1
       if (isValid(start) && isValid(end)) {
-        months = Math.max(1, Math.ceil(differenceInMonths(end, start) + 0.1))
+        const months = Math.max(1, Math.ceil(differenceInMonths(end, start) + 0.1))
+        if (months > durationMonths) {
+          durationMonths = months
+        }
       }
-
-      return { fee, months, batchName: batch.batch_name || batch.name || "", months_count: months }
     })
 
-    const monthlySubtotal = batchBreakdowns.reduce((acc, b) => acc + (b.fee / b.months), 0)
+    const monthlySubtotal = subtotal / durationMonths
     const monthlyTaxPercent = parseFloat(feeSettings?.monthly_tax_percentage || "0")
     const monthlyTaxAmount = (monthlySubtotal * monthlyTaxPercent) / 100
     const monthlyTotal = monthlySubtotal + monthlyTaxAmount
 
-    // 5. EMI preview (when installment fee_mode chosen)
-    const emiBreakdown = batchBreakdowns.map((b) => {
-      const perEmiSubtotal = b.fee / b.months_count
-      const perEmiTax = (perEmiSubtotal * monthlyTaxPercent) / 100
-      return {
-        batchName: b.batchName,
-        installments: b.months_count,
-        perInstallment: perEmiSubtotal + perEmiTax,
-      }
-    })
+    // 5. Resolve the active fee mode: form selection takes priority, fallback to backend setting
+    // Map "one-time" → "one-time", "installment" → "monthly" (for display purposes)
+    const activeFeeMode: "one-time" | "monthly" | "installment" =
+      watchedFeeMode === "installment" ? "installment"
+      : watchedFeeMode === "one-time" ? "one-time"
+      : (feeSettings?.fee_mode || "one-time") as "one-time" | "monthly"
+
+    // 6. EMI preview (when installment fee_mode chosen)
+    const emiBreakdown = [{
+      batchName: selectedCourses.map(c => c.name).join(" + "),
+      installments: durationMonths,
+      perInstallment: monthlyTotal,
+    }]
 
     return {
       rawSubtotal,
@@ -387,14 +481,40 @@ export const StudentForm = ({
       monthlyTaxAmount,
       monthlyTotal,
       emiBreakdown,
-      feeMode: feeSettings?.fee_mode || "one-time"
+      feeMode: activeFeeMode
     }
-  }, [selectedBatches, feeSettings, watchedDiscountAmount, watchedDiscountPercent, watchedFeeMode])
+  }, [selectedCourses, selectedBatches, feeSettings, watchedDiscountAmount, watchedDiscountPercent, watchedFeeMode])
 
   return (
     <TooltipProvider>
       <form
         onSubmit={handleSubmit((values) => {
+          // Check if at least one batch is selected for each selected course
+          const selectedBatchObjects = allBatches.filter(b => values.batch_ids?.includes(b.id))
+          const missingBatchesCourses: string[] = []
+
+          values.course_ids.forEach(courseId => {
+            const courseObj = courses.find(c => c.id === courseId)
+            const hasBatchForCourse = selectedBatchObjects.some(b => {
+              const batchCourseIds = (b as any).course_ids || (b as any).courses?.map((c: any) => c.id) || [b.course_id]
+              return batchCourseIds.includes(courseId)
+            })
+            if (!hasBatchForCourse && courseObj) {
+              missingBatchesCourses.push(courseObj.name)
+            }
+          })
+
+          if (missingBatchesCourses.length > 0) {
+            toast.error(
+              `Please select at least one batch for course(s): ${missingBatchesCourses.join(", ")}`
+            )
+            setError("batch_ids", {
+              type: "custom",
+              message: `Select at least one batch for: ${missingBatchesCourses.join(", ")}`
+            })
+            return
+          }
+
           const fullName = `${values.first_name} ${values.middle_name} ${values.last_name}`
             .replace(/\s+/g, " ")
             .trim()
@@ -409,6 +529,7 @@ export const StudentForm = ({
             ...values,
             name: fullName,
             qualifications: sanitizedQualifications.length > 0 ? sanitizedQualifications : undefined,
+            course_id: values.course_ids[0], // backward compatibility
           }
           onSubmit(submission as StudentFormValues, setError)
         }, () => {
@@ -422,9 +543,22 @@ export const StudentForm = ({
             {/* Enquiry Pre-fill (only shown when creating new student) */}
             {!isEdit && (
               <div className="space-y-4">
-                <div className="flex items-center gap-3 pb-1">
-                  <ClipboardList className="h-4 w-4 text-primary" />
-                  <h2 className="text-[13px] font-bold text-slate-500 uppercase tracking-widest">Pre-fill from Enquiry</h2>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-1">
+                  <div className="flex items-center gap-3">
+                    <ClipboardList className="h-4 w-4 text-primary" />
+                    <h2 className="text-[13px] font-bold text-slate-500 uppercase tracking-widest">Pre-fill from Enquiry</h2>
+                  </div>
+                  {latestStudent && (
+                    <div className="flex items-center gap-4 text-xs font-semibold text-slate-500 bg-slate-50 dark:bg-slate-800/50 px-3 py-1.5 rounded-lg border border-slate-200/60 dark:border-slate-800 self-start sm:self-center">
+                      <div>
+                        Last Reg No: <span className="text-primary font-bold">{latestStudent.registration_no || "N/A"}</span>
+                      </div>
+                      <div className="h-3 w-px bg-slate-200 dark:bg-slate-700" />
+                      <div>
+                        Last Att ID: <span className="text-primary font-bold">{latestStudent.attendance_id || "N/A"}</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
                 {selectedEnquiryId && enquiryData ? (
                   <div className="flex items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50 dark:bg-emerald-900/20 dark:border-emerald-800 px-4 py-3">
@@ -784,8 +918,10 @@ export const StudentForm = ({
                       }}
                       onFilesSelected={(files) => {
                         if (files.length > 0) {
-                          setValue("photo", files[0])
-                          setValue("photo_url", URL.createObjectURL(files[0]))
+                          compressAndCropImage(files[0], (compressedFile) => {
+                            setValue("photo", compressedFile)
+                            setValue("photo_url", URL.createObjectURL(compressedFile))
+                          })
                         }
                       }}
                     />
@@ -1001,174 +1137,276 @@ export const StudentForm = ({
                 </div>
               </div>
 
-              {/* Section 4: Batch Enrollment */}
-              <div className="space-y-6 min-w-0">
-                <div className="flex items-center gap-3">
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-primary text-[10px] font-bold">4</span>
-                  <h2 className="text-[13px] font-bold text-slate-500 uppercase tracking-widest">Batch Enrollment</h2>
-                </div>
+              {/* Column 2: Course & Batch Management */}
+              <div className="space-y-8 min-w-0">
+                <div className="space-y-8">
+                  {/* Section 4: Course Enrollment */}
+                  <div className="space-y-6 min-w-0">
+                    <div className="flex items-center gap-3">
+                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-primary text-[10px] font-bold">4</span>
+                      <h2 className="text-[13px] font-bold text-slate-500 uppercase tracking-widest">Course Enrollment</h2>
+                    </div>
 
-                <div className="space-y-4">
-                  <div className="space-y-1.5">
-                    <Label
-                      className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 ml-0.5"
-                      required={!isEdit}
-                    >
-                      Select Batches
-                    </Label>
-                    <ComboBox
-                      placeholder="Search and select batches..."
-                      value=""
-                      onValueChange={handleBatchSelect}
-                      options={batchComboBox.options.filter(
-                        (opt) => !selectedBatchIds.includes(Number(opt.value))
-                      )}
-                      onSearch={batchComboBox.onSearch}
-                      onLoadMore={batchComboBox.onLoadMore}
-                      onReset={batchComboBox.onReset}
-                      hasMore={batchComboBox.hasMore}
-                      isLoading={batchComboBox.isLoading}
-                      isLoadingMore={batchComboBox.isLoadingMore}
-                      searchPlaceholder="Search batches..."
-                      emptyText="No batches found."
-                      triggerClassName="w-full h-11 rounded-lg bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 shadow-none text-sm"
-                    />
-                  </div>
-
-                  {selectedBatches.length > 0 && (
-                    <div className="space-y-2">
-                      <p className="text-xs font-medium text-muted-foreground ml-0.5">
-                        {selectedBatches.length} batch{selectedBatches.length > 1 ? "es" : ""} selected
-                      </p>
-                      <div className="space-y-2">
-                        {selectedBatches.map((batch) => (
-                          <div
-                            key={batch.id}
-                            className="flex items-center justify-between p-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30"
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <Label
+                            className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 ml-0.5"
+                            required={!isEdit}
                           >
-                            <div className="flex items-center gap-3 min-w-0">
-                              <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary text-xs font-bold shrink-0">
-                                {(batch.batch_name || batch.name)?.charAt(0) || "?"}
-                              </div>
-                              <div className="min-w-0">
-                                <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate">{batch.batch_name || batch.name || "Unknown Batch"}</p>
-                                <div className="flex items-center gap-2">
-                                  <p className="text-xs text-muted-foreground truncate">{batch.course_name || "No Course"}</p>
-                                  <div className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-700 text-[10px] font-bold text-slate-600 dark:text-slate-400">
-                                    <IndianRupee className="h-2.5 w-2.5" />
-                                    {batch.course_base_fees || batch.course_fees}
-                                  </div>
+                            Select Courses
+                          </Label>
+                          {courses.length > 0 && (
+                            <Checkbox
+                              id="select-all-courses"
+                              checked={
+                                courses.length > 0 &&
+                                (watchedCourseIds || []).length === courses.length
+                              }
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setValue("course_ids", courses.map(c => c.id), { shouldValidate: true })
+                                } else {
+                                  setValue("course_ids", [], { shouldValidate: true })
+                                  setValue("batch_ids", [])
+                                  setSelectedBatches([])
+                                }
+                              }}
+                              label="Select All"
+                              labelClassName="text-xs font-semibold text-slate-600 dark:text-slate-400 cursor-pointer"
+                            />
+                          )}
+                        </div>
+
+                        {courses.length === 0 ? (
+                          <div className="text-sm text-rose-500">No active courses found.</div>
+                        ) : (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 max-h-[200px] overflow-y-auto">
+                            {courses.map((course) => {
+                              const isChecked = (watchedCourseIds || []).includes(course.id)
+                              return (
+                                <div key={course.id} className="flex items-center space-x-2">
+                                  <Checkbox
+                                    id={`course-${course.id}`}
+                                    checked={isChecked}
+                                    onCheckedChange={(checked) => {
+                                      const currentIds = watchedCourseIds || []
+                                      let nextIds: number[] = []
+                                      if (checked) {
+                                        nextIds = [...currentIds, course.id]
+                                      } else {
+                                        nextIds = currentIds.filter(id => id !== course.id)
+                                        // Remove any batches belonging to the deselected course
+                                        const nextSelectedBatches = selectedBatches.filter(b => {
+                                          const batchCourseIds = (b as any).course_ids || (b as any).courses?.map((c: any) => c.id) || [b.course_id]
+                                          return batchCourseIds.some((id: number) => nextIds.includes(id))
+                                        })
+                                        setSelectedBatches(nextSelectedBatches)
+                                        setValue("batch_ids", nextSelectedBatches.map(b => b.id), { shouldValidate: true })
+                                      }
+                                      setValue("course_ids", nextIds, { shouldValidate: true })
+                                    }}
+                                    label={course.name}
+                                    labelClassName="text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer"
+                                  />
+                                </div>
+                              )
+                            })}
+                          </div>
+                        )}
+                        {errors.course_ids && (
+                          <p className="text-[11px] text-rose-500 font-medium mt-1">
+                            {errors.course_ids.message as string}
+                          </p>
+                        )}
+
+                        {/* Course warnings if no active batches exist for a selected course */}
+                        {selectedCourses.map((c) => {
+                          const hasBatches = allBatches.some((b) => {
+                            const batchCourseIds = (b as any).course_ids || (b as any).courses?.map((bc: any) => bc.id) || [b.course_id]
+                            return batchCourseIds.includes(c.id)
+                          })
+                          if (!hasBatches) {
+                            return (
+                              <div key={c.id} className="flex items-start gap-2 p-3 rounded-lg border border-amber-200 dark:border-amber-900 bg-amber-50/50 dark:bg-amber-950/20 text-amber-800 dark:text-amber-300 text-xs mt-2">
+                                <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+                                <div>
+                                  <span className="font-bold">No active batches found for course "{c.name}".</span> Please create a batch for this course in Batch Management first.
                                 </div>
                               </div>
+                            )
+                          }
+                          return null
+                        })}
+
+                        {selectedCourses.length > 0 && (
+                          <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                            <div className="space-y-2">
+                              {selectedCourses.map((course) => (
+                                <div key={course.id} className="flex items-center justify-between p-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30">
+                                  <div className="flex items-center gap-3">
+                                    <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary text-xs font-bold">
+                                      {course.name.charAt(0)}
+                                    </div>
+                                    <div>
+                                      <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{course.name}</p>
+                                      <p className="text-xs text-muted-foreground">Course Fees: ₹{course.fees}</p>
+                                    </div>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const nextIds = watchedCourseIds.filter(id => id !== course.id)
+                                      setValue("course_ids", nextIds, { shouldValidate: true })
+                                      // Remove any batches belonging to the deselected course
+                                      const nextSelectedBatches = selectedBatches.filter(b => {
+                                        const batchCourseIds = (b as any).course_ids || (b as any).courses?.map((c: any) => c.id) || [b.course_id]
+                                        return batchCourseIds.some((id: number) => nextIds.includes(id))
+                                      })
+                                      setSelectedBatches(nextSelectedBatches)
+                                      setValue("batch_ids", nextSelectedBatches.map(b => b.id), { shouldValidate: true })
+                                    }}
+                                    className="text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 p-1.5 rounded-lg transition-colors cursor-pointer"
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </button>
+                                </div>
+                              ))}
                             </div>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
+
+                          {/* Fee Mode */}
+                          <Controller
+                            name="fee_mode"
+                            control={control}
+                            render={({ field }) => (
+                              <CustomSelect
+                                label="Fee Mode"
+                                options={[
+                                  { label: "One-Time (Full payment, no EMI)", value: "one-time" },
+                                  { label: "Installment (EMI schedule auto-generated)", value: "installment" },
+                                ]}
+                                value={field.value}
+                                onValueChange={field.onChange}
+                                required
+                              />
+                            )}
+                          />
+
+                          {/* Discount */}
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Discount <span className="text-slate-400 font-normal">(optional)</span></label>
+                              {/* Flat / % toggle */}
+                              <div className="flex items-center rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
                                 <button
                                   type="button"
-                                  onClick={() => handleBatchRemove(batch.id)}
+                                  onClick={() => handleDiscountTypeChange("flat")}
                                   className={cn(
-                                    "ml-2 p-1 rounded-md transition-colors shrink-0 cursor-pointer",
-                                    batch.is_removable === false
-                                      ? "text-slate-300 dark:text-slate-600"
-                                      : "text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10"
+                                    "px-3 py-1.5 text-xs font-bold flex items-center gap-1 transition-colors",
+                                    discountType === "flat"
+                                      ? "bg-primary text-white"
+                                      : "text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800"
                                   )}
-                                  aria-disabled={isLoading || batch.is_removable === false}
                                 >
-                                  <X className="h-4 w-4" />
+                                  <IndianRupee className="h-3 w-3" /> Flat
                                 </button>
-                              </TooltipTrigger>
-                              <TooltipContent side="left" className="bg-slate-900 text-white border-none shadow-xl">
-                                {batch.is_removable === false
-                                  ? "Payment started - Cannot remove"
-                                  : "Remove batch"}
-                              </TooltipContent>
-                            </Tooltip>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {errors.batch_ids && <p className="text-[11px] text-rose-500 font-medium">{errors.batch_ids.message}</p>}
-
-                  {/* Fee Mode + Discount fields (visible once at least one batch is selected) */}
-                  {selectedBatches.length > 0 && (
-                    <div className="mt-6 space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
-                      {/* Fee Mode */}
-                      <Controller
-                        name="fee_mode"
-                        control={control}
-                        render={({ field }) => (
-                          <CustomSelect
-                            label="Fee Mode"
-                            options={[
-                              { label: "One-Time (Full payment, no EMI)", value: "one-time" },
-                              { label: "Installment (EMI schedule auto-generated)", value: "installment" },
-                            ]}
-                            value={field.value}
-                            onValueChange={field.onChange}
-                            required
-                          />
-                        )}
-                      />
-
-                      {/* Discount */}
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Discount <span className="text-slate-400 font-normal">(optional)</span></label>
-                          {/* Flat / % toggle */}
-                          <div className="flex items-center rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
-                            <button
-                              type="button"
-                              onClick={() => handleDiscountTypeChange("flat")}
-                              className={cn(
-                                "px-3 py-1.5 text-xs font-bold flex items-center gap-1 transition-colors",
-                                discountType === "flat"
-                                  ? "bg-primary text-white"
-                                  : "text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800"
-                              )}
-                            >
-                              <IndianRupee className="h-3 w-3" /> Flat
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleDiscountTypeChange("percent")}
-                              className={cn(
-                                "px-3 py-1.5 text-xs font-bold flex items-center gap-1 transition-colors",
-                                discountType === "percent"
-                                  ? "bg-primary text-white"
-                                  : "text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800"
-                              )}
-                            >
-                              <Percent className="h-3 w-3" /> %
-                            </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDiscountTypeChange("percent")}
+                                  className={cn(
+                                    "px-3 py-1.5 text-xs font-bold flex items-center gap-1 transition-colors",
+                                    discountType === "percent"
+                                      ? "bg-primary text-white"
+                                      : "text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800"
+                                  )}
+                                >
+                                  <Percent className="h-3 w-3" /> %
+                                </button>
+                              </div>
+                            </div>
+                            {discountType === "flat" ? (
+                              <Input
+                                {...register("discount_amount", { valueAsNumber: true })}
+                                type="number"
+                                step="any"
+                                min={0}
+                                leftIcon={<IndianRupee className="h-4 w-4" />}
+                                placeholder="e.g. 500"
+                                error={errors.discount_amount?.message as string}
+                              />
+                            ) : (
+                              <Input
+                                {...register("discount_percentage", { valueAsNumber: true })}
+                                type="number"
+                                step="any"
+                                min={0}
+                                max={100}
+                                leftIcon={<Percent className="h-4 w-4" />}
+                                placeholder="e.g. 10"
+                                error={errors.discount_percentage?.message as string}
+                              />
+                            )}
                           </div>
                         </div>
-                        {discountType === "flat" ? (
-                          <Input
-                            {...register("discount_amount", { valueAsNumber: true })}
-                            type="number"
-                            step="any"
-                            min={0}
-                            leftIcon={<IndianRupee className="h-4 w-4" />}
-                            placeholder="e.g. 500"
-                            error={errors.discount_amount?.message as string}
-                          />
-                        ) : (
-                          <Input
-                            {...register("discount_percentage", { valueAsNumber: true })}
-                            type="number"
-                            step="any"
-                            min={0}
-                            max={100}
-                            leftIcon={<Percent className="h-4 w-4" />}
-                            placeholder="e.g. 10"
-                            error={errors.discount_percentage?.message as string}
-                          />
-                        )}
-                      </div>
+                      )}
                     </div>
-                  )}
+                  </div>
+
+                  {/* Section 5: Batch Assignment */}
+                  <div className="space-y-6 min-w-0">
+                    <div className="flex items-center gap-3">
+                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-primary text-[10px] font-bold">5</span>
+                      <h2 className="text-[13px] font-bold text-slate-500 uppercase tracking-widest">Batch Assignment</h2>
+                    </div>
+
+                    <div className="space-y-4">
+                      <Label className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 ml-0.5">
+                        Select Batch <span className="text-[10px] font-normal text-slate-400 ml-1">(select one or more)</span>
+                      </Label>
+
+                      {isBatchesLoading ? (
+                        <div className="text-sm text-slate-400">Loading active batches...</div>
+                      ) : watchedCourseIds.length === 0 ? (
+                        <div className="text-sm text-slate-400">Please select at least one course first.</div>
+                      ) : activeBatches.length === 0 ? (
+                        <div className="text-sm text-amber-500">No active batches found for the selected course(s).</div>
+                      ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 max-h-[300px] overflow-y-auto">
+                          {activeBatches.map((batch) => {
+                            const isChecked = selectedBatchIds.includes(batch.id)
+                            const isRemovable = selectedBatches.find(b => b.id === batch.id)?.is_removable !== false
+                            return (
+                              <div key={batch.id} className="flex flex-col gap-1.5 p-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-sm">
+                                <div className="flex items-start justify-between gap-2">
+                                  <Checkbox
+                                    id={`batch-${batch.id}`}
+                                    checked={isChecked}
+                                    onCheckedChange={(checked) => handleBatchCheckboxChange(batch, !!checked)}
+                                    label={batch.name}
+                                    labelClassName="text-sm font-semibold text-slate-700 dark:text-slate-300 cursor-pointer leading-tight"
+                                    disabled={!isRemovable}
+                                  />
+                                  {batch.hall_no && (
+                                    <span className="text-[10px] font-semibold text-slate-400 shrink-0 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
+                                      {batch.hall_no}
+                                    </span>
+                                  )}
+                                </div>
+                                {(batch.start_date || batch.end_date) && (
+                                  <p className="text-[10px] text-slate-400 pl-6">
+                                    {batch.start_date ? format(new Date(batch.start_date), "dd MMM yyyy") : "—"}
+                                    {" → "}
+                                    {batch.end_date ? format(new Date(batch.end_date), "dd MMM yyyy") : "—"}
+                                  </p>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      {errors.batch_ids && <p className="text-[11px] text-rose-500 font-medium">{errors.batch_ids.message as string}</p>}
+                    </div>
+                  </div>
 
                   {/* Dynamic Fee Summary / Fees Structure */}
                   {feeSummary && (
@@ -1237,46 +1475,29 @@ export const StudentForm = ({
                             </div>
                           </div>
 
-                          <div className="h-px bg-slate-100 dark:bg-slate-800 mx-1" />
-
-                          {/* Monthly Section */}
-                          <div className={cn(
-                            "space-y-2.5 transition-all duration-300",
-                            feeSummary.feeMode !== "monthly" && "opacity-60 scale-[0.98] grayscale-[0.2]"
-                          )}>
-                            <div className="flex justify-between items-center text-sm">
-                              <div className="flex items-center gap-2">
-                                <span className="text-slate-600 dark:text-slate-400 font-medium">Monthly Fees :</span>
-                                {feeSummary.feeMode !== "monthly" && (
-                                  <span className="text-[9px] bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-slate-400 uppercase font-black tracking-tighter">Preview</span>
-                                )}
+                           {/* Monthly Section — only shown when monthly or installment mode is active */}
+                          {(feeSummary.feeMode === "monthly" || feeSummary.feeMode === "installment") && (
+                            <>
+                              <div className="h-px bg-slate-100 dark:bg-slate-800 mx-1" />
+                              <div className="space-y-2.5">
+                                <div className="flex justify-between items-center text-sm">
+                                  <span className="text-slate-600 dark:text-slate-400 font-medium">Monthly Fees :</span>
+                                  <span className="font-semibold text-slate-800 dark:text-slate-200">₹{feeSummary.monthlySubtotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                </div>
+                                <div className="flex justify-between items-center text-sm">
+                                  <span className="text-slate-600 dark:text-slate-400 font-medium whitespace-nowrap">Monthly Course Tax ({feeSummary.monthlyTaxPercent}%) :</span>
+                                  <span className="font-semibold text-slate-800 dark:text-slate-200">₹{feeSummary.monthlyTaxAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                </div>
+                                <div className="flex justify-between items-center p-2.5 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200/50 dark:border-emerald-500/20 shadow-[0_0_15px_-5px_rgba(16,185,129,0.1)]">
+                                  <span className="text-sm font-bold uppercase tracking-tight text-emerald-600 dark:text-emerald-400">Monthly Course Fees :</span>
+                                  <div className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
+                                    <IndianRupee className="h-4 w-4" />
+                                    <span className="text-lg font-black">{feeSummary.monthlyTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                  </div>
+                                </div>
                               </div>
-                              <span className="font-semibold text-slate-800 dark:text-slate-200">₹{feeSummary.monthlySubtotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                            </div>
-                            <div className="flex justify-between items-center text-sm">
-                              <span className="text-slate-600 dark:text-slate-400 font-medium whitespace-nowrap">Monthly Course Tax ({feeSummary.monthlyTaxPercent}%) :</span>
-                              <span className="font-semibold text-slate-800 dark:text-slate-200">₹{feeSummary.monthlyTaxAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                            </div>
-                            <div className={cn(
-                              "flex justify-between items-center p-2.5 rounded-lg transition-all",
-                              feeSummary.feeMode === "monthly"
-                                ? "bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200/50 dark:border-emerald-500/20 shadow-[0_0_15px_-5px_rgba(16,185,129,0.1)]"
-                                : "bg-blue-50/10 dark:bg-blue-900/5 border border-transparent"
-                            )}>
-                              <span className={cn(
-                                "text-sm font-bold uppercase tracking-tight",
-                                feeSummary.feeMode === "monthly" ? "text-emerald-600 dark:text-emerald-400" : "text-blue-500/70"
-                              )}>Monthly Course Fees :</span>
-                              <div className={cn(
-                                "flex items-center gap-1",
-                                feeSummary.feeMode === "monthly" ? "text-emerald-600 dark:text-emerald-400" : "text-blue-500/70"
-                              )}>
-                                <IndianRupee className="h-4 w-4" />
-                                <span className="text-lg font-black">{feeSummary.monthlyTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
+                            </>
+                          )}
 
                         {/* EMI Preview — only when installment mode is chosen */}
                         {watchedFeeMode === "installment" && feeSummary.emiBreakdown.length > 0 && (
@@ -1305,7 +1526,7 @@ export const StudentForm = ({
                             </p>
                           </div>
                         )}
-
+                        </div>{/* end p-5 space-y-4 */}
 
                         {/* Status Indicator */}
                         <div className="px-5 py-2.5 bg-slate-50 dark:bg-slate-800/80 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
@@ -1323,20 +1544,20 @@ export const StudentForm = ({
                             {feeSummary.feeMode}
                           </span>
                         </div>
-                      </div>
+                      </div>{/* end card */}
                     </div>
                   )}
                 </div>
               </div>
             </div>
           </div>
-          <Dialog open={isWebcamOpen} onOpenChange={setIsWebcamOpen}>
+           <Dialog open={isWebcamOpen} onOpenChange={setIsWebcamOpen}>
             <DialogContent className="max-w-md">
               <DialogHeader>
                 <DialogTitle>Capture Photo from Webcam</DialogTitle>
               </DialogHeader>
               <div className="space-y-3">
-                <div className="relative w-full rounded-lg overflow-hidden bg-black aspect-4/3">
+                <div className="relative w-full rounded-lg overflow-hidden bg-black aspect-[3/4] max-w-[280px] mx-auto border border-slate-200 dark:border-slate-800 shadow-md">
                   <video
                     ref={videoRef}
                     className="w-full h-full object-cover"
@@ -1344,27 +1565,46 @@ export const StudentForm = ({
                     playsInline
                     muted
                   />
+                  {/* Passport overlay guide */}
+                  <div className="absolute inset-4 border-2 border-dashed border-white/60 rounded-md pointer-events-none flex flex-col items-center justify-center">
+                    <div className="w-28 h-36 rounded-full border-2 border-white/30 bg-white/5 flex items-center justify-center">
+                      <span className="text-[9px] text-white/50 font-bold uppercase tracking-wider">Face Guide</span>
+                    </div>
+                  </div>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  Position the student in the frame and click &quot;Capture Photo&quot;. The captured
-                  image will be used as the profile photo.
+                <p className="text-[11px] text-center text-muted-foreground mt-2">
+                  Align the face within the guides. The photo will be automatically cropped and compressed under 200KB.
                 </p>
               </div>
-              <DialogFooter className="mt-3 flex justify-end gap-2">
+              <DialogFooter className="mt-3 flex flex-wrap justify-between items-center gap-2">
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => {
-                    setIsWebcamOpen(false)
-                    stopWebcamStream()
-                  }}
+                  size="sm"
+                  onClick={toggleFacingMode}
+                  className="gap-1.5 h-9"
                 >
-                  Cancel
+                  <RefreshCw className="h-3.5 w-3.5" />
+                  <span>Switch Camera</span>
                 </Button>
-                <Button type="button" onClick={handleCaptureFromWebcam}>
-                  <Camera className="mr-1.5 h-4 w-4" />
-                  Capture Photo
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-9"
+                    onClick={() => {
+                      setIsWebcamOpen(false)
+                      stopWebcamStream()
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="button" size="sm" className="h-9 gap-1.5" onClick={handleCaptureFromWebcam}>
+                    <Camera className="h-3.5 w-3.5" />
+                    <span>Capture</span>
+                  </Button>
+                </div>
               </DialogFooter>
             </DialogContent>
           </Dialog>
