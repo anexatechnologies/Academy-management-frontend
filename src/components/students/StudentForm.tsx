@@ -601,7 +601,7 @@ export const StudentForm = ({
               </div>
             )}
 
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 xl:gap-x-10 xl:gap-y-0">
+            <div className="space-y-10">
               {/* Section 1: Personal Information */}
               <div className="space-y-6 min-w-0">
                 <div className="flex items-center gap-3">
@@ -609,7 +609,7 @@ export const StudentForm = ({
                   <h2 className="text-[13px] font-bold text-slate-500 uppercase tracking-widest">Personal Information</h2>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-x-8 gap-y-6">
                   <Input
                     {...register("registration_no")}
                     label="Registration No."
@@ -843,7 +843,7 @@ export const StudentForm = ({
                     )}
                   </div>
 
-                  <div className="md:col-span-2">
+                  <div className="md:col-span-2 xl:col-span-4">
                     <Textarea
                       {...register("address")}
                       label="Address"
@@ -889,7 +889,7 @@ export const StudentForm = ({
                     }}
                   />
 
-                  <div className="md:col-span-2 space-y-1.5">
+                  <div className="md:col-span-2 xl:col-span-4 space-y-1.5">
                     <div className="flex items-center justify-between gap-2">
                       <Label className="text-[13px] font-semibold text-slate-700 dark:text-slate-300">
                         Photo
@@ -936,7 +936,7 @@ export const StudentForm = ({
                   <h2 className="text-[13px] font-bold text-slate-500 uppercase tracking-widest">Contact Information</h2>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-x-8 gap-y-6">
                   <Input
                     {...register("personal_contact")}
                     label="Personal Contact"
