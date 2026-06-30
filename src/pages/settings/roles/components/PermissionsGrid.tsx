@@ -54,27 +54,29 @@ const PermissionsGrid = ({
             </div>
 
             {/* Individual Actions */}
-            <div className="p-4 grid grid-cols-2 sm:grid-cols-4 gap-4 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
+            <div className="p-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
               {permissions.map((permission) => {
                 const isSelected = selectedIds.includes(permission.id)
+                const formattedAction = permission.action
+                  .replace(/_/g, " ")
+                  .replace(/\b\w/g, (char) => char.toUpperCase())
 
                 return (
-                  <div key={permission.id} className="flex items-start space-x-3">
+                  <div key={permission.id} className="flex items-center space-x-3 min-w-0">
                     <Checkbox
                       id={`permission-${permission.id}`}
                       checked={isSelected}
                       onCheckedChange={() => onToggle(permission.id)}
                       disabled={disabled}
-                      className="mt-0.5"
+                      className="shrink-0"
                     />
-                    <div className="flex flex-col gap-1">
-                      <Label
-                        htmlFor={`permission-${permission.id}`}
-                        className="text-[14px] font-medium capitalize cursor-pointer leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-slate-700 dark:text-slate-200"
-                      >
-                        {permission.action}
-                      </Label>
-                    </div>
+                    <Label
+                      htmlFor={`permission-${permission.id}`}
+                      className="text-sm font-medium cursor-pointer leading-normal peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-slate-700 dark:text-slate-200 select-none truncate"
+                      title={formattedAction}
+                    >
+                      {formattedAction}
+                    </Label>
                   </div>
                 )
               })}
