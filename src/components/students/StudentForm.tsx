@@ -10,7 +10,7 @@ import { FormFooter } from "@/components/ui/form-footer"
 import { DatePickerInput } from "@/components/ui/date-picker"
 import { ComboBox } from "@/components/ui/combobox"
 import { DeleteButton } from "@/components/ui/delete-button"
-import { X, IndianRupee, Calculator, Percent, Camera, ClipboardList, Plus, RefreshCw, AlertTriangle } from "lucide-react"
+import { X, IndianRupee, Calculator, Percent, Camera, ClipboardList, Plus, RefreshCw, AlertTriangle, Eye } from "lucide-react"
 import {
   TooltipProvider,
 } from "@/components/ui/tooltip"
@@ -144,6 +144,7 @@ export const StudentForm = ({
 
   const [discountType, setDiscountType] = useState<DiscountType>("flat")
   const [isWebcamOpen, setIsWebcamOpen] = useState(false)
+  const [isPhotoPreviewOpen, setIsPhotoPreviewOpen] = useState(false)
   const [facingMode, setFacingMode] = useState<"user" | "environment">("user")
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
@@ -609,26 +610,31 @@ export const StudentForm = ({
                   <h2 className="text-[13px] font-bold text-slate-500 uppercase tracking-widest">Personal Information</h2>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-x-8 gap-y-6">
-                  <Input
-                    {...register("registration_no")}
-                    label="Registration No."
-                    placeholder="e.g. 1000001 (Optional)"
-                    className="rounded-lg text-sm font-mono"
-                    error={errors.registration_no?.message}
-                    disabled={isLoading}
-                  />
-                  <Input
-                    {...register("attendance_id")}
-                    label="Attendance ID"
-                    placeholder="e.g. 1000001"
-                    className="rounded-lg text-sm font-mono"
-                    error={errors.attendance_id?.message}
-                    disabled={isLoading}
-                    onInput={(e: React.FormEvent<HTMLInputElement>) => {
-                      e.currentTarget.value = e.currentTarget.value.replace(/\D/g, '');
-                    }}
-                  />
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_160px] lg:items-start">
+                    <div className="grid grid-cols-1 gap-x-8 gap-y-6 md:grid-cols-2 xl:grid-cols-4">
+                      <div className="md:col-span-2 xl:col-span-4 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-center">
+                        <Input
+                          {...register("registration_no")}
+                          label="Registration No."
+                          placeholder="e.g. 1000001 (Optional)"
+                          className="rounded-lg text-sm font-mono"
+                          error={errors.registration_no?.message}
+                          disabled={isLoading}
+                        />
+                        <Input
+                          {...register("attendance_id")}
+                          label="Attendance ID"
+                          placeholder="e.g. 1000001"
+                          className="rounded-lg text-sm font-mono"
+                          error={errors.attendance_id?.message}
+                          disabled={isLoading}
+                          onInput={(e: React.FormEvent<HTMLInputElement>) => {
+                            e.currentTarget.value = e.currentTarget.value.replace(/\D/g, '');
+                          }}
+                        />
+                      </div>
+
                   <Input
                     {...register("first_name")}
                     label="First Name"
@@ -665,6 +671,67 @@ export const StudentForm = ({
                     error={errors.father_husband_name?.message}
                     disabled={isLoading}
                   />
+                    </div>
+
+                    <div className="space-y-2 lg:justify-self-end">
+                      
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between gap-2">
+                          <Label className="text-[13px] font-semibold text-slate-700 dark:text-slate-300">
+                            Photo
+                          </Label>
+                          <div className="flex items-center gap-1.5">
+                            {watch("photo_url") && (
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="h-8 px-2.5 text-[12px]"
+                                onClick={() => setIsPhotoPreviewOpen(true)}
+                                disabled={isLoading}
+                                title="Preview photo"
+                              >
+                                <Eye className="h-3.5 w-3.5" />
+                              </Button>
+                            )}
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="h-8 px-2.5 text-[12px]"
+                              onClick={() => setIsWebcamOpen(true)}
+                              disabled={isLoading}
+                              title="Capture from webcam"
+                            >
+                              <Camera className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        </div>
+                        <Upload
+                          key={watch("photo_url") || "photo-upload"}
+                          className="w-40 max-w-full"
+                          accept="image/*"
+                          compactImagePreview
+                          imagePreview={watch("photo_url")}
+                          disabled={isLoading}
+                          onRemove={() => {
+                            setValue("photo_url", "")
+                            setValue("photo", undefined)
+                          }}
+                          onFilesSelected={(files) => {
+                            if (files.length > 0) {
+                              compressAndCropImage(files[0], (compressedFile) => {
+                                setValue("photo", compressedFile)
+                                setValue("photo_url", URL.createObjectURL(compressedFile))
+                              })
+                            }
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-x-8 gap-y-6">
                   <Input
                     {...register("mother_name")}
                     label="Mother Name"
@@ -737,16 +804,6 @@ export const StudentForm = ({
                     )}
                   />
 
-
-                  <Input
-                    {...register("nationality")}
-                    label="Nationality"
-                    placeholder="e.g. Indian"
-                    className="rounded-lg text-sm"
-                    error={errors.nationality?.message}
-                    disabled={isLoading}
-                  />
-
                   <Input
                     {...register("adhar_no")}
                     label="Aadhaar Number"
@@ -781,6 +838,15 @@ export const StudentForm = ({
                         .replace(/[^0-9.]/g, "")
                         .replace(/(\..*)\./g, "$1")
                     }}
+                  />
+
+                  <Input
+                    {...register("nationality")}
+                    label="Nationality"
+                    placeholder="e.g. Indian"
+                    className="rounded-lg text-sm"
+                    error={errors.nationality?.message}
+                    disabled={isLoading}
                   />
 
                   <Input
@@ -842,8 +908,9 @@ export const StudentForm = ({
                       </div>
                     )}
                   </div>
+                  </div>
 
-                  <div className="md:col-span-2 xl:col-span-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-[minmax(220px,2fr)_repeat(3,minmax(120px,1fr))] gap-x-8 gap-y-6">
                     <Textarea
                       {...register("address")}
                       label="Address"
@@ -852,11 +919,10 @@ export const StudentForm = ({
                       error={errors.address?.message}
                       disabled={isLoading}
                     />
-                  </div>
 
                   <Input
                     {...register("city")}
-                    label="City"
+                    label="City / At"
                     placeholder="Enter city"
                     className="rounded-lg text-sm"
                     error={errors.city?.message}
@@ -888,43 +954,6 @@ export const StudentForm = ({
                       }
                     }}
                   />
-
-                  <div className="md:col-span-2 xl:col-span-4 space-y-1.5">
-                    <div className="flex items-center justify-between gap-2">
-                      <Label className="text-[13px] font-semibold text-slate-700 dark:text-slate-300">
-                        Photo
-                      </Label>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="h-8 text-[12px] px-2.5 gap-1"
-                        onClick={() => setIsWebcamOpen(true)}
-                        disabled={isLoading}
-                      >
-                        <Camera className="h-3.5 w-3.5" />
-                        Capture from webcam
-                      </Button>
-                    </div>
-                    <Upload
-                      key={watch("photo_url") || "photo-upload"}
-                      className="w-full"
-                      accept="image/*"
-                      imagePreview={watch("photo_url")}
-                      disabled={isLoading}
-                      onRemove={() => {
-                        setValue("photo_url", "")
-                        setValue("photo", undefined)
-                      }}
-                      onFilesSelected={(files) => {
-                        if (files.length > 0) {
-                          compressAndCropImage(files[0], (compressedFile) => {
-                            setValue("photo", compressedFile)
-                            setValue("photo_url", URL.createObjectURL(compressedFile))
-                          })
-                        }
-                      }}
-                    />
                   </div>
                 </div>
               </div>
@@ -936,7 +965,8 @@ export const StudentForm = ({
                   <h2 className="text-[13px] font-bold text-slate-500 uppercase tracking-widest">Contact Information</h2>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-x-8 gap-y-6">
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-6">
                   <Input
                     {...register("personal_contact")}
                     label="Personal Contact"
@@ -948,15 +978,6 @@ export const StudentForm = ({
                       e.currentTarget.value = e.currentTarget.value.replace(/\D/g, '').slice(0, 10);
                     }}
                     error={errors.personal_contact?.message}
-                    disabled={isLoading}
-                  />
-                  <Input
-                    {...register("email")}
-                    label="Email Address"
-                    type="email"
-                    placeholder="student@example.com"
-                    className="rounded-lg text-sm"
-                    error={errors.email?.message}
                     disabled={isLoading}
                   />
                   <Input
@@ -972,15 +993,6 @@ export const StudentForm = ({
                     disabled={isLoading}
                   />
                   <Input
-                    {...register("father_email")}
-                    label="Father's Email"
-                    type="email"
-                    placeholder="father@example.com"
-                    className="rounded-lg text-sm"
-                    error={errors.father_email?.message}
-                    disabled={isLoading}
-                  />
-                  <Input
                     {...register("mother_contact")}
                     label="Mother's Contact"
                     placeholder="Enter 10-digit number"
@@ -992,13 +1004,15 @@ export const StudentForm = ({
                     error={errors.mother_contact?.message}
                     disabled={isLoading}
                   />
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                   <Input
-                    {...register("mother_email")}
-                    label="Mother's Email"
+                    {...register("email")}
+                    label="Email Address"
                     type="email"
-                    placeholder="mother@example.com"
+                    placeholder="student@example.com"
                     className="rounded-lg text-sm"
-                    error={errors.mother_email?.message}
+                    error={errors.email?.message}
                     disabled={isLoading}
                   />
                   <Input
@@ -1009,13 +1023,32 @@ export const StudentForm = ({
                     error={errors.reference?.message}
                     disabled={isLoading}
                   />
+                  <Input
+                    {...register("father_email")}
+                    label="Father's Email"
+                    type="email"
+                    placeholder="father@example.com"
+                    className="rounded-lg text-sm"
+                    error={errors.father_email?.message}
+                    disabled={isLoading}
+                  />
+                  <Input
+                    {...register("mother_email")}
+                    label="Mother's Email"
+                    type="email"
+                    placeholder="mother@example.com"
+                    className="rounded-lg text-sm"
+                    error={errors.mother_email?.message}
+                    disabled={isLoading}
+                  />
+                  </div>
                 </div>
               </div>
             </div>
 
             <div className="h-px bg-slate-100 dark:bg-slate-800" />
 
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 xl:gap-x-10 xl:gap-y-0 xl:items-start">
+            <div className="grid grid-cols-1 gap-8 xl:gap-10 xl:items-start">
               {/* Section 3: Academic Information */}
               <div className="space-y-6 min-w-0">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -1551,6 +1584,25 @@ export const StudentForm = ({
               </div>
             </div>
           </div>
+          <Dialog open={isPhotoPreviewOpen} onOpenChange={setIsPhotoPreviewOpen}>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Photo Preview</DialogTitle>
+              </DialogHeader>
+              <div className="flex justify-center">
+                <div className="max-h-[70vh] w-full max-w-sm overflow-hidden rounded-lg border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900">
+                  {watch("photo_url") && (
+                    <img
+                      src={watch("photo_url") || ""}
+                      alt="Student photo preview"
+                      className="h-full max-h-[70vh] w-full object-contain"
+                    />
+                  )}
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+
            <Dialog open={isWebcamOpen} onOpenChange={setIsWebcamOpen}>
             <DialogContent className="max-w-md">
               <DialogHeader>
