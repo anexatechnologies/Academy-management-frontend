@@ -38,6 +38,7 @@ interface FormValues {
   status_archived: boolean
   sort_by: string
   staff_type: string
+  slot_type: string
 }
 
 export default function ReportConfigModal({
@@ -62,6 +63,7 @@ export default function ReportConfigModal({
       status_archived: true,
       sort_by: "asc",
       staff_type: "all",
+      slot_type: "both",
     },
   })
 
@@ -88,6 +90,7 @@ export default function ReportConfigModal({
         status_archived: true,
         sort_by: "asc",
         staff_type: "all",
+        slot_type: "both",
       })
     }
   }, [isOpen, reportId, reset])
@@ -104,7 +107,7 @@ export default function ReportConfigModal({
         "blank-monthly": "/reports/attendance/blank-monthly",
         "blank-monthly-reg-wise": "/reports/attendance/blank-monthly-reg-wise",
         "blank-sheet": "/reports/attendance/blank-sheet",
-        "monthly-all-batches": "/reports/attendance/monthly-all-batches",
+        "monthly-all-batches": "/reports/attendance/batch-monthly",
         "student-timing": "/reports/attendance/student-timing",
         "student-summary": "/reports/attendance/student-summary",
         "master": "/reports/attendance/master",
@@ -127,7 +130,7 @@ export default function ReportConfigModal({
 
       const isStaffReport = reportId.startsWith("staff-")
 
-      if (reportId !== "monthly-all-batches" && reportId !== "master" && !isStaffReport) {
+      if (reportId !== "master" && !isStaffReport) {
         if (!data.batch_id) {
           toast.error("Please select a batch")
           setIsDownloading(false)
@@ -182,6 +185,9 @@ export default function ReportConfigModal({
         case "staff-monthly":
           params.month = data.month
           params.year = data.year
+          if (reportId === "monthly-all-batches") {
+            params.slot_type = data.slot_type
+          }
           if (isStaffReport && data.staff_type !== "all") {
             params.staff_type = data.staff_type === "teaching" ? "Teaching" : "Non-Teaching"
           }
@@ -215,7 +221,7 @@ export default function ReportConfigModal({
   }
 
   // UI Helper variables to determine what fields to show
-  const showBatch = reportId !== "monthly-all-batches" && reportId !== "master" && !reportId.startsWith("staff-")
+  const showBatch = reportId !== "master" && !reportId.startsWith("staff-")
   const showStudent = ["student-wise", "student-summary"].includes(reportId)
   const showSingleDate = ["batch-wise", "blank-sheet"].includes(reportId)
   const showDateRange = [
@@ -242,6 +248,7 @@ export default function ReportConfigModal({
   const showMasterStatusFilters = reportId === "master"
   const showSortBy = reportId === "batch-wise"
   const showStaffType = reportId.startsWith("staff-")
+  const showSlotType = reportId === "monthly-all-batches"
 
   // Years for dropdown (Current year +/- 2 years)
   const currentYear = new Date().getFullYear()
@@ -463,6 +470,31 @@ export default function ReportConfigModal({
                         { value: "all", label: "All Types" },
                         { value: "teaching", label: "Teaching" },
                         { value: "non-teaching", label: "Non-Teaching" },
+                      ]}
+                      disabled={isDownloading}
+                      triggerClassName="h-10 bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 shadow-sm"
+                    />
+                  )}
+                />
+              </div>
+            )}
+
+            {showSlotType && (
+              <div className="md:col-span-2">
+                <Controller
+                  control={control}
+                  name="slot_type"
+                  render={({ field }) => (
+                    <CustomSelect
+                      label="Slot Type"
+                      required
+                      placeholder="Select Slot Type"
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      options={[
+                        { value: "ground", label: "Ground" },
+                        { value: "lecture", label: "Lecture" },
+                        { value: "both", label: "Both" },
                       ]}
                       disabled={isDownloading}
                       triggerClassName="h-10 bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 shadow-sm"
