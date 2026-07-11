@@ -33,6 +33,9 @@ const TEMPLATE_CATEGORIES = [
   { label: "Admission Confirmation", value: "admission" },
   { label: "Fee Receipt", value: "fee_receipt" },
   { label: "Attendance Alert", value: "attendance" },
+  { label: "Attendance (Ground Slot)", value: "attendance_absent_ground" },
+  { label: "Attendance (Lecture Slot)", value: "attendance_absent_lecture" },
+  { label: "Attendance (Combined Slots)", value: "attendance_absent_combined" },
   { label: "General Notice", value: "general" },
   { label: "Summer Camp", value: "summer_camp" },
 ]
