@@ -31,10 +31,10 @@ import { CalendarClock } from "lucide-react"
 import { useEffect } from "react"
 
 export default function Dashboard() {
-  const { canReadFinancials } = usePermissions()
+  const { canReadFinancials, isSuperAdmin } = usePermissions()
   const { data: studentCount, isLoading: isLoadingStudents } = useStudentCount()
   const { data: attendance, isLoading: isLoadingAttendance } = useAttendanceSummary()
-  const { data: fees, isLoading: isLoadingFees } = useFeesSummary({ enabled: canReadFinancials })
+  const { data: fees, isLoading: isLoadingFees } = useFeesSummary({ enabled: isSuperAdmin })
 
   const { page: bPage, pageSize: bPageSize, setPage: setBPage, setPageSize: setBPageSize } = usePagination()
   const { page: pPage, pageSize: pPageSize, setPage: setPPage, setPageSize: setPPageSize } = usePagination()
@@ -147,7 +147,7 @@ export default function Dashboard() {
       ),
       isLoading: isLoadingAttendance,
     },
-    ...(canReadFinancials ? [{
+    ...(isSuperAdmin ? [{
       title: "Expected Fees",
       value: fees?.total_expected ? `₹${parseFloat(fees.total_expected).toLocaleString()}` : "₹0",
       icon: IndianRupee,
@@ -427,7 +427,7 @@ export default function Dashboard() {
         )}
       </div>
 
-      {canReadFinancials && (
+      {isSuperAdmin && (
         <div className="grid gap-6">
           <MonthlyFeesPerformanceTable />
         </div>
