@@ -272,7 +272,7 @@ export const StudentForm = ({
       videoRef.current.srcObject = null
     }
   }
-
+//added comment
   useEffect(() => {
     if (!isWebcamOpen) {
       stopWebcamStream()
