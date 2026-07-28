@@ -244,6 +244,7 @@ const StudentViewPage = () => {
                       <DetailItem label="Caste" value={student.caste} />
                       <DetailItem label="Registration Date" value={<DateCell date={student.registration_date} />} icon={<Calendar className="h-4 w-4" />} />
                       <DetailItem label="Heard About Us" value={student.heard_about_us} />
+                      <DetailItem label="Reference" value={student.reference} />
                     </div>
                   </CardContent>
                 </Card>
