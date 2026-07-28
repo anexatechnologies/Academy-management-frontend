@@ -272,7 +272,7 @@ export const StudentForm = ({
       videoRef.current.srcObject = null
     }
   }
-
+//added comment
   useEffect(() => {
     if (!isWebcamOpen) {
       stopWebcamStream()
@@ -537,13 +537,14 @@ export const StudentForm = ({
         })}
         className="relative flex flex-col"
       >
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm relative min-w-0 max-w-full">
+        <div className="relative min-w-0 max-w-full overflow-hidden rounded-[18px] border border-slate-200/80 bg-[#fbfcff] shadow-[0_18px_45px_-28px_rgba(15,23,42,0.45)] dark:border-slate-800 dark:bg-slate-950">
+          <div className="absolute inset-x-0 top-0 h-1 bg-primary/80" />
           <div className="p-4 sm:p-6 md:p-8 pb-24 md:pb-28 space-y-8 xl:space-y-10">
 
             {/* Enquiry Pre-fill (only shown when creating new student) */}
             {!isEdit && (
-              <div className="space-y-4">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-1">
+              <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3">
                   <div className="flex items-center gap-3">
                     <ClipboardList className="h-4 w-4 text-primary" />
                     <h2 className="text-[13px] font-bold text-slate-500 uppercase tracking-widest">Pre-fill from Enquiry</h2>
@@ -597,82 +598,82 @@ export const StudentForm = ({
                     disabled={isLoading}
                   />
                 )}
-                <div className="h-px bg-slate-100 dark:bg-slate-800" />
               </div>
             )}
 
             <div className="space-y-10">
               {/* Section 1: Personal Information */}
-              <div className="space-y-6 min-w-0">
-                <div className="flex items-center gap-3">
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-primary text-[10px] font-bold">1</span>
-                  <h2 className="text-[13px] font-bold text-slate-500 uppercase tracking-widest">Personal Information</h2>
+              <div className="space-y-6 min-w-0 rounded-2xl border border-slate-200/80 bg-white p-4 sm:p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
+                <div className="flex items-center gap-3 border-b border-slate-100 pb-4 dark:border-slate-800">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground shadow-sm">1</span>
+                  <h2 className="text-[13px] font-bold text-slate-600 uppercase tracking-widest dark:text-slate-300">Personal Information</h2>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-x-8 gap-y-6">
-                  <Input
-                    {...register("registration_no")}
-                    label="Registration No."
-                    placeholder="e.g. 1000001 (Optional)"
-                    className="rounded-lg text-sm font-mono"
-                    error={errors.registration_no?.message}
-                    disabled={isLoading}
-                  />
-                  <Input
-                    {...register("attendance_id")}
-                    label="Attendance ID"
-                    placeholder="e.g. 1000001"
-                    className="rounded-lg text-sm font-mono"
-                    error={errors.attendance_id?.message}
-                    disabled={isLoading}
-                    onInput={(e: React.FormEvent<HTMLInputElement>) => {
-                      e.currentTarget.value = e.currentTarget.value.replace(/\D/g, '');
-                    }}
-                  />
-                  <Input
-                    {...register("first_name")}
-                    label="First Name"
-                    required={true}
-                    placeholder="Enter first name"
-                    className="rounded-lg text-sm"
-                    error={errors.first_name?.message}
-                    disabled={isLoading}
-                  />
-                  <Input
-                    {...register("middle_name")}
-                    label="Middle Name"
-                    required={true}
-                    placeholder="Enter middle name"
-                    className="rounded-lg text-sm"
-                    error={errors.middle_name?.message}
-                    disabled={isLoading}
-                  />
-                  <Input
-                    {...register("last_name")}
-                    label="Last Name"
-                    required={true}
-                    placeholder="Enter last name"
-                    className="rounded-lg text-sm"
-                    error={errors.last_name?.message}
-                    disabled={isLoading}
-                  />
-                  <Input
-                    {...register("father_husband_name")}
-                    label="Father / Husband Name"
-                    required={true}
-                    placeholder="Enter father or husband name"
-                    className="rounded-lg text-sm"
-                    error={errors.father_husband_name?.message}
-                    disabled={isLoading}
-                  />
-                  <Input
-                    {...register("mother_name")}
-                    label="Mother Name"
-                    placeholder="Enter mother's name"
-                    className="rounded-lg text-sm"
-                    error={errors.mother_name?.message}
-                    disabled={isLoading}
-                  />
+                <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_180px] xl:items-start">
+                  <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-4 gap-x-6 gap-y-5">
+                    <Input
+                      {...register("registration_no")}
+                      label="Registration No."
+                      placeholder="e.g. 1000001 (Optional)"
+                      className="rounded-lg text-sm font-mono"
+                      error={errors.registration_no?.message}
+                      disabled={isLoading}
+                    />
+                    <Input
+                      {...register("attendance_id")}
+                      label="Attendance ID"
+                      placeholder="e.g. 1000001"
+                      className="rounded-lg text-sm font-mono"
+                      error={errors.attendance_id?.message}
+                      disabled={isLoading}
+                      onInput={(e: React.FormEvent<HTMLInputElement>) => {
+                        e.currentTarget.value = e.currentTarget.value.replace(/\D/g, '');
+                      }}
+                    />
+                    <Input
+                      {...register("first_name")}
+                      label="First Name"
+                      required={true}
+                      placeholder="Enter first name"
+                      className="rounded-lg text-sm"
+                      error={errors.first_name?.message}
+                      disabled={isLoading}
+                    />
+                    <Input
+                      {...register("middle_name")}
+                      label="Middle Name"
+                      required={true}
+                      placeholder="Enter middle name"
+                      className="rounded-lg text-sm"
+                      error={errors.middle_name?.message}
+                      disabled={isLoading}
+                    />
+                    <Input
+                      {...register("last_name")}
+                      label="Last Name"
+                      required={true}
+                      placeholder="Enter last name"
+                      className="rounded-lg text-sm"
+                      error={errors.last_name?.message}
+                      disabled={isLoading}
+                    />
+                    <Input
+                      {...register("father_husband_name")}
+                      label="Father / Husband Name"
+                      required={true}
+                      placeholder="Enter father or husband name"
+                      className="rounded-lg text-sm"
+                      error={errors.father_husband_name?.message}
+                      disabled={isLoading}
+                    />
+                    <Input
+                      {...register("mother_name")}
+                      label="Mother Name"
+                      placeholder="Enter mother's name"
+                      className="rounded-lg text-sm"
+                      error={errors.mother_name?.message}
+                      disabled={isLoading}
+                    />
 
                   <div className="space-y-1.5">
                     <Label
@@ -843,7 +844,7 @@ export const StudentForm = ({
                     )}
                   </div>
 
-                  <div className="md:col-span-2 xl:col-span-4">
+                  <div className="md:col-span-2 2xl:col-span-4">
                     <Textarea
                       {...register("address")}
                       label="Address"
@@ -888,55 +889,59 @@ export const StudentForm = ({
                       }
                     }}
                   />
-
-                  <div className="md:col-span-2 xl:col-span-4 space-y-1.5">
-                    <div className="flex items-center justify-between gap-2">
-                      <Label className="text-[13px] font-semibold text-slate-700 dark:text-slate-300">
-                        Photo
-                      </Label>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="h-8 text-[12px] px-2.5 gap-1"
-                        onClick={() => setIsWebcamOpen(true)}
-                        disabled={isLoading}
-                      >
-                        <Camera className="h-3.5 w-3.5" />
-                        Capture from webcam
-                      </Button>
-                    </div>
-                    <Upload
-                      key={watch("photo_url") || "photo-upload"}
-                      className="w-full"
-                      accept="image/*"
-                      imagePreview={watch("photo_url")}
-                      disabled={isLoading}
-                      onRemove={() => {
-                        setValue("photo_url", "")
-                        setValue("photo", undefined)
-                      }}
-                      onFilesSelected={(files) => {
-                        if (files.length > 0) {
-                          compressAndCropImage(files[0], (compressedFile) => {
-                            setValue("photo", compressedFile)
-                            setValue("photo_url", URL.createObjectURL(compressedFile))
-                          })
-                        }
-                      }}
-                    />
                   </div>
+
+                  <aside className="xl:sticky xl:top-6 xl:self-start">
+                    <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50/70 p-3 shadow-inner dark:border-slate-800 dark:bg-slate-950/50">
+                      <div className="flex items-center justify-between gap-2">
+                        <Label className="text-[13px] font-semibold text-slate-700 dark:text-slate-300">
+                          Photo
+                        </Label>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-8 w-8 rounded-lg p-0"
+                          onClick={() => setIsWebcamOpen(true)}
+                          disabled={isLoading}
+                          title="Capture from webcam"
+                        >
+                          <Camera className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                      <Upload
+                        key={watch("photo_url") || "photo-upload"}
+                        className="w-full"
+                        variant="photo-square"
+                        accept="image/*"
+                        imagePreview={watch("photo_url")}
+                        disabled={isLoading}
+                        onRemove={() => {
+                          setValue("photo_url", "")
+                          setValue("photo", undefined)
+                        }}
+                        onFilesSelected={(files) => {
+                          if (files.length > 0) {
+                            compressAndCropImage(files[0], (compressedFile) => {
+                              setValue("photo", compressedFile)
+                              setValue("photo_url", URL.createObjectURL(compressedFile))
+                            })
+                          }
+                        }}
+                      />
+                    </div>
+                  </aside>
                 </div>
               </div>
 
               {/* Section 2: Contact Information */}
-              <div className="space-y-6 min-w-0">
-                <div className="flex items-center gap-3">
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-primary text-[10px] font-bold">2</span>
-                  <h2 className="text-[13px] font-bold text-slate-500 uppercase tracking-widest">Contact Information</h2>
+              <div className="space-y-6 min-w-0 rounded-2xl border border-slate-200/80 bg-white p-4 sm:p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
+                <div className="flex items-center gap-3 border-b border-slate-100 pb-4 dark:border-slate-800">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground shadow-sm">2</span>
+                  <h2 className="text-[13px] font-bold text-slate-600 uppercase tracking-widest dark:text-slate-300">Contact Information</h2>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-x-8 gap-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-x-6 gap-y-5">
                   <Input
                     {...register("personal_contact")}
                     label="Personal Contact"
@@ -1013,15 +1018,13 @@ export const StudentForm = ({
               </div>
             </div>
 
-            <div className="h-px bg-slate-100 dark:bg-slate-800" />
-
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 xl:gap-x-10 xl:gap-y-0 xl:items-start">
+            <div className="space-y-8">
               {/* Section 3: Academic Information */}
-              <div className="space-y-6 min-w-0">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="space-y-6 min-w-0 rounded-2xl border border-slate-200/80 bg-white p-4 sm:p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
+                <div className="flex flex-col gap-3 border-b border-slate-100 pb-4 sm:flex-row sm:items-center sm:justify-between dark:border-slate-800">
                   <div className="flex items-center gap-3">
-                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-[10px] font-bold">3</span>
-                    <h2 className="text-[13px] font-bold text-slate-500 uppercase tracking-widest">Academic Information</h2>
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground shadow-sm">3</span>
+                    <h2 className="text-[13px] font-bold text-slate-600 uppercase tracking-widest dark:text-slate-300">Academic Information</h2>
                   </div>
                   {!isLoading && (
                     <Button
@@ -1053,7 +1056,7 @@ export const StudentForm = ({
                     return (
                       <div
                         key={field.id}
-                        className="relative p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-900/30 animate-in fade-in slide-in-from-top-2 duration-300"
+                        className="relative p-4 sm:p-5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-950/40 animate-in fade-in slide-in-from-top-2 duration-300"
                       >
                         {fields.length >= 1 && !isLoading && (
                           <div className="absolute top-4 right-4 z-10">
@@ -1141,10 +1144,10 @@ export const StudentForm = ({
               <div className="space-y-8 min-w-0">
                 <div className="space-y-8">
                   {/* Section 4: Course Enrollment */}
-                  <div className="space-y-6 min-w-0">
-                    <div className="flex items-center gap-3">
-                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-primary text-[10px] font-bold">4</span>
-                      <h2 className="text-[13px] font-bold text-slate-500 uppercase tracking-widest">Course Enrollment</h2>
+                  <div className="space-y-6 min-w-0 rounded-2xl border border-slate-200/80 bg-white p-4 sm:p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
+                    <div className="flex items-center gap-3 border-b border-slate-100 pb-4 dark:border-slate-800">
+                      <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground shadow-sm">4</span>
+                      <h2 className="text-[13px] font-bold text-slate-600 uppercase tracking-widest dark:text-slate-300">Course Enrollment</h2>
                     </div>
 
                     <div className="space-y-4">
@@ -1180,7 +1183,7 @@ export const StudentForm = ({
                         {courses.length === 0 ? (
                           <div className="text-sm text-rose-500">No active courses found.</div>
                         ) : (
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 max-h-[200px] overflow-y-auto">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/40 max-h-[200px] overflow-y-auto">
                             {courses.map((course) => {
                               const isChecked = (watchedCourseIds || []).includes(course.id)
                               return (
@@ -1352,10 +1355,10 @@ export const StudentForm = ({
                   </div>
 
                   {/* Section 5: Batch Assignment */}
-                  <div className="space-y-6 min-w-0">
-                    <div className="flex items-center gap-3">
-                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-primary text-[10px] font-bold">5</span>
-                      <h2 className="text-[13px] font-bold text-slate-500 uppercase tracking-widest">Batch Assignment</h2>
+                  <div className="space-y-6 min-w-0 rounded-2xl border border-slate-200/80 bg-white p-4 sm:p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
+                    <div className="flex items-center gap-3 border-b border-slate-100 pb-4 dark:border-slate-800">
+                      <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground shadow-sm">5</span>
+                      <h2 className="text-[13px] font-bold text-slate-600 uppercase tracking-widest dark:text-slate-300">Batch Assignment</h2>
                     </div>
 
                     <div className="space-y-4">
@@ -1370,7 +1373,7 @@ export const StudentForm = ({
                       ) : activeBatches.length === 0 ? (
                         <div className="text-sm text-amber-500">No active batches found for the selected course(s).</div>
                       ) : (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 max-h-[300px] overflow-y-auto">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/40 max-h-[300px] overflow-y-auto">
                           {activeBatches.map((batch) => {
                             const isChecked = selectedBatchIds.includes(batch.id)
                             const isRemovable = selectedBatches.find(b => b.id === batch.id)?.is_removable !== false

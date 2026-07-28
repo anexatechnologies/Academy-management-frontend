@@ -9,13 +9,15 @@ export interface UploadProps extends React.InputHTMLAttributes<HTMLInputElement>
   accept?: string
   imagePreview?: string | null
   onRemove?: () => void
+  variant?: "default" | "photo-square"
 }
 
 const Upload = React.forwardRef<HTMLInputElement, UploadProps>(
-  ({ className, onFilesSelected, maxFiles = 1, accept, imagePreview, onRemove, disabled, ...props }, ref) => {
+  ({ className, onFilesSelected, maxFiles = 1, accept, imagePreview, onRemove, disabled, variant = "default", ...props }, ref) => {
     const [dragActive, setDragActive] = React.useState(false)
     const [selectedFiles, setSelectedFiles] = React.useState<File[]>([])
     const inputRef = React.useRef<HTMLInputElement | null>(null)
+    const isPhotoSquare = variant === "photo-square"
 
     const handleDrag = (e: React.DragEvent) => {
       e.preventDefault()
@@ -64,6 +66,7 @@ const Upload = React.forwardRef<HTMLInputElement, UploadProps>(
           <div
             className={cn(
               "relative group cursor-pointer flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/20 p-12 text-center transition-all hover:bg-muted/30 hover:border-primary/30 active:scale-[0.99]",
+              isPhotoSquare && "aspect-square p-4",
               dragActive && "border-primary bg-muted/50 scale-[1.01 shadow-md]",
               selectedFiles.length > 0 && "border-primary/40 bg-primary/5"
             )}
@@ -103,16 +106,22 @@ const Upload = React.forwardRef<HTMLInputElement, UploadProps>(
         </div>
         )}        {/* Existing Image Preview Card */}
         {imagePreview && selectedFiles.length === 0 && (
-          <div className="relative overflow-hidden rounded-xl border bg-slate-50/50 dark:bg-slate-900/50">
-            <div className="flex items-start justify-between p-3 gap-4">
-              <div className="h-20 w-20 overflow-hidden rounded-lg border bg-white dark:bg-slate-950 shrink-0">
+          <div className={cn(
+            "relative overflow-hidden rounded-xl border bg-slate-50/50 dark:bg-slate-900/50",
+            isPhotoSquare && "aspect-square bg-white dark:bg-slate-950"
+          )}>
+            <div className={cn("flex items-start justify-between p-3 gap-4", isPhotoSquare && "h-full p-0")}>
+              <div className={cn(
+                "h-20 w-20 overflow-hidden rounded-lg border bg-white dark:bg-slate-950 shrink-0",
+                isPhotoSquare && "h-full w-full rounded-xl border-0"
+              )}>
                 <img 
                   src={imagePreview} 
                   alt="Preview" 
                   className="h-full w-full object-cover"
                 />
               </div>
-              <div className="flex-1 space-y-1 py-1">
+              <div className={cn("flex-1 space-y-1 py-1", isPhotoSquare && "sr-only")}>
                 <p className="text-sm font-medium leading-none">Uploaded Photo</p>
                 <p className="text-xs text-muted-foreground">Image preview</p>
               </div>
@@ -120,7 +129,10 @@ const Upload = React.forwardRef<HTMLInputElement, UploadProps>(
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 text-muted-foreground hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 shrink-0"
+                className={cn(
+                  "h-8 w-8 text-muted-foreground hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 shrink-0",
+                  isPhotoSquare && "absolute right-2 top-2 bg-white/90 text-slate-600 shadow-sm backdrop-blur dark:bg-slate-950/85"
+                )}
                 onClick={(e) => {
                   e.stopPropagation()
                   if (onRemove) onRemove()
@@ -141,16 +153,22 @@ const Upload = React.forwardRef<HTMLInputElement, UploadProps>(
               const objectUrl = isImage ? URL.createObjectURL(file) : null
 
               return isImage ? (
-                <div key={index} className="relative overflow-hidden rounded-xl border bg-slate-50/50 dark:bg-slate-900/50">
-                  <div className="flex items-start justify-between p-3 gap-4">
-                    <div className="h-20 w-20 overflow-hidden rounded-lg border bg-white dark:bg-slate-950 shrink-0">
+                <div key={index} className={cn(
+                  "relative overflow-hidden rounded-xl border bg-slate-50/50 dark:bg-slate-900/50",
+                  isPhotoSquare && "aspect-square bg-white dark:bg-slate-950"
+                )}>
+                  <div className={cn("flex items-start justify-between p-3 gap-4", isPhotoSquare && "h-full p-0")}>
+                    <div className={cn(
+                      "h-20 w-20 overflow-hidden rounded-lg border bg-white dark:bg-slate-950 shrink-0",
+                      isPhotoSquare && "h-full w-full rounded-xl border-0"
+                    )}>
                       <img 
                         src={objectUrl || ''} 
                         alt={file.name} 
                         className="h-full w-full object-cover"
                       />
                     </div>
-                    <div className="flex-1 space-y-1 py-1 min-w-0">
+                    <div className={cn("flex-1 space-y-1 py-1 min-w-0", isPhotoSquare && "sr-only")}>
                       <p className="text-sm font-medium leading-none truncate">{file.name}</p>
                       <p className="text-xs text-muted-foreground">
                         {(file.size / 1024).toFixed(1)} KB
@@ -160,7 +178,10 @@ const Upload = React.forwardRef<HTMLInputElement, UploadProps>(
                       type="button"
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 text-muted-foreground hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 shrink-0"
+                      className={cn(
+                        "h-8 w-8 text-muted-foreground hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 shrink-0",
+                        isPhotoSquare && "absolute right-2 top-2 bg-white/90 text-slate-600 shadow-sm backdrop-blur dark:bg-slate-950/85"
+                      )}
                       onClick={(e) => {
                         e.stopPropagation()
                         if (objectUrl) URL.revokeObjectURL(objectUrl)
