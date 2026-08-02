@@ -51,5 +51,54 @@ export const useDownloadReport = () => {
     }
   }
 
-  return { downloadPdfReport }
+  const downloadExcelReport = async (
+    endpointUrl: string,
+    data: Record<string, any> = {}
+  ) => {
+    try {
+      const response = await axiosPrivate.post(endpointUrl, data, {
+        responseType: "blob", // CRITICAL: Tells axios to not parse it as string/JSON
+      })
+
+      const file = new Blob([response.data], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" })
+      const fileURL = URL.createObjectURL(file)
+
+      const link = document.createElement('a')
+      link.href = fileURL
+      link.setAttribute('download', 'student_master_report.xlsx')
+      document.body.appendChild(link)
+      link.click()
+      
+      link.remove()
+      window.URL.revokeObjectURL(fileURL)
+
+      return true // Success
+    } catch (error: any) {
+      console.error("Failed to download Excel:", error)
+      
+      if (
+        error.response &&
+        error.response.data &&
+        error.response.data instanceof Blob &&
+        error.response.data.type === "application/json"
+      ) {
+        const reader = new FileReader()
+        reader.onload = () => {
+          if (typeof reader.result === 'string') {
+            try {
+              const errorData = JSON.parse(reader.result)
+              console.error("Parsed JSON error from Blob:", errorData)
+            } catch (e) {
+              console.error("Failed to parse error blob", e)
+            }
+          }
+        }
+        reader.readAsText(error.response.data)
+      }
+      
+      throw error
+    }
+  }
+
+  return { downloadPdfReport, downloadExcelReport }
 }

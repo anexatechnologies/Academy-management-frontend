@@ -5,6 +5,7 @@ import BodyLayout from "@/components/layout/BodyLayout"
 import { FormFooter } from "@/components/ui/form-footer"
 
 export const STUDENT_REPORT_TYPES = [
+  { id: "student-excel-export", label: "Master Student Data Export" },
   { id: "batch-wise", label: "Batch Wise Attendance Report" },
   { id: "date-wise", label: "Date Wise Attendance Report" },
   { id: "student-wise", label: "Student attendance report" },

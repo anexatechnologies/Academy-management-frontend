@@ -14,7 +14,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { CustomSelect } from "@/components/ui/custom-select"
-import { useBatchComboBox, useStudentComboBox } from "@/hooks/use-combobox-data"
+import { useBatchComboBox, useStudentComboBox, useCourseComboBox } from "@/hooks/use-combobox-data"
 import { useDownloadReport } from "@/hooks/api/use-reports"
 import { ALL_REPORT_TYPES } from "../ReportsPage"
 import { toast } from "sonner"
@@ -28,6 +28,7 @@ interface ReportConfigModalProps {
 interface FormValues {
   batch_id: string
   student_id: string
+  course_id: string
   date: string
   from_date: string
   to_date: string
@@ -39,20 +40,51 @@ interface FormValues {
   sort_by: string
   staff_type: string
   slot_type: string
+  excel_status: string
+  excel_fields: string[]
 }
+
+const EXCEL_FIELDS = [
+  { id: 'first_name', label: 'First Name' },
+  { id: 'middle_name', label: 'Middle Name' },
+  { id: 'last_name', label: 'Last Name' },
+  { id: 'registration_no', label: 'Registration No' },
+  { id: 'student_id', label: 'Student ID' },
+  { id: 'attendance_id', label: 'Attendance ID' },
+  { id: 'gender', label: 'Gender' },
+  { id: 'date_of_birth', label: 'Date of Birth' },
+  { id: 'registration_date', label: 'Registration Date' },
+  { id: 'personal_contact', label: 'Personal Contact' },
+  { id: 'father_contact', label: 'Father Contact' },
+  { id: 'mother_contact', label: 'Mother Contact' },
+  { id: 'email', label: 'Email' },
+  { id: 'adhar_no', label: 'Aadhar No' },
+  { id: 'address', label: 'Address' },
+  { id: 'city', label: 'City' },
+  { id: 'state', label: 'State' },
+  { id: 'pincode', label: 'Pincode' },
+  { id: 'status', label: 'Status' },
+  { id: 'category', label: 'Category' },
+  { id: 'religion', label: 'Religion' },
+  { id: 'caste', label: 'Caste' },
+  { id: 'nationality', label: 'Nationality' },
+  { id: 'place_of_birth', label: 'Place of Birth' },
+  { id: 'height', label: 'Height' }
+]
 
 export default function ReportConfigModal({
   isOpen,
   onClose,
   reportId,
 }: ReportConfigModalProps) {
-  const { downloadPdfReport } = useDownloadReport()
+  const { downloadPdfReport, downloadExcelReport } = useDownloadReport()
   const [isDownloading, setIsDownloading] = useState(false)
 
   const { control, handleSubmit, watch, reset } = useForm<FormValues>({
     defaultValues: {
       batch_id: "",
       student_id: "",
+      course_id: "",
       date: new Date().toISOString().split("T")[0],
       from_date: new Date().toISOString().split("T")[0],
       to_date: new Date().toISOString().split("T")[0],
@@ -64,6 +96,8 @@ export default function ReportConfigModal({
       sort_by: "asc",
       staff_type: "all",
       slot_type: "both",
+      excel_status: "all",
+      excel_fields: ['first_name', 'last_name', 'registration_no', 'personal_contact'],
     },
   })
 
@@ -73,6 +107,7 @@ export default function ReportConfigModal({
   // ComboBox hooks
   const batchComboBox = useBatchComboBox()
   const studentComboBox = useStudentComboBox(watchBatchId)
+  const courseComboBox = useCourseComboBox()
 
   // Reset form when modal opens or report changes
   useEffect(() => {
@@ -80,6 +115,7 @@ export default function ReportConfigModal({
       reset({
         batch_id: "",
         student_id: "",
+        course_id: "",
         date: new Date().toISOString().split("T")[0],
         from_date: new Date().toISOString().split("T")[0],
         to_date: new Date().toISOString().split("T")[0],
@@ -91,6 +127,8 @@ export default function ReportConfigModal({
         sort_by: "asc",
         staff_type: "all",
         slot_type: "both",
+        excel_status: "all",
+        excel_fields: ['first_name', 'last_name', 'registration_no', 'personal_contact'],
       })
     }
   }, [isOpen, reportId, reset])
@@ -100,6 +138,23 @@ export default function ReportConfigModal({
   const onSubmit = async (data: FormValues) => {
     setIsDownloading(true)
     try {
+      if (reportId === "student-excel-export") {
+        const filters: Record<string, any> = {}
+        if (data.course_id) filters.course_id = Number(data.course_id)
+        if (data.batch_id) filters.batch_id = Number(data.batch_id)
+        if (data.excel_status !== "all") {
+          filters.status = data.excel_status
+        }
+        
+        await downloadExcelReport("/students/export", {
+          filters,
+          fields: data.excel_fields
+        })
+        toast.success("Excel report downloaded successfully!")
+        setIsDownloading(false)
+        return
+      }
+
       const endpointMap: Record<string, string> = {
         "batch-wise": "/reports/attendance/batch-wise",
         "date-wise": "/reports/attendance/date-wise",
@@ -221,7 +276,9 @@ export default function ReportConfigModal({
   }
 
   // UI Helper variables to determine what fields to show
+  const isExcelExport = reportId === "student-excel-export"
   const showBatch = reportId !== "master" && !reportId.startsWith("staff-")
+  const showCourse = isExcelExport
   const showStudent = ["student-wise", "student-summary"].includes(reportId)
   const showSingleDate = ["batch-wise", "blank-sheet"].includes(reportId)
   const showDateRange = [
@@ -281,6 +338,33 @@ export default function ReportConfigModal({
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 py-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
+            {showCourse && (
+              <div className="md:col-span-2">
+                <Controller
+                  control={control}
+                  name="course_id"
+                  render={({ field }) => (
+                    <ComboBox
+                      label="Course (Optional)"
+                      placeholder="All Courses"
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      options={courseComboBox.options}
+                      onSearch={courseComboBox.onSearch}
+                      onLoadMore={courseComboBox.onLoadMore}
+                      onReset={courseComboBox.onReset}
+                      hasMore={courseComboBox.hasMore}
+                      isLoading={courseComboBox.isLoading}
+                      isLoadingMore={courseComboBox.isLoadingMore}
+                      searchPlaceholder="Search courses..."
+                      emptyText="No courses found."
+                      disabled={isDownloading}
+                    />
+                  )}
+                />
+              </div>
+            )}
+
             {showBatch && (
               <div className="md:col-span-2">
                 <Controller
@@ -288,9 +372,9 @@ export default function ReportConfigModal({
                   name="batch_id"
                   render={({ field }) => (
                     <ComboBox
-                      label="Batch"
-                      required
-                      placeholder="Select a batch"
+                      label={isExcelExport ? "Batch (Optional)" : "Batch"}
+                      required={!isExcelExport}
+                      placeholder={isExcelExport ? "All Batches" : "Select a batch"}
                       value={field.value}
                       onValueChange={field.onChange}
                       options={batchComboBox.options}
@@ -590,9 +674,72 @@ export default function ReportConfigModal({
             </div>
           )}
 
+          {isExcelExport && (
+            <div className="space-y-6 mt-6 pt-6 border-t border-slate-200 dark:border-slate-800">
+              <div className="md:col-span-2">
+                <Controller
+                  control={control}
+                  name="excel_status"
+                  render={({ field }) => (
+                    <CustomSelect
+                      label="Student Status (Optional)"
+                      placeholder="All Statuses"
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      options={[
+                        { value: "all", label: "All Statuses" },
+                        { value: "active", label: "Active" },
+                        { value: "inactive", label: "Inactive" },
+                        { value: "archived", label: "Archived" },
+                      ]}
+                      disabled={isDownloading}
+                      triggerClassName="h-10 bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 shadow-sm"
+                    />
+                  )}
+                />
+              </div>
+
+              <div>
+                <div className="mb-4">
+                  <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                    Select Fields to Export
+                  </Label>
+                  <p className="text-[11px] text-slate-500 mt-0.5">
+                    Choose the data columns you want to include in the Excel report.
+                  </p>
+                </div>
+                
+                <Controller
+                  control={control}
+                  name="excel_fields"
+                  render={({ field: { value, onChange } }) => (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-y-4 gap-x-2">
+                      {EXCEL_FIELDS.map((f) => (
+                        <Checkbox
+                          key={f.id}
+                          id={`excel-field-${f.id}`}
+                          label={f.label}
+                          checked={value.includes(f.id)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              onChange([...value, f.id])
+                            } else {
+                              onChange(value.filter((v) => v !== f.id))
+                            }
+                          }}
+                          disabled={isDownloading}
+                        />
+                      ))}
+                    </div>
+                  )}
+                />
+              </div>
+            </div>
+          )}
+
           <FormFooter 
             isLoading={isDownloading}
-            submitLabel="View"
+            submitLabel={isExcelExport ? "Download Excel" : "View"}
             loadingLabel="Generating..."
             cancelLabel="Close"
             onCancel={onClose}
