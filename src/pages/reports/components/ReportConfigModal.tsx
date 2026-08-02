@@ -328,16 +328,19 @@ export default function ReportConfigModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px] border-slate-200 dark:border-slate-800">
-        <DialogHeader>
-          <DialogTitle className="text-xl">{reportConfig?.label}</DialogTitle>
-          <DialogDescription>
-            Configure the parameters below to generate your PDF report.
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="sm:max-w-[600px] border-slate-200 dark:border-slate-800 p-0 flex flex-col max-h-[90vh]">
+        <div className="px-6 pt-6">
+          <DialogHeader>
+            <DialogTitle className="text-xl">{reportConfig?.label}</DialogTitle>
+            <DialogDescription>
+              Configure the parameters below to generate your PDF report.
+            </DialogDescription>
+          </DialogHeader>
+        </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 py-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col flex-1 overflow-hidden">
+          <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
             {showCourse && (
               <div className="md:col-span-2">
                 <Controller
@@ -736,15 +739,18 @@ export default function ReportConfigModal({
               </div>
             </div>
           )}
+          </div>
 
-          <FormFooter 
-            isLoading={isDownloading}
-            submitLabel={isExcelExport ? "Download Excel" : "View"}
-            loadingLabel="Generating..."
-            cancelLabel="Close"
-            onCancel={onClose}
-            className="pt-6 border-t border-slate-200 dark:border-slate-800 mt-6"
-          />
+          <div className="px-6 py-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 mt-auto shrink-0 rounded-b-lg">
+            <FormFooter 
+              isLoading={isDownloading}
+              submitLabel={isExcelExport ? "Download Excel" : "View"}
+              loadingLabel="Generating..."
+              cancelLabel="Close"
+              onCancel={onClose}
+              className="pt-0 border-none mt-0 bg-transparent"
+            />
+          </div>
         </form>
       </DialogContent>
     </Dialog>
