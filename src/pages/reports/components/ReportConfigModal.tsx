@@ -49,7 +49,6 @@ const EXCEL_FIELDS = [
   { id: 'middle_name', label: 'Middle Name' },
   { id: 'last_name', label: 'Last Name' },
   { id: 'registration_no', label: 'Registration No' },
-  { id: 'student_id', label: 'Student ID' },
   { id: 'attendance_id', label: 'Attendance ID' },
   { id: 'gender', label: 'Gender' },
   { id: 'date_of_birth', label: 'Date of Birth' },
@@ -703,20 +702,37 @@ export default function ReportConfigModal({
               </div>
 
               <div>
-                <div className="mb-4">
-                  <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                    Select Fields to Export
-                  </Label>
-                  <p className="text-[11px] text-slate-500 mt-0.5">
-                    Choose the data columns you want to include in the Excel report.
-                  </p>
-                </div>
-                
                 <Controller
                   control={control}
                   name="excel_fields"
                   render={({ field: { value, onChange } }) => (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-y-4 gap-x-2">
+                    <>
+                      <div className="mb-4 flex items-start justify-between">
+                        <div>
+                          <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                            Select Fields to Export
+                          </Label>
+                          <p className="text-[11px] text-slate-500 mt-0.5">
+                            Choose the data columns you want to include in the Excel report.
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (value.length === EXCEL_FIELDS.length) {
+                              onChange([])
+                            } else {
+                              onChange(EXCEL_FIELDS.map(f => f.id))
+                            }
+                          }}
+                          className="text-xs font-medium text-primary hover:underline focus:outline-none disabled:opacity-50 mt-1"
+                          disabled={isDownloading}
+                        >
+                          {value.length === EXCEL_FIELDS.length ? "Deselect All" : "Select All"}
+                        </button>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-y-4 gap-x-2">
                       {EXCEL_FIELDS.map((f) => (
                         <Checkbox
                           key={f.id}
@@ -734,6 +750,7 @@ export default function ReportConfigModal({
                         />
                       ))}
                     </div>
+                    </>
                   )}
                 />
               </div>
