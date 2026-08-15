@@ -80,13 +80,25 @@ export const useSendBirthdayWishes = () => {
   const axiosPrivate = useAxiosPrivate()
   return useMutation({
     mutationFn: async () => {
-      const { data } = await axiosPrivate.post<{ status: string; message: string }>(
+      const { data } = await axiosPrivate.post<{ status: string; message: string; audit_notices?: string[] }>(
         "/dashboard/send-birthday-wishes"
       )
       return data
     },
     onSuccess: (data) => {
-      toast.success(data.message || "Birthday wishes sent successfully!")
+      const hasNotices = data.audit_notices && data.audit_notices.length > 0;
+      
+      if (hasNotices) {
+        data.audit_notices!.forEach(notice => {
+          toast.warning(notice, { duration: 6000 })
+        })
+      }
+
+      // Skip the success toast if it just says "0 students" and we already showed warnings
+      const isZeroStudents = data.message?.includes("0 students");
+      if (!hasNotices || !isZeroStudents) {
+        toast.success(data.message || "Birthday wishes sent successfully!")
+      }
     },
     onError: (error: any) => {
       const msg = error?.response?.data?.message || "Failed to send birthday wishes"
