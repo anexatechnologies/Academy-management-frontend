@@ -1,5 +1,5 @@
 import * as React from "react"
-import { Check, ChevronsUpDown, Loader2, X } from "lucide-react"
+import { ChevronsUpDown, Loader2, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
