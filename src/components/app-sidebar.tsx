@@ -249,23 +249,25 @@ export function AppSidebar() {
                                 <span>Pending Payments</span>
                               </Link>
                             )}
-                            <Link
-                              to="/students/id-cards"
-                              className={`relative flex items-center gap-2 py-1.5 pl-5 pr-2 text-sm rounded-md transition-colors
-                                ${location.pathname === "/students/id-cards"
-                                  ? "text-primary font-semibold"
-                                  : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
-                                }`}
-                            >
-                              <span className={`absolute left-[-4.5px] top-1/2 -translate-y-1/2 h-2 w-2 rounded-full border-2 transition-all
-                                ${location.pathname === "/students/id-cards"
-                                  ? "bg-primary border-primary scale-110"
-                                  : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700"
-                                }`}
-                              />
-                              <CreditCard className="h-3.5 w-3.5" />
-                              <span>Generate ID Cards</span>
-                            </Link>
+                            {hasPermission("students", "read") && (
+                              <Link
+                                to="/students/id-cards"
+                                className={`relative flex items-center gap-2 py-1.5 pl-5 pr-2 text-sm rounded-md transition-colors
+                                  ${location.pathname === "/students/id-cards"
+                                    ? "text-primary font-semibold"
+                                    : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+                                  }`}
+                              >
+                                <span className={`absolute left-[-4.5px] top-1/2 -translate-y-1/2 h-2 w-2 rounded-full border-2 transition-all
+                                  ${location.pathname === "/students/id-cards"
+                                    ? "bg-primary border-primary scale-110"
+                                    : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700"
+                                  }`}
+                                />
+                                <CreditCard className="h-3.5 w-3.5" />
+                                <span>Generate ID Cards</span>
+                              </Link>
+                            )}
                           </div>
                         </CollapsibleContent>
                       </SidebarMenuItem>
