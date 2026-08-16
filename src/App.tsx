@@ -37,6 +37,7 @@ import StudentCreatePage from "@/pages/students/StudentCreatePage"
 import StudentEditPage from "@/pages/students/StudentEditPage"
 import StudentViewPage from "@/pages/students/StudentViewPage"
 import PendingPaymentsPage from "@/pages/students/PendingPaymentsPage"
+import IdCardGenerationPage from "@/pages/students/IdCardGenerationPage"
 import SettingsPage from "@/pages/settings-page"
 import AttendanceSettingsPage from "@/pages/settings/attendance/AttendanceSettingsPage"
 import RolesListPage from "@/pages/settings/roles/RolesListPage"
@@ -99,6 +100,7 @@ function App() {
             <Route path="/batches/view/:id" element={<BatchViewPage />} />
 
             <Route path="/students" element={<StudentsListPage />} />
+            <Route path="/students/id-cards" element={<IdCardGenerationPage />} />
             <Route element={<ProtectedRoute requiredPermissions={["payments:read"]} />}>
               <Route path="/students/pending-payments" element={<PendingPaymentsPage />} />
             </Route>

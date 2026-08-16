@@ -15,6 +15,7 @@ import {
   ClipboardList,
   Megaphone,
   IndianRupee,
+  CreditCard,
   Plus,
 } from "lucide-react"
 import { usePermissions } from "@/hooks/use-permissions"
@@ -197,37 +198,38 @@ export function AppSidebar() {
                           </SidebarMenuButton>
                         </CollapsibleTrigger>
 
-                        {hasPermission("students", "create") && (
-                          <div className="absolute right-6 top-1/2 -translate-y-1/2 opacity-0 group-hover/item:opacity-100 transition-opacity z-10 group-data-[collapsible=icon]:hidden">
-                            <Link
-                              to="/students/new"
-                              className="flex h-6 w-6 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-500 shadow-sm transition-colors hover:bg-primary hover:text-white dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400 dark:hover:bg-primary"
-                              title="Add Student"
-                            >
-                              <Plus className="h-4 w-4" />
-                            </Link>
-                          </div>
-                        )}
-
                         <CollapsibleContent className="transition-all duration-200 group-data-[collapsible=icon]:hidden">
                           <div className="relative ml-[22px] mt-0.5 mb-1">
                             <span className="absolute left-0 top-0 bottom-0 w-px bg-slate-200 dark:bg-slate-700" />
-                            <Link
-                              to="/students"
-                              className={`relative flex items-center gap-2 py-1.5 pl-5 pr-2 text-sm rounded-md transition-colors
-                                ${location.pathname === "/students"
-                                  ? "text-primary font-semibold"
-                                  : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
-                                }`}
-                            >
-                              <span className={`absolute left-[-4.5px] top-1/2 -translate-y-1/2 h-2 w-2 rounded-full border-2 transition-all
-                                ${location.pathname === "/students"
-                                  ? "bg-primary border-primary scale-110"
-                                  : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700"
-                                }`}
-                              />
-                              <span>Student List</span>
-                            </Link>
+                            <div className="relative flex items-center justify-between">
+                              <Link
+                                to="/students"
+                                className={`relative flex items-center gap-2 py-1.5 pl-5 pr-2 text-sm rounded-md transition-colors flex-1
+                                  ${location.pathname === "/students"
+                                    ? "text-primary font-semibold"
+                                    : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+                                  }`}
+                              >
+                                <span className={`absolute left-[-4.5px] top-1/2 -translate-y-1/2 h-2 w-2 rounded-full border-2 transition-all
+                                  ${location.pathname === "/students"
+                                    ? "bg-primary border-primary scale-110"
+                                    : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700"
+                                  }`}
+                                />
+                                <span>Student List</span>
+                              </Link>
+                              {hasPermission("students", "create") && (
+                                <div className="opacity-0 group-hover/item:opacity-100 transition-opacity z-10 pr-2 shrink-0">
+                                  <Link
+                                    to="/students/new"
+                                    className="flex h-6 w-6 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-500 shadow-sm transition-colors hover:bg-primary hover:text-white dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400 dark:hover:bg-primary"
+                                    title="Add Student"
+                                  >
+                                    <Plus className="h-4 w-4" />
+                                  </Link>
+                                </div>
+                              )}
+                            </div>
                             {hasPermission("payments", "read") && (
                               <Link
                                 to="/students/pending-payments"
@@ -247,6 +249,23 @@ export function AppSidebar() {
                                 <span>Pending Payments</span>
                               </Link>
                             )}
+                            <Link
+                              to="/students/id-cards"
+                              className={`relative flex items-center gap-2 py-1.5 pl-5 pr-2 text-sm rounded-md transition-colors
+                                ${location.pathname === "/students/id-cards"
+                                  ? "text-primary font-semibold"
+                                  : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+                                }`}
+                            >
+                              <span className={`absolute left-[-4.5px] top-1/2 -translate-y-1/2 h-2 w-2 rounded-full border-2 transition-all
+                                ${location.pathname === "/students/id-cards"
+                                  ? "bg-primary border-primary scale-110"
+                                  : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700"
+                                }`}
+                              />
+                              <CreditCard className="h-3.5 w-3.5" />
+                              <span>Generate ID Cards</span>
+                            </Link>
                           </div>
                         </CollapsibleContent>
                       </SidebarMenuItem>
