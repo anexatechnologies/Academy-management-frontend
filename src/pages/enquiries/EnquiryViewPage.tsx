@@ -12,6 +12,7 @@ import {
   Loader2,
   User,
   History,
+  Printer,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -28,6 +29,7 @@ import {
   useAddEnquiryLog,
   useDeleteEnquiryLog,
 } from "@/hooks/api/use-enquiries"
+import { useDownloadEnquiryPdf } from "@/hooks/api/use-reports"
 import { usePermissions } from "@/hooks/use-permissions"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
@@ -70,6 +72,7 @@ const EnquiryViewPage = () => {
   const updateEnquiry = useUpdateEnquiry(enquiryId)
   const addLog = useAddEnquiryLog(enquiryId)
   const deleteLog = useDeleteEnquiryLog(enquiryId)
+  const downloadPdf = useDownloadEnquiryPdf()
   const { canUpdateEnquiry, canDeleteEnquiry } = usePermissions()
 
   const [deletingLogId, setDeletingLogId] = useState<number | null>(null)
@@ -191,11 +194,28 @@ const EnquiryViewPage = () => {
                 >
                   {statusCfg.label}
                 </span>
-                <span className="text-xs text-muted-foreground">Enquiry #{enquiry.id}</span>
+                {enquiry.enquiry_number && (
+                  <span className="text-xs font-mono font-bold text-primary px-2 py-0.5 bg-primary/10 rounded-md border border-primary/20">
+                    {enquiry.enquiry_number}
+                  </span>
+                )}
+                <span className="text-xs text-muted-foreground">ID #{enquiry.id}</span>
               </div>
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={() => downloadPdf.mutate(enquiry.id)}
+              disabled={downloadPdf.isPending}
+            >
+              {downloadPdf.isPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin text-primary" />
+              ) : (
+                <Printer className="mr-2 h-4 w-4 text-slate-600 dark:text-slate-400" />
+              )}
+              Print Form
+            </Button>
             {canUpdateEnquiry && (
               <>
                 <Button variant="outline" onClick={() => navigate(`/enquiries/edit/${enquiry.id}`)}>
@@ -246,7 +266,13 @@ const EnquiryViewPage = () => {
                     {enquiry.first_name.charAt(0).toUpperCase()}
                   </div>
                   <h3 className="text-xl font-bold">{fullName}</h3>
-                  <p className="text-sm text-muted-foreground mt-1">Enquiry #{enquiry.id}</p>
+                  {enquiry.enquiry_number ? (
+                    <p className="text-xs font-mono font-bold text-primary mt-1 px-2.5 py-0.5 bg-primary/10 rounded-full border border-primary/20">
+                      {enquiry.enquiry_number}
+                    </p>
+                  ) : (
+                    <p className="text-sm text-muted-foreground mt-1">Enquiry #{enquiry.id}</p>
+                  )}
 
                   <Separator className="my-5" />
 
@@ -296,17 +322,21 @@ const EnquiryViewPage = () => {
                 <CardHeader>
                   <CardTitle className="text-lg">Enquiry Details</CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="space-y-6">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-10">
+                    <DetailItem label="Enquiry No." value={enquiry.enquiry_number ? <span className="font-mono text-primary font-bold">{enquiry.enquiry_number}</span> : "—"} />
+                    <DetailItem label="Enquiry Date" value={<DateCell date={enquiry.created_at} />} />
                     <DetailItem label="First Name" value={enquiry.first_name} />
                     <DetailItem label="Middle Name" value={enquiry.middle_name || "—"} />
                     <DetailItem label="Last Name" value={enquiry.last_name} />
                     <DetailItem label="Contact Number" value={enquiry.personal_contact} />
+                    <DetailItem label="Parents Contact" value={enquiry.parents_contact || "—"} />
                     <DetailItem label="Email" value={enquiry.email || "—"} />
+                    <DetailItem label="Gender" value={enquiry.gender || "—"} />
                     <DetailItem label="Education" value={enquiry.education || "—"} />
+                    <DetailItem label="Caste" value={enquiry.caste || "—"} />
                     <DetailItem label="Height" value={enquiry.height || "—"} />
                     <DetailItem label="Weight" value={enquiry.weight || "—"} />
-                    <DetailItem label="Enquiry Date" value={<DateCell date={enquiry.created_at} />} />
                     <DetailItem
                       label="Status"
                       value={
@@ -316,6 +346,36 @@ const EnquiryViewPage = () => {
                       }
                     />
                   </div>
+
+                  <Separator />
+
+                  {/* Interested Courses */}
+                  <DetailItem
+                    label="Interested Courses / Streams"
+                    value={
+                      enquiry.interested_courses && enquiry.interested_courses.length > 0 ? (
+                        <div className="flex flex-wrap gap-1.5 pt-1">
+                          {enquiry.interested_courses.map((course, idx) => (
+                            <span
+                              key={idx}
+                              className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-primary/10 text-primary border border-primary/20"
+                            >
+                              {course}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground text-sm italic">—</span>
+                      )
+                    }
+                  />
+
+                  {enquiry.address && (
+                    <>
+                      <Separator />
+                      <DetailItem label="Address" value={enquiry.address} />
+                    </>
+                  )}
                 </CardContent>
               </Card>
             </div>

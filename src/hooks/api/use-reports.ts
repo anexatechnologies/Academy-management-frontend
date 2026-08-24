@@ -136,3 +136,25 @@ export const useDownloadIdCards = () => {
   })
 }
 
+export const useDownloadEnquiryPdf = () => {
+  const axiosPrivate = useAxiosPrivate()
+
+  return useMutation({
+    mutationFn: async (enquiryId: number) => {
+      const response = await axiosPrivate.get(`/reports/enquiry-form/${enquiryId}`, {
+        responseType: "blob",
+      })
+
+      const file = new Blob([response.data], { type: "application/pdf" })
+      const fileURL = URL.createObjectURL(file)
+      window.open(fileURL, "_blank")
+      return true
+    },
+    onError: (error: any) => {
+      console.error("Failed to generate enquiry PDF:", error)
+      toast.error("Failed to generate enquiry PDF form")
+    },
+  })
+}
+
+

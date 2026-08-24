@@ -43,7 +43,7 @@ const EnquiryEditPage = () => {
 
   return (
     <BodyLayout breadcrumbs={breadcrumbs}>
-      <div className="max-w-2xl space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="max-w-4xl space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Edit Enquiry</h1>
           <p className="text-sm text-muted-foreground">Update enquiry details and information.</p>
