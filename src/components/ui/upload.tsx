@@ -9,14 +9,15 @@ export interface UploadProps extends React.InputHTMLAttributes<HTMLInputElement>
   accept?: string
   imagePreview?: string | null
   onRemove?: () => void
-  compactImagePreview?: boolean
+  variant?: "default" | "photo-square"
 }
 
 const Upload = React.forwardRef<HTMLInputElement, UploadProps>(
-  ({ className, onFilesSelected, maxFiles = 1, accept, imagePreview, onRemove, compactImagePreview = false, disabled, ...props }, ref) => {
+  ({ className, onFilesSelected, maxFiles = 1, accept, imagePreview, onRemove, disabled, variant = "default", ...props }, ref) => {
     const [dragActive, setDragActive] = React.useState(false)
     const [selectedFiles, setSelectedFiles] = React.useState<File[]>([])
     const inputRef = React.useRef<HTMLInputElement | null>(null)
+    const isPhotoSquare = variant === "photo-square"
 
     const handleDrag = (e: React.DragEvent) => {
       e.preventDefault()
@@ -65,58 +66,64 @@ const Upload = React.forwardRef<HTMLInputElement, UploadProps>(
           <div
             className={cn(
               "relative group cursor-pointer flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/20 p-12 text-center transition-all hover:bg-muted/30 hover:border-primary/30 active:scale-[0.99]",
-              compactImagePreview && "aspect-square p-3 rounded-lg",
+              isPhotoSquare && "aspect-square p-4",
               dragActive && "border-primary bg-muted/50 scale-[1.01 shadow-md]",
               selectedFiles.length > 0 && "border-primary/40 bg-primary/5"
             )}
-          onDragEnter={handleDrag}
-          onDragLeave={handleDrag}
-          onDragOver={handleDrag}
-          onDrop={handleDrop}
-          onClick={onButtonClick}
-        >
-          <input
-            {...props}
-            disabled={disabled}
-            ref={(node) => {
-              if (typeof ref === 'function') ref(node)
-              else if (ref) ref.current = node
-              inputRef.current = node
-            }}
-            type="file"
-            className="hidden"
-            multiple={maxFiles > 1}
-            accept={accept}
-            onChange={handleChange}
-          />
-          <div className="flex flex-col items-center justify-center gap-2">
-            <div className={cn("flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors", compactImagePreview && "h-9 w-9")}>
-              <UploadIcon className="h-5 w-5 text-primary" />
-            </div>
-            <div className="space-y-1">
-              <p className={cn("text-sm font-medium leading-none", compactImagePreview && "text-xs leading-tight")}>
-                {dragActive ? "Drop files here" : "Click or drag to upload"}
-              </p>
-              <p className={cn("text-xs text-muted-foreground", compactImagePreview && "hidden")}>
-                {accept ? `Available formats: ${accept}` : "Any file format"}
-              </p>
+            onDragEnter={handleDrag}
+            onDragLeave={handleDrag}
+            onDragOver={handleDrag}
+            onDrop={handleDrop}
+            onClick={onButtonClick}
+          >
+            <input
+              {...props}
+              disabled={disabled}
+              ref={(node) => {
+                if (typeof ref === 'function') ref(node)
+                else if (ref) ref.current = node
+                inputRef.current = node
+              }}
+              type="file"
+              className="hidden"
+              multiple={maxFiles > 1}
+              accept={accept}
+              onChange={handleChange}
+            />
+            <div className="flex flex-col items-center justify-center gap-2">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                <UploadIcon className="h-5 w-5 text-primary" />
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm font-medium leading-none">
+                  {dragActive ? "Drop files here" : "Click or drag to upload"}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {accept ? `Available formats: ${accept}` : "Any file format"}
+                </p>
+              </div>
             </div>
           </div>
-        </div>
         )}        {/* Existing Image Preview Card */}
         {imagePreview && selectedFiles.length === 0 && (
-          <div className={cn("relative overflow-hidden rounded-xl border bg-slate-50/50 dark:bg-slate-900/50", compactImagePreview && "aspect-square rounded-lg")}>
-            <div className={cn("flex items-start justify-between p-3 gap-4", compactImagePreview && "h-full flex-col items-center justify-center gap-2 p-3")}>
-              <div className={cn("h-20 w-20 overflow-hidden rounded-lg border bg-white dark:bg-slate-950 shrink-0", compactImagePreview && "h-24 w-24")}>
-                <img 
-                  src={imagePreview} 
-                  alt="Preview" 
+          <div className={cn(
+            "relative overflow-hidden rounded-xl border bg-slate-50/50 dark:bg-slate-900/50",
+            isPhotoSquare && "aspect-square bg-white dark:bg-slate-950"
+          )}>
+            <div className={cn("flex items-start justify-between p-3 gap-4", isPhotoSquare && "h-full p-0")}>
+              <div className={cn(
+                "h-20 w-20 overflow-hidden rounded-lg border bg-white dark:bg-slate-950 shrink-0",
+                isPhotoSquare && "h-full w-full rounded-xl border-0"
+              )}>
+                <img
+                  src={imagePreview}
+                  alt="Preview"
                   className="h-full w-full object-cover"
                 />
               </div>
-              <div className={cn("flex-1 space-y-1 py-1", compactImagePreview && "flex-none py-0 text-center")}>
-                <p className={cn("text-sm font-medium leading-none", compactImagePreview && "text-xs leading-tight")}>Uploaded Photo</p>
-                <p className={cn("text-xs text-muted-foreground", compactImagePreview && "hidden")}>Image preview</p>
+              <div className={cn("flex-1 space-y-1 py-1", isPhotoSquare && "sr-only")}>
+                <p className="text-sm font-medium leading-none">Uploaded Photo</p>
+                <p className="text-xs text-muted-foreground">Image preview</p>
               </div>
               <Button
                 type="button"
@@ -124,7 +131,7 @@ const Upload = React.forwardRef<HTMLInputElement, UploadProps>(
                 size="icon"
                 className={cn(
                   "h-8 w-8 text-muted-foreground hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 shrink-0",
-                  compactImagePreview && "absolute right-2 top-2 h-7 w-7 rounded-full bg-white/90 shadow-sm dark:bg-slate-950/90"
+                  isPhotoSquare && "absolute right-2 top-2 bg-white/90 text-slate-600 shadow-sm backdrop-blur dark:bg-slate-950/85"
                 )}
                 onClick={(e) => {
                   e.stopPropagation()
@@ -146,18 +153,24 @@ const Upload = React.forwardRef<HTMLInputElement, UploadProps>(
               const objectUrl = isImage ? URL.createObjectURL(file) : null
 
               return isImage ? (
-                <div key={index} className={cn("relative overflow-hidden rounded-xl border bg-slate-50/50 dark:bg-slate-900/50", compactImagePreview && "aspect-square rounded-lg")}>
-                  <div className={cn("flex items-start justify-between p-3 gap-4", compactImagePreview && "h-full flex-col items-center justify-center gap-2 p-3")}>
-                    <div className={cn("h-20 w-20 overflow-hidden rounded-lg border bg-white dark:bg-slate-950 shrink-0", compactImagePreview && "h-24 w-24")}>
-                      <img 
-                        src={objectUrl || ''} 
-                        alt={file.name} 
+                <div key={index} className={cn(
+                  "relative overflow-hidden rounded-xl border bg-slate-50/50 dark:bg-slate-900/50",
+                  isPhotoSquare && "aspect-square bg-white dark:bg-slate-950"
+                )}>
+                  <div className={cn("flex items-start justify-between p-3 gap-4", isPhotoSquare && "h-full p-0")}>
+                    <div className={cn(
+                      "h-20 w-20 overflow-hidden rounded-lg border bg-white dark:bg-slate-950 shrink-0",
+                      isPhotoSquare && "h-full w-full rounded-xl border-0"
+                    )}>
+                      <img
+                        src={objectUrl || ''}
+                        alt={file.name}
                         className="h-full w-full object-cover"
                       />
                     </div>
-                    <div className={cn("flex-1 space-y-1 py-1 min-w-0", compactImagePreview && "w-full flex-none py-0 text-center")}>
-                      <p className={cn("text-sm font-medium leading-none truncate", compactImagePreview && "text-xs leading-tight")}>{file.name}</p>
-                      <p className={cn("text-xs text-muted-foreground", compactImagePreview && "hidden")}>
+                    <div className={cn("flex-1 space-y-1 py-1 min-w-0", isPhotoSquare && "sr-only")}>
+                      <p className="text-sm font-medium leading-none truncate">{file.name}</p>
+                      <p className="text-xs text-muted-foreground">
                         {(file.size / 1024).toFixed(1)} KB
                       </p>
                     </div>
@@ -167,7 +180,7 @@ const Upload = React.forwardRef<HTMLInputElement, UploadProps>(
                       size="icon"
                       className={cn(
                         "h-8 w-8 text-muted-foreground hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 shrink-0",
-                        compactImagePreview && "absolute right-2 top-2 h-7 w-7 rounded-full bg-white/90 shadow-sm dark:bg-slate-950/90"
+                        isPhotoSquare && "absolute right-2 top-2 bg-white/90 text-slate-600 shadow-sm backdrop-blur dark:bg-slate-950/85"
                       )}
                       onClick={(e) => {
                         e.stopPropagation()
