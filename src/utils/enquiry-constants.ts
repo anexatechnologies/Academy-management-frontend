@@ -1,0 +1,15 @@
+export const ENQUIRY_STREAM_OPTIONS = [
+  "MPSC Foundation Batch",
+  "Police Bharti",
+  "Sainya Bharti (Army Bharti)",
+  "Saralseva",
+  "Banking",
+  "Railway Bharti",
+  "SSC-GD",
+  "CRPF",
+  "CISF",
+  "SSB",
+  "BSF",
+  "ITBP",
+  "Other",
+] as const

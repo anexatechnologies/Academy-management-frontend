@@ -5,6 +5,7 @@ import type {
   EnquiryWithLogs,
   EnquiryListResponse,
   EnquiryDetailResponse,
+  NextEnquiryNumberResponse,
   CreateEnquiryPayload,
   UpdateEnquiryPayload,
   AddEnquiryLogPayload,
@@ -15,6 +16,7 @@ export const enquiryKeys = {
   list: (params?: object) => [...enquiryKeys.all, "list", params] as const,
   detail: (id: number) => [...enquiryKeys.all, "detail", id] as const,
   logs: (id: number) => [...enquiryKeys.all, "logs", id] as const,
+  nextNumber: () => [...enquiryKeys.all, "next-number"] as const,
 }
 
 // Fetch all enquiries
@@ -141,3 +143,17 @@ export function useActiveEnquiries(search?: string) {
     },
   })
 }
+
+// Fetch next auto enquiry number & tracking details
+export function useNextEnquiryNumber(enabled: boolean = true) {
+  const axiosPrivate = useAxiosPrivate()
+  return useQuery({
+    queryKey: enquiryKeys.nextNumber(),
+    queryFn: async () => {
+      const { data } = await axiosPrivate.get<NextEnquiryNumberResponse>("/enquiries/next-number")
+      return data.data
+    },
+    enabled,
+  })
+}
+

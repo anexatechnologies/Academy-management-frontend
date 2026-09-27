@@ -5,6 +5,7 @@ import BodyLayout from "@/components/layout/BodyLayout"
 import { FormFooter } from "@/components/ui/form-footer"
 
 export const STUDENT_REPORT_TYPES = [
+  { id: "student-excel-export", label: "Master Student Data Export" },
   { id: "batch-wise", label: "Batch Wise Attendance Report" },
   { id: "date-wise", label: "Date Wise Attendance Report" },
   { id: "student-wise", label: "Student attendance report" },
@@ -26,7 +27,7 @@ export const ALL_REPORT_TYPES = [...STUDENT_REPORT_TYPES, ...STAFF_REPORT_TYPES]
 
 export default function ReportsPage() {
   const [reportCategory, setReportCategory] = useState<"student" | "staff">("student")
-  const [selectedReport, setSelectedReport] = useState<string>("batch-wise")
+  const [selectedReport, setSelectedReport] = useState<string>("student-excel-export")
   const [isModalOpen, setIsModalOpen] = useState(false)
 
   const handleGo = (e?: React.FormEvent) => {
@@ -60,7 +61,7 @@ export default function ReportsPage() {
                 value={reportCategory}
                 onValueChange={(val) => {
                   setReportCategory(val as "student" | "staff")
-                  setSelectedReport(val === "student" ? "batch-wise" : "staff-monthly")
+                  setSelectedReport(val === "student" ? "student-excel-export" : "staff-monthly")
                 }}
                 className="flex flex-row gap-8 pl-2"
               >

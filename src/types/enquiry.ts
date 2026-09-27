@@ -10,6 +10,7 @@ export interface EnquiryLog {
 
 export interface Enquiry {
   id: number
+  enquiry_number?: string
   first_name: string
   middle_name?: string
   last_name: string
@@ -22,6 +23,7 @@ export interface Enquiry {
   parents_contact?: string
   caste?: string
   address?: string
+  interested_courses?: string[]
   status: EnquiryStatus
   created_at: string
   updated_at: string
@@ -34,6 +36,7 @@ export interface EnquiryWithLogs extends Enquiry {
 }
 
 export interface CreateEnquiryPayload {
+  enquiry_number?: string
   first_name: string
   middle_name?: string
   last_name: string
@@ -46,6 +49,7 @@ export interface CreateEnquiryPayload {
   parents_contact?: string
   caste?: string
   address?: string
+  interested_courses?: string[]
 }
 
 export type UpdateEnquiryPayload = Partial<CreateEnquiryPayload> & {
@@ -72,4 +76,14 @@ export interface EnquiryListResponse {
 export interface EnquiryDetailResponse {
   status: string
   data: EnquiryWithLogs
+}
+
+export interface NextEnquiryNumberResponse {
+  status: string
+  data: {
+    next_enquiry_number: string
+    last_enquiry_number: string | null
+    current_year: number
+    next_seq: number
+  }
 }

@@ -21,9 +21,13 @@ export const usePermissions = () => {
     )
   }
 
+  const isSuperAdmin =
+    auth.user?.role === "super_admin" || auth.user?.role === "SUPER_ADMIN"
+
   // Helper properties for common modules
   return {
     hasPermission,
+    isSuperAdmin,
     canCreateUser: hasPermission("users", "create"),
     canReadUsers: hasPermission("users", "read"),
     canUpdateUser: hasPermission("users", "update"),
