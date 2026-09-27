@@ -18,6 +18,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { StudentDemographicsChart } from "./dashboard/components/StudentDemographicsChart"
 import { AttendanceOverviewChart } from "./dashboard/components/AttendanceOverviewChart"
 import { MonthlyFeesPerformanceTable } from "./dashboard/components/MonthlyFeesPerformanceTable"
+import { RecentLoginsCard } from "./dashboard/components/RecentLoginsCard"
 import { useCertificates } from "@/hooks/api/use-certificates"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { DateCell } from "@/components/ui/date-cell"
@@ -430,6 +431,12 @@ export default function Dashboard() {
       {isSuperAdmin && (
         <div className="grid gap-6">
           <MonthlyFeesPerformanceTable />
+        </div>
+      )}
+
+      {isSuperAdmin && (
+        <div className="grid gap-6">
+          <RecentLoginsCard />
         </div>
       )}
 

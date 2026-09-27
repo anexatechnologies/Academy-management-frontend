@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query"
 import { useAxiosPrivate } from "@/hooks/useAxiosPrivate"
-import type { User, CreateUserPayload, UpdateUserPayload } from "@/types/user"
+import type { User, CreateUserPayload, UpdateUserPayload, LoginAuditLogsResponse, LoginAuditLogsParams } from "@/types/user"
 
 export const useUsers = (params?: { page?: number; limit?: number; search?: string }) => {
   const axiosPrivate = useAxiosPrivate()
@@ -95,5 +95,23 @@ export const useToggleUserStatus = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] })
     },
+  })
+}
+
+export const useLoginLogs = (
+  params?: LoginAuditLogsParams,
+  options?: { enabled?: boolean }
+) => {
+  const axiosPrivate = useAxiosPrivate()
+  return useQuery({
+    queryKey: ["user-login-logs", params],
+    queryFn: async () => {
+      const response = await axiosPrivate.get<LoginAuditLogsResponse>("/users/login-logs", {
+        params,
+      })
+      return response.data
+    },
+    placeholderData: keepPreviousData,
+    enabled: options?.enabled !== undefined ? options.enabled : true,
   })
 }
