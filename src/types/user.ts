@@ -48,3 +48,38 @@ export interface RoleWithPermissions {
   role: Role
   permissions: Permission[]
 }
+
+export interface LoginAuditLog {
+  id: number
+  user_id: number
+  username: string
+  full_name: string
+  email?: string | null
+  role_name: string
+  ip_address: string | null
+  user_agent: string | null
+  status: 'success' | 'failed' | string
+  login_at: string
+}
+
+export interface LoginAuditLogsResponse {
+  status: string
+  count: number
+  pagination: {
+    totalData: number
+    totalPages: number
+    currentPage: number
+    limit: number
+  }
+  data: LoginAuditLog[]
+}
+
+export interface LoginAuditLogsParams {
+  page?: number
+  limit?: number
+  search?: string
+  user_id?: number
+  from_date?: string
+  to_date?: string
+  status?: string
+}
