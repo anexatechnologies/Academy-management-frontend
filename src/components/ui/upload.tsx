@@ -70,40 +70,40 @@ const Upload = React.forwardRef<HTMLInputElement, UploadProps>(
               dragActive && "border-primary bg-muted/50 scale-[1.01 shadow-md]",
               selectedFiles.length > 0 && "border-primary/40 bg-primary/5"
             )}
-          onDragEnter={handleDrag}
-          onDragLeave={handleDrag}
-          onDragOver={handleDrag}
-          onDrop={handleDrop}
-          onClick={onButtonClick}
-        >
-          <input
-            {...props}
-            disabled={disabled}
-            ref={(node) => {
-              if (typeof ref === 'function') ref(node)
-              else if (ref) ref.current = node
-              inputRef.current = node
-            }}
-            type="file"
-            className="hidden"
-            multiple={maxFiles > 1}
-            accept={accept}
-            onChange={handleChange}
-          />
-          <div className="flex flex-col items-center justify-center gap-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors">
-              <UploadIcon className="h-5 w-5 text-primary" />
-            </div>
-            <div className="space-y-1">
-              <p className="text-sm font-medium leading-none">
-                {dragActive ? "Drop files here" : "Click or drag to upload"}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {accept ? `Available formats: ${accept}` : "Any file format"}
-              </p>
+            onDragEnter={handleDrag}
+            onDragLeave={handleDrag}
+            onDragOver={handleDrag}
+            onDrop={handleDrop}
+            onClick={onButtonClick}
+          >
+            <input
+              {...props}
+              disabled={disabled}
+              ref={(node) => {
+                if (typeof ref === 'function') ref(node)
+                else if (ref) ref.current = node
+                inputRef.current = node
+              }}
+              type="file"
+              className="hidden"
+              multiple={maxFiles > 1}
+              accept={accept}
+              onChange={handleChange}
+            />
+            <div className="flex flex-col items-center justify-center gap-2">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                <UploadIcon className="h-5 w-5 text-primary" />
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm font-medium leading-none">
+                  {dragActive ? "Drop files here" : "Click or drag to upload"}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {accept ? `Available formats: ${accept}` : "Any file format"}
+                </p>
+              </div>
             </div>
           </div>
-        </div>
         )}        {/* Existing Image Preview Card */}
         {imagePreview && selectedFiles.length === 0 && (
           <div className={cn(
@@ -115,9 +115,9 @@ const Upload = React.forwardRef<HTMLInputElement, UploadProps>(
                 "h-20 w-20 overflow-hidden rounded-lg border bg-white dark:bg-slate-950 shrink-0",
                 isPhotoSquare && "h-full w-full rounded-xl border-0"
               )}>
-                <img 
-                  src={imagePreview} 
-                  alt="Preview" 
+                <img
+                  src={imagePreview}
+                  alt="Preview"
                   className="h-full w-full object-cover"
                 />
               </div>
@@ -162,9 +162,9 @@ const Upload = React.forwardRef<HTMLInputElement, UploadProps>(
                       "h-20 w-20 overflow-hidden rounded-lg border bg-white dark:bg-slate-950 shrink-0",
                       isPhotoSquare && "h-full w-full rounded-xl border-0"
                     )}>
-                      <img 
-                        src={objectUrl || ''} 
-                        alt={file.name} 
+                      <img
+                        src={objectUrl || ''}
+                        alt={file.name}
                         className="h-full w-full object-cover"
                       />
                     </div>

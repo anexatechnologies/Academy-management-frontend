@@ -1,4 +1,6 @@
 import { useAxiosPrivate } from "../useAxiosPrivate"
+import { useMutation } from "@tanstack/react-query"
+import { toast } from "sonner"
 
 export const useDownloadReport = () => {
   const axiosPrivate = useAxiosPrivate()
@@ -102,3 +104,57 @@ export const useDownloadReport = () => {
 
   return { downloadPdfReport, downloadExcelReport }
 }
+
+export interface DownloadIdCardsPayload {
+  studentIds?: number[]
+  batchId?: number
+  courseId?: number
+  all?: boolean
+}
+
+export const useDownloadIdCards = () => {
+  const axiosPrivate = useAxiosPrivate()
+
+  return useMutation({
+    mutationFn: async (payload: DownloadIdCardsPayload) => {
+      const response = await axiosPrivate.post("/reports/id-cards", payload, {
+        responseType: "blob",
+      })
+
+      const file = new Blob([response.data], { type: "application/pdf" })
+      const fileURL = URL.createObjectURL(file)
+      window.open(fileURL, "_blank")
+      return true
+    },
+    onSuccess: () => {
+      toast.success("ID cards generated successfully")
+    },
+    onError: (error: any) => {
+      console.error("Failed to generate ID cards:", error)
+      toast.error("Failed to generate ID cards. Please try again.")
+    },
+  })
+}
+
+export const useDownloadEnquiryPdf = () => {
+  const axiosPrivate = useAxiosPrivate()
+
+  return useMutation({
+    mutationFn: async (enquiryId: number) => {
+      const response = await axiosPrivate.get(`/reports/enquiry-form/${enquiryId}`, {
+        responseType: "blob",
+      })
+
+      const file = new Blob([response.data], { type: "application/pdf" })
+      const fileURL = URL.createObjectURL(file)
+      window.open(fileURL, "_blank")
+      return true
+    },
+    onError: (error: any) => {
+      console.error("Failed to generate enquiry PDF:", error)
+      toast.error("Failed to generate enquiry PDF form")
+    },
+  })
+}
+
+

@@ -162,7 +162,7 @@ export const StudentForm = ({
         const targetHeight = 600;
         canvas.width = targetWidth;
         canvas.height = targetHeight;
-        
+
         const ctx = canvas.getContext("2d");
         if (!ctx) return;
 
@@ -272,7 +272,7 @@ export const StudentForm = ({
       videoRef.current.srcObject = null
     }
   }
-//added comment
+  //added comment
   useEffect(() => {
     if (!isWebcamOpen) {
       stopWebcamStream()
@@ -459,8 +459,8 @@ export const StudentForm = ({
     // Map "one-time" → "one-time", "installment" → "monthly" (for display purposes)
     const activeFeeMode: "one-time" | "monthly" | "installment" =
       watchedFeeMode === "installment" ? "installment"
-      : watchedFeeMode === "one-time" ? "one-time"
-      : (feeSettings?.fee_mode || "one-time") as "one-time" | "monthly"
+        : watchedFeeMode === "one-time" ? "one-time"
+          : (feeSettings?.fee_mode || "one-time") as "one-time" | "monthly"
 
     // 6. EMI preview (when installment fee_mode chosen)
     const emiBreakdown = [{
@@ -675,220 +675,220 @@ export const StudentForm = ({
                       disabled={isLoading}
                     />
 
-                  <div className="space-y-1.5">
-                    <Label
-                      className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 ml-0.5"
-                      required={true}
-                    >
-                      Gender
-                    </Label>
+                    <div className="space-y-1.5">
+                      <Label
+                        className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 ml-0.5"
+                        required={true}
+                      >
+                        Gender
+                      </Label>
+                      <Controller
+                        control={control}
+                        name="gender"
+                        render={({ field }) => (
+                          <CustomSelect
+                            options={[...GENDER_TYPES]}
+                            value={
+                              field.value != null && String(field.value).trim() !== ""
+                                ? String(field.value)
+                                : undefined
+                            }
+                            triggerClassName="w-full h-11 rounded-lg bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 shadow-none text-sm"
+                            onValueChange={(value) => {
+                              field.onChange(value)
+                              clearErrors("gender")
+                            }}
+                            disabled={isLoading}
+                            placeholder="Select gender"
+                          />
+                        )}
+                      />
+                      {errors.gender && <p className="text-[11px] text-rose-500 font-medium">{errors.gender.message}</p>}
+                    </div>
+
                     <Controller
                       control={control}
-                      name="gender"
+                      name="date_of_birth"
                       render={({ field }) => (
-                        <CustomSelect
-                          options={[...GENDER_TYPES]}
-                          value={
-                            field.value != null && String(field.value).trim() !== ""
-                              ? String(field.value)
-                              : undefined
-                          }
-                          triggerClassName="w-full h-11 rounded-lg bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 shadow-none text-sm"
-                          onValueChange={(value) => {
-                            field.onChange(value)
-                            clearErrors("gender")
-                          }}
+                        <DatePickerInput
+                          label="Date of Birth"
+                          required={true}
+                          value={field.value ? new Date(field.value) : null}
+                          onChange={(date) => field.onChange(date ? date.toISOString().split('T')[0] : '')}
+                          error={errors.date_of_birth?.message}
+                          placeholder="Select date of birth"
                           disabled={isLoading}
-                          placeholder="Select gender"
                         />
                       )}
                     />
-                    {errors.gender && <p className="text-[11px] text-rose-500 font-medium">{errors.gender.message}</p>}
-                  </div>
 
-                  <Controller
-                    control={control}
-                    name="date_of_birth"
-                    render={({ field }) => (
-                      <DatePickerInput
-                        label="Date of Birth"
-                        required={true}
-                        value={field.value ? new Date(field.value) : null}
-                        onChange={(date) => field.onChange(date ? date.toISOString().split('T')[0] : '')}
-                        error={errors.date_of_birth?.message}
-                        placeholder="Select date of birth"
-                        disabled={isLoading}
-                      />
-                    )}
-                  />
-
-                  <Controller
-                    control={control}
-                    name="registration_date"
-                    render={({ field }) => (
-                      <DatePickerInput
-                        label="Registration Date"
-                        required={true}
-                        value={field.value ? new Date(field.value) : null}
-                        onChange={(date) => field.onChange(date ? date.toISOString().split('T')[0] : '')}
-                        error={errors.registration_date?.message}
-                        placeholder="Select registration date"
-                        disabled={isLoading}
-                      />
-                    )}
-                  />
-
-
-                  <Input
-                    {...register("nationality")}
-                    label="Nationality"
-                    placeholder="e.g. Indian"
-                    className="rounded-lg text-sm"
-                    error={errors.nationality?.message}
-                    disabled={isLoading}
-                  />
-
-                  <Input
-                    {...register("adhar_no")}
-                    label="Aadhaar Number"
-                    placeholder="12-digit Aadhaar number"
-                    maxLength={12}
-                    onInput={(e: React.FormEvent<HTMLInputElement>) => {
-                      e.currentTarget.value = e.currentTarget.value.replace(/\D/g, '').slice(0, 12);
-                    }}
-                    className="rounded-lg text-sm"
-                    error={errors.adhar_no?.message}
-                    disabled={isLoading}
-                  />
-
-                  <Input
-                    {...register("place_of_birth")}
-                    label="Place of Birth"
-                    placeholder="Enter place of birth"
-                    className="rounded-lg text-sm"
-                    error={errors.place_of_birth?.message}
-                    disabled={isLoading}
-                  />
-
-                  <Input
-                    {...register("height")}
-                    label="Height"
-                    placeholder="e.g. 5.8 ft"
-                    className="rounded-lg text-sm"
-                    error={errors.height?.message}
-                    disabled={isLoading}
-                    onInput={(e: React.FormEvent<HTMLInputElement>) => {
-                      e.currentTarget.value = e.currentTarget.value
-                        .replace(/[^0-9.]/g, "")
-                        .replace(/(\..*)\./g, "$1")
-                    }}
-                  />
-
-                  <Input
-                    {...register("caste")}
-                    label="Caste"
-                    placeholder="Enter detailed caste"
-                    className="rounded-lg text-sm"
-                    error={errors.caste?.message}
-                    disabled={isLoading}
-                  />
-
-                  <div className="space-y-1.5">
-                    <Label className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 ml-0.5">Category</Label>
-                    <CustomSelect
-                      options={[...STUDENT_CATEGORIES]}
-                      value={watch("category") || ""}
-                      triggerClassName="w-full h-11 rounded-lg bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 shadow-none text-sm"
-                      onValueChange={(value) => setValue("category", value)}
-                      disabled={isLoading}
-                      placeholder="Select category"
-                    />
-                    {errors.category && <p className="text-[11px] text-rose-500 font-medium">{errors.category.message}</p>}
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <Label className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 ml-0.5">Religion</Label>
-                    <CustomSelect
-                      options={[...RELIGIONS]}
-                      value={watch("religion") || ""}
-                      triggerClassName="w-full h-11 rounded-lg bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 shadow-none text-sm"
-                      onValueChange={(value) => setValue("religion", value)}
-                      disabled={isLoading}
-                      placeholder="Select religion"
-                    />
-                    {errors.religion && <p className="text-[11px] text-rose-500 font-medium">{errors.religion.message}</p>}
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <Label className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 ml-0.5">Heard About Us</Label>
-                    <CustomSelect
-                      options={[...HEARD_ABOUT_US]}
-                      value={watch("heard_about_us") || ""}
-                      triggerClassName="w-full h-11 rounded-lg bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 shadow-none text-sm"
-                      onValueChange={(value) => setValue("heard_about_us", value)}
-                      disabled={isLoading}
-                      placeholder="Select option"
-                    />
-                    {watch("heard_about_us") === "Other" && (
-                      <div className="mt-2">
-                        <Input
-                          {...register("heard_about_us_remark")}
-                          label="Remark"
+                    <Controller
+                      control={control}
+                      name="registration_date"
+                      render={({ field }) => (
+                        <DatePickerInput
+                          label="Registration Date"
                           required={true}
-                          placeholder="Please specify"
-                          className="rounded-lg text-sm"
-                          error={errors.heard_about_us_remark?.message}
+                          value={field.value ? new Date(field.value) : null}
+                          onChange={(date) => field.onChange(date ? date.toISOString().split('T')[0] : '')}
+                          error={errors.registration_date?.message}
+                          placeholder="Select registration date"
                           disabled={isLoading}
                         />
-                      </div>
-                    )}
-                  </div>
+                      )}
+                    />
 
-                  <div className="md:col-span-2 2xl:col-span-4">
-                    <Textarea
-                      {...register("address")}
-                      label="Address"
-                      placeholder="Enter residential address"
-                      className="min-h-[80px] rounded-lg resize-none text-sm"
-                      error={errors.address?.message}
+
+                    <Input
+                      {...register("nationality")}
+                      label="Nationality"
+                      placeholder="e.g. Indian"
+                      className="rounded-lg text-sm"
+                      error={errors.nationality?.message}
                       disabled={isLoading}
                     />
-                  </div>
 
-                  <Input
-                    {...register("city")}
-                    label="City"
-                    placeholder="Enter city"
-                    className="rounded-lg text-sm"
-                    error={errors.city?.message}
-                    disabled={isLoading}
-                  />
-                  <Input
-                    {...register("state")}
-                    label="State"
-                    placeholder="Enter state"
-                    className="rounded-lg text-sm"
-                    error={errors.state?.message}
-                    disabled={isLoading}
-                  />
-                  <Input
-                    {...register("pincode")}
-                    label="Pincode"
-                    placeholder="Enter pincode"
-                    className="rounded-lg text-sm"
-                    error={errors.pincode?.message}
-                    disabled={isLoading}
-                    maxLength={6}
-                    inputMode="numeric"
-                    onKeyDown={(e) => {
-                      if (
-                        !/[0-9]/.test(e.key) &&
-                        !["Backspace", "Delete", "ArrowLeft", "ArrowRight", "Tab"].includes(e.key)
-                      ) {
-                        e.preventDefault()
-                      }
-                    }}
-                  />
+                    <Input
+                      {...register("adhar_no")}
+                      label="Aadhaar Number"
+                      placeholder="12-digit Aadhaar number"
+                      maxLength={12}
+                      onInput={(e: React.FormEvent<HTMLInputElement>) => {
+                        e.currentTarget.value = e.currentTarget.value.replace(/\D/g, '').slice(0, 12);
+                      }}
+                      className="rounded-lg text-sm"
+                      error={errors.adhar_no?.message}
+                      disabled={isLoading}
+                    />
+
+                    <Input
+                      {...register("place_of_birth")}
+                      label="Place of Birth"
+                      placeholder="Enter place of birth"
+                      className="rounded-lg text-sm"
+                      error={errors.place_of_birth?.message}
+                      disabled={isLoading}
+                    />
+
+                    <Input
+                      {...register("height")}
+                      label="Height"
+                      placeholder="e.g. 5.8 ft"
+                      className="rounded-lg text-sm"
+                      error={errors.height?.message}
+                      disabled={isLoading}
+                      onInput={(e: React.FormEvent<HTMLInputElement>) => {
+                        e.currentTarget.value = e.currentTarget.value
+                          .replace(/[^0-9.]/g, "")
+                          .replace(/(\..*)\./g, "$1")
+                      }}
+                    />
+
+                    <Input
+                      {...register("caste")}
+                      label="Caste"
+                      placeholder="Enter detailed caste"
+                      className="rounded-lg text-sm"
+                      error={errors.caste?.message}
+                      disabled={isLoading}
+                    />
+
+                    <div className="space-y-1.5">
+                      <Label className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 ml-0.5">Category</Label>
+                      <CustomSelect
+                        options={[...STUDENT_CATEGORIES]}
+                        value={watch("category") || ""}
+                        triggerClassName="w-full h-11 rounded-lg bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 shadow-none text-sm"
+                        onValueChange={(value) => setValue("category", value)}
+                        disabled={isLoading}
+                        placeholder="Select category"
+                      />
+                      {errors.category && <p className="text-[11px] text-rose-500 font-medium">{errors.category.message}</p>}
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 ml-0.5">Religion</Label>
+                      <CustomSelect
+                        options={[...RELIGIONS]}
+                        value={watch("religion") || ""}
+                        triggerClassName="w-full h-11 rounded-lg bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 shadow-none text-sm"
+                        onValueChange={(value) => setValue("religion", value)}
+                        disabled={isLoading}
+                        placeholder="Select religion"
+                      />
+                      {errors.religion && <p className="text-[11px] text-rose-500 font-medium">{errors.religion.message}</p>}
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 ml-0.5">Heard About Us</Label>
+                      <CustomSelect
+                        options={[...HEARD_ABOUT_US]}
+                        value={watch("heard_about_us") || ""}
+                        triggerClassName="w-full h-11 rounded-lg bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 shadow-none text-sm"
+                        onValueChange={(value) => setValue("heard_about_us", value)}
+                        disabled={isLoading}
+                        placeholder="Select option"
+                      />
+                      {watch("heard_about_us") === "Other" && (
+                        <div className="mt-2">
+                          <Input
+                            {...register("heard_about_us_remark")}
+                            label="Remark"
+                            required={true}
+                            placeholder="Please specify"
+                            className="rounded-lg text-sm"
+                            error={errors.heard_about_us_remark?.message}
+                            disabled={isLoading}
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="md:col-span-2 2xl:col-span-4">
+                      <Textarea
+                        {...register("address")}
+                        label="Address"
+                        placeholder="Enter residential address"
+                        className="min-h-[80px] rounded-lg resize-none text-sm"
+                        error={errors.address?.message}
+                        disabled={isLoading}
+                      />
+                    </div>
+
+                    <Input
+                      {...register("city")}
+                      label="City"
+                      placeholder="Enter city"
+                      className="rounded-lg text-sm"
+                      error={errors.city?.message}
+                      disabled={isLoading}
+                    />
+                    <Input
+                      {...register("state")}
+                      label="State"
+                      placeholder="Enter state"
+                      className="rounded-lg text-sm"
+                      error={errors.state?.message}
+                      disabled={isLoading}
+                    />
+                    <Input
+                      {...register("pincode")}
+                      label="Pincode"
+                      placeholder="Enter pincode"
+                      className="rounded-lg text-sm"
+                      error={errors.pincode?.message}
+                      disabled={isLoading}
+                      maxLength={6}
+                      inputMode="numeric"
+                      onKeyDown={(e) => {
+                        if (
+                          !/[0-9]/.test(e.key) &&
+                          !["Backspace", "Delete", "ArrowLeft", "ArrowRight", "Tab"].includes(e.key)
+                        ) {
+                          e.preventDefault()
+                        }
+                      }}
+                    />
                   </div>
 
                   <aside className="xl:sticky xl:top-6 xl:self-start">
@@ -1151,115 +1151,53 @@ export const StudentForm = ({
                     </div>
 
                     <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                          <Label
-                            className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 ml-0.5"
-                            required={!isEdit}
-                          >
-                            Select Courses
-                          </Label>
-                          {courses.length > 0 && (
-                            <Checkbox
-                              id="select-all-courses"
-                              checked={
-                                courses.length > 0 &&
-                                (watchedCourseIds || []).length === courses.length
+                      <div className="flex items-center justify-between">
+                        <Label
+                          className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 ml-0.5"
+                          required={!isEdit}
+                        >
+                          Select Courses
+                        </Label>
+                        {courses.length > 0 && (
+                          <Checkbox
+                            id="select-all-courses"
+                            checked={
+                              courses.length > 0 &&
+                              (watchedCourseIds || []).length === courses.length
+                            }
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setValue("course_ids", courses.map(c => c.id), { shouldValidate: true })
+                              } else {
+                                setValue("course_ids", [], { shouldValidate: true })
+                                setValue("batch_ids", [])
+                                setSelectedBatches([])
                               }
-                              onCheckedChange={(checked) => {
-                                if (checked) {
-                                  setValue("course_ids", courses.map(c => c.id), { shouldValidate: true })
-                                } else {
-                                  setValue("course_ids", [], { shouldValidate: true })
-                                  setValue("batch_ids", [])
-                                  setSelectedBatches([])
-                                }
-                              }}
-                              label="Select All"
-                              labelClassName="text-xs font-semibold text-slate-600 dark:text-slate-400 cursor-pointer"
-                            />
-                          )}
-                        </div>
-
-                        {courses.length === 0 ? (
-                          <div className="text-sm text-rose-500">No active courses found.</div>
-                        ) : (
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/40 max-h-[200px] overflow-y-auto">
-                            {courses.map((course) => {
-                              const isChecked = (watchedCourseIds || []).includes(course.id)
-                              return (
-                                <div key={course.id} className="flex items-center space-x-2">
-                                  <Checkbox
-                                    id={`course-${course.id}`}
-                                    checked={isChecked}
-                                    onCheckedChange={(checked) => {
-                                      const currentIds = watchedCourseIds || []
-                                      let nextIds: number[] = []
-                                      if (checked) {
-                                        nextIds = [...currentIds, course.id]
-                                      } else {
-                                        nextIds = currentIds.filter(id => id !== course.id)
-                                        // Remove any batches belonging to the deselected course
-                                        const nextSelectedBatches = selectedBatches.filter(b => {
-                                          const batchCourseIds = (b as any).course_ids || (b as any).courses?.map((c: any) => c.id) || [b.course_id]
-                                          return batchCourseIds.some((id: number) => nextIds.includes(id))
-                                        })
-                                        setSelectedBatches(nextSelectedBatches)
-                                        setValue("batch_ids", nextSelectedBatches.map(b => b.id), { shouldValidate: true })
-                                      }
-                                      setValue("course_ids", nextIds, { shouldValidate: true })
-                                    }}
-                                    label={course.name}
-                                    labelClassName="text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer"
-                                  />
-                                </div>
-                              )
-                            })}
-                          </div>
+                            }}
+                            label="Select All"
+                            labelClassName="text-xs font-semibold text-slate-600 dark:text-slate-400 cursor-pointer"
+                          />
                         )}
-                        {errors.course_ids && (
-                          <p className="text-[11px] text-rose-500 font-medium mt-1">
-                            {errors.course_ids.message as string}
-                          </p>
-                        )}
+                      </div>
 
-                        {/* Course warnings if no active batches exist for a selected course */}
-                        {selectedCourses.map((c) => {
-                          const hasBatches = allBatches.some((b) => {
-                            const batchCourseIds = (b as any).course_ids || (b as any).courses?.map((bc: any) => bc.id) || [b.course_id]
-                            return batchCourseIds.includes(c.id)
-                          })
-                          if (!hasBatches) {
+                      {courses.length === 0 ? (
+                        <div className="text-sm text-rose-500">No active courses found.</div>
+                      ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/40 max-h-[200px] overflow-y-auto">
+                          {courses.map((course) => {
+                            const isChecked = (watchedCourseIds || []).includes(course.id)
                             return (
-                              <div key={c.id} className="flex items-start gap-2 p-3 rounded-lg border border-amber-200 dark:border-amber-900 bg-amber-50/50 dark:bg-amber-950/20 text-amber-800 dark:text-amber-300 text-xs mt-2">
-                                <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
-                                <div>
-                                  <span className="font-bold">No active batches found for course "{c.name}".</span> Please create a batch for this course in Batch Management first.
-                                </div>
-                              </div>
-                            )
-                          }
-                          return null
-                        })}
-
-                        {selectedCourses.length > 0 && (
-                          <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
-                            <div className="space-y-2">
-                              {selectedCourses.map((course) => (
-                                <div key={course.id} className="flex items-center justify-between p-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30">
-                                  <div className="flex items-center gap-3">
-                                    <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary text-xs font-bold">
-                                      {course.name.charAt(0)}
-                                    </div>
-                                    <div>
-                                      <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{course.name}</p>
-                                      <p className="text-xs text-muted-foreground">Course Fees: ₹{course.fees}</p>
-                                    </div>
-                                  </div>
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      const nextIds = watchedCourseIds.filter(id => id !== course.id)
-                                      setValue("course_ids", nextIds, { shouldValidate: true })
+                              <div key={course.id} className="flex items-center space-x-2">
+                                <Checkbox
+                                  id={`course-${course.id}`}
+                                  checked={isChecked}
+                                  onCheckedChange={(checked) => {
+                                    const currentIds = watchedCourseIds || []
+                                    let nextIds: number[] = []
+                                    if (checked) {
+                                      nextIds = [...currentIds, course.id]
+                                    } else {
+                                      nextIds = currentIds.filter(id => id !== course.id)
                                       // Remove any batches belonging to the deselected course
                                       const nextSelectedBatches = selectedBatches.filter(b => {
                                         const batchCourseIds = (b as any).course_ids || (b as any).courses?.map((c: any) => c.id) || [b.course_id]
@@ -1267,14 +1205,76 @@ export const StudentForm = ({
                                       })
                                       setSelectedBatches(nextSelectedBatches)
                                       setValue("batch_ids", nextSelectedBatches.map(b => b.id), { shouldValidate: true })
-                                    }}
-                                    className="text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 p-1.5 rounded-lg transition-colors cursor-pointer"
-                                  >
-                                    <X className="h-4 w-4" />
-                                  </button>
-                                </div>
-                              ))}
+                                    }
+                                    setValue("course_ids", nextIds, { shouldValidate: true })
+                                  }}
+                                  label={course.name}
+                                  labelClassName="text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer"
+                                />
+                              </div>
+                            )
+                          })}
+                        </div>
+                      )}
+                      {errors.course_ids && (
+                        <p className="text-[11px] text-rose-500 font-medium mt-1">
+                          {errors.course_ids.message as string}
+                        </p>
+                      )}
+
+                      {/* Course warnings if no active batches exist for a selected course */}
+                      {selectedCourses.map((c) => {
+                        const hasBatches = allBatches.some((b) => {
+                          const batchCourseIds = (b as any).course_ids || (b as any).courses?.map((bc: any) => bc.id) || [b.course_id]
+                          return batchCourseIds.includes(c.id)
+                        })
+                        if (!hasBatches) {
+                          return (
+                            <div key={c.id} className="flex items-start gap-2 p-3 rounded-lg border border-amber-200 dark:border-amber-900 bg-amber-50/50 dark:bg-amber-950/20 text-amber-800 dark:text-amber-300 text-xs mt-2">
+                              <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+                              <div>
+                                <span className="font-bold">No active batches found for course "{c.name}".</span> Please create a batch for this course in Batch Management first.
+                              </div>
                             </div>
+                          )
+                        }
+                        return null
+                      })}
+
+                      {selectedCourses.length > 0 && (
+                        <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                          <div className="space-y-2">
+                            {selectedCourses.map((course) => (
+                              <div key={course.id} className="flex items-center justify-between p-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30">
+                                <div className="flex items-center gap-3">
+                                  <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary text-xs font-bold">
+                                    {course.name.charAt(0)}
+                                  </div>
+                                  <div>
+                                    <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{course.name}</p>
+                                    <p className="text-xs text-muted-foreground">Course Fees: ₹{course.fees}</p>
+                                  </div>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const nextIds = watchedCourseIds.filter(id => id !== course.id)
+                                    setValue("course_ids", nextIds, { shouldValidate: true })
+                                    // Remove any batches belonging to the deselected course
+                                    const nextSelectedBatches = selectedBatches.filter(b => {
+                                      const batchCourseIds = (b as any).course_ids || (b as any).courses?.map((c: any) => c.id) || [b.course_id]
+                                      return batchCourseIds.some((id: number) => nextIds.includes(id))
+                                    })
+                                    setSelectedBatches(nextSelectedBatches)
+                                    setValue("batch_ids", nextSelectedBatches.map(b => b.id), { shouldValidate: true })
+                                  }}
+                                  className="text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 p-1.5 rounded-lg transition-colors cursor-pointer"
+                                >
+                                  <X className="h-4 w-4" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
 
                           {/* Fee Mode */}
                           <Controller
@@ -1478,7 +1478,7 @@ export const StudentForm = ({
                             </div>
                           </div>
 
-                           {/* Monthly Section — only shown when monthly or installment mode is active */}
+                          {/* Monthly Section — only shown when monthly or installment mode is active */}
                           {(feeSummary.feeMode === "monthly" || feeSummary.feeMode === "installment") && (
                             <>
                               <div className="h-px bg-slate-100 dark:bg-slate-800 mx-1" />
@@ -1502,33 +1502,33 @@ export const StudentForm = ({
                             </>
                           )}
 
-                        {/* EMI Preview — only when installment mode is chosen */}
-                        {watchedFeeMode === "installment" && feeSummary.emiBreakdown.length > 0 && (
-                          <div className="border border-amber-100 dark:border-amber-800/30 rounded-lg overflow-hidden bg-amber-50/40 dark:bg-amber-900/10 p-4 space-y-3">
-                            <p className="text-[11px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-widest flex items-center gap-1.5 border-b border-amber-200/60 dark:border-amber-800/40 pb-2">
-                              <Calculator className="h-3.5 w-3.5" /> EMI Schedule Preview
-                            </p>
-                            <div className="space-y-2">
-                              {feeSummary.emiBreakdown.map((emi, i) => (
-                                <div key={i} className="flex items-center justify-between rounded-lg bg-white dark:bg-slate-900 border border-amber-100 dark:border-amber-800/30 px-3 py-2">
-                                  <div>
-                                    <p className="text-xs font-semibold text-slate-700 dark:text-slate-300 truncate max-w-[160px]">{emi.batchName}</p>
-                                    <p className="text-[10px] text-slate-400 mt-0.5">{emi.installments} installment{emi.installments !== 1 ? "s" : ""} · 30 days apart</p>
+                          {/* EMI Preview — only when installment mode is chosen */}
+                          {watchedFeeMode === "installment" && feeSummary.emiBreakdown.length > 0 && (
+                            <div className="border border-amber-100 dark:border-amber-800/30 rounded-lg overflow-hidden bg-amber-50/40 dark:bg-amber-900/10 p-4 space-y-3">
+                              <p className="text-[11px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-widest flex items-center gap-1.5 border-b border-amber-200/60 dark:border-amber-800/40 pb-2">
+                                <Calculator className="h-3.5 w-3.5" /> EMI Schedule Preview
+                              </p>
+                              <div className="space-y-2">
+                                {feeSummary.emiBreakdown.map((emi, i) => (
+                                  <div key={i} className="flex items-center justify-between rounded-lg bg-white dark:bg-slate-900 border border-amber-100 dark:border-amber-800/30 px-3 py-2">
+                                    <div>
+                                      <p className="text-xs font-semibold text-slate-700 dark:text-slate-300 truncate max-w-[160px]">{emi.batchName}</p>
+                                      <p className="text-[10px] text-slate-400 mt-0.5">{emi.installments} installment{emi.installments !== 1 ? "s" : ""} · 30 days apart</p>
+                                    </div>
+                                    <div className="text-right">
+                                      <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-0.5">Per EMI</p>
+                                      <p className="text-[15px] font-black text-amber-600 dark:text-amber-500 flex items-center gap-0.5 justify-end">
+                                        <IndianRupee className="h-3.5 w-3.5" />{emi.perInstallment.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                      </p>
+                                    </div>
                                   </div>
-                                  <div className="text-right">
-                                    <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-0.5">Per EMI</p>
-                                    <p className="text-[15px] font-black text-amber-600 dark:text-amber-500 flex items-center gap-0.5 justify-end">
-                                      <IndianRupee className="h-3.5 w-3.5" />{emi.perInstallment.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                    </p>
-                                  </div>
-                                </div>
-                              ))}
+                                ))}
+                              </div>
+                              <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-2 text-center italic">
+                                EMI amounts reflect the final payable amount including all taxes.
+                              </p>
                             </div>
-                            <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-2 text-center italic">
-                              EMI amounts reflect the final payable amount including all taxes.
-                            </p>
-                          </div>
-                        )}
+                          )}
                         </div>{/* end p-5 space-y-4 */}
 
                         {/* Status Indicator */}
@@ -1554,7 +1554,7 @@ export const StudentForm = ({
               </div>
             </div>
           </div>
-           <Dialog open={isWebcamOpen} onOpenChange={setIsWebcamOpen}>
+          <Dialog open={isWebcamOpen} onOpenChange={setIsWebcamOpen}>
             <DialogContent className="max-w-md">
               <DialogHeader>
                 <DialogTitle>Capture Photo from Webcam</DialogTitle>

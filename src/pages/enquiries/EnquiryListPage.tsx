@@ -210,8 +210,9 @@ const EnquiryListPage = () => {
           <TableHeader>
             <TableRow>
               <TableHead className="w-[60px]">Sr No</TableHead>
-              <TableHead>Full Name</TableHead>
+              <TableHead>Full Name & Enquiry No</TableHead>
               <TableHead>Contact</TableHead>
+              <TableHead>Interested Courses</TableHead>
               <TableHead>Enquiry Date</TableHead>
               <TableHead className="w-[130px]">Status</TableHead>
               <TableHead>Next Follow-up</TableHead>
@@ -223,7 +224,7 @@ const EnquiryListPage = () => {
           <TableBody
             loading={isLoading}
             fetching={isFetching && !isLoading}
-            columnCount={(canReadEnquiries || canUpdateEnquiry || canDeleteEnquiry) ? 7 : 6}
+            columnCount={(canReadEnquiries || canUpdateEnquiry || canDeleteEnquiry) ? 8 : 7}
             rowCount={pageSize}
           >
             {!isLoading &&
@@ -243,25 +244,48 @@ const EnquiryListPage = () => {
                         <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold shrink-0">
                           {enquiry.first_name.charAt(0).toUpperCase()}
                         </div>
-                        {canReadEnquiries ? (
-                          <Link 
-                            to={`/enquiries/view/${enquiry.id}`}
-                            className="font-semibold text-slate-900 dark:text-slate-100 hover:text-primary dark:hover:text-primary hover:underline transition-colors w-fit"
-                          >
-                            {[enquiry.first_name, enquiry.middle_name, enquiry.last_name]
-                              .filter(Boolean)
-                              .join(" ")}
-                          </Link>
-                        ) : (
-                          <span className="font-semibold text-slate-900 dark:text-slate-100 w-fit">
-                            {[enquiry.first_name, enquiry.middle_name, enquiry.last_name]
-                              .filter(Boolean)
-                              .join(" ")}
-                          </span>
-                        )}
+                        <div className="flex flex-col">
+                          {canReadEnquiries ? (
+                            <Link 
+                              to={`/enquiries/view/${enquiry.id}`}
+                              className="font-semibold text-slate-900 dark:text-slate-100 hover:text-primary dark:hover:text-primary hover:underline transition-colors w-fit text-sm"
+                            >
+                              {[enquiry.first_name, enquiry.middle_name, enquiry.last_name]
+                                .filter(Boolean)
+                                .join(" ")}
+                            </Link>
+                          ) : (
+                            <span className="font-semibold text-slate-900 dark:text-slate-100 w-fit text-sm">
+                              {[enquiry.first_name, enquiry.middle_name, enquiry.last_name]
+                                .filter(Boolean)
+                                .join(" ")}
+                            </span>
+                          )}
+                          {enquiry.enquiry_number && (
+                            <span className="text-[11px] font-mono font-semibold text-primary">
+                              {enquiry.enquiry_number}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell>{enquiry.personal_contact}</TableCell>
+                    <TableCell>
+                      {enquiry.interested_courses && enquiry.interested_courses.length > 0 ? (
+                        <div className="flex flex-wrap gap-1 max-w-[220px]">
+                          {enquiry.interested_courses.map((course, i) => (
+                            <span
+                              key={i}
+                              className="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700"
+                            >
+                              {course}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground text-sm italic">—</span>
+                      )}
+                    </TableCell>
                     <TableCell>
                       <DateCell date={enquiry.created_at} />
                     </TableCell>
