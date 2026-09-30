@@ -5,17 +5,17 @@ import { Input } from "@/components/ui/input"
 import { CustomSelect } from "@/components/ui/custom-select"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { Upload } from "@/components/ui/upload"
 import { FormFooter } from "@/components/ui/form-footer"
 import { DatePickerInput } from "@/components/ui/date-picker"
 import { ComboBox } from "@/components/ui/combobox"
 import { DeleteButton } from "@/components/ui/delete-button"
-import { X, IndianRupee, Calculator, Percent, Camera, ClipboardList, Plus, RefreshCw, AlertTriangle } from "lucide-react"
+import { X, IndianRupee, Calculator, Percent, ClipboardList, Plus, AlertTriangle } from "lucide-react"
 import {
   TooltipProvider,
 } from "@/components/ui/tooltip"
 import { studentSchema, type StudentFormValues } from "@/validations/student"
 import { GENDER_TYPES, STUDENT_CATEGORIES, RELIGIONS, HEARD_ABOUT_US } from "@/utils/student-constants"
+import { PassportPhotoUpload } from "@/components/ui/passport-photo-upload"
 import { useEnquiryComboBox } from "@/hooks/use-combobox-data"
 import { useEnquiry } from "@/hooks/api/use-enquiries"
 import { useCourses } from "@/hooks/api/use-courses"
@@ -24,19 +24,12 @@ import { useStudents } from "@/hooks/api/use-students"
 import { Checkbox } from "@/components/ui/checkbox"
 import type { EnrolledBatch } from "@/types/student"
 import { useFeeSettings } from "@/hooks/api/use-fee-settings"
-import { useState, useMemo, useEffect, useCallback, useRef } from "react"
+import { useState, useMemo, useEffect, useCallback } from "react"
 import { differenceInMonths, format, isValid } from "date-fns"
 import { cn } from "@/lib/utils"
 import type { UseFormSetError } from "react-hook-form"
 import type { Student } from "@/types/student"
 import { Button } from "@/components/ui/button"
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
 
 const DEGREE_OPTIONS: { label: string; value: "S.S.C." | "H.S.C." | "Degree" | "Post Graduate" }[] = [
   { label: "S.S.C.", value: "S.S.C." },
@@ -143,62 +136,6 @@ export const StudentForm = ({
   })
 
   const [discountType, setDiscountType] = useState<DiscountType>("flat")
-  const [isWebcamOpen, setIsWebcamOpen] = useState(false)
-  const [facingMode, setFacingMode] = useState<"user" | "environment">("user")
-  const videoRef = useRef<HTMLVideoElement | null>(null)
-  const streamRef = useRef<MediaStream | null>(null)
-
-  const toggleFacingMode = useCallback(() => {
-    setFacingMode((prev) => (prev === "user" ? "environment" : "user"))
-  }, [])
-
-  const compressAndCropImage = useCallback((fileOrBlob: Blob | File, callback: (compressedFile: File) => void) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement("canvas");
-        const targetWidth = 450;
-        const targetHeight = 600;
-        canvas.width = targetWidth;
-        canvas.height = targetHeight;
-
-        const ctx = canvas.getContext("2d");
-        if (!ctx) return;
-
-        const imgAspect = img.width / img.height;
-        const targetAspect = targetWidth / targetHeight;
-
-        let sourceX = 0;
-        let sourceY = 0;
-        let sourceWidth = img.width;
-        let sourceHeight = img.height;
-
-        if (imgAspect > targetAspect) {
-          sourceWidth = img.height * targetAspect;
-          sourceX = (img.width - sourceWidth) / 2;
-        } else {
-          sourceHeight = img.width / targetAspect;
-          sourceY = (img.height - sourceHeight) / 2;
-        }
-
-        ctx.drawImage(img, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, targetWidth, targetHeight);
-
-        canvas.toBlob(
-          (blob) => {
-            if (blob) {
-              const compressedFile = new File([blob], "photo.jpg", { type: "image/jpeg" });
-              callback(compressedFile);
-            }
-          },
-          "image/jpeg",
-          0.8
-        );
-      };
-      img.src = e.target?.result as string;
-    };
-    reader.readAsDataURL(fileOrBlob);
-  }, []);
 
   const handleDiscountTypeChange = useCallback((type: DiscountType) => {
     setDiscountType(type)
@@ -260,102 +197,6 @@ export const StudentForm = ({
   }, [initialValues, setValue])
   const selectedBatchIds = watch("batch_ids") || []
 
-
-
-  // Webcam helpers
-  const stopWebcamStream = () => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => track.stop())
-      streamRef.current = null
-    }
-    if (videoRef.current) {
-      videoRef.current.srcObject = null
-    }
-  }
-  //added comment
-  useEffect(() => {
-    if (!isWebcamOpen) {
-      stopWebcamStream()
-      return
-    }
-
-    const startWebcam = async () => {
-      try {
-        if (!navigator.mediaDevices?.getUserMedia) {
-          toast.error("Camera not supported in this browser.")
-          setIsWebcamOpen(false)
-          return
-        }
-
-        if (streamRef.current) {
-          streamRef.current.getTracks().forEach((track) => track.stop())
-        }
-
-        const constraints = {
-          video: { facingMode: facingMode }
-        }
-
-        const stream = await navigator.mediaDevices.getUserMedia(constraints)
-        streamRef.current = stream
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream
-          await videoRef.current.play()
-        }
-      } catch (error) {
-        console.error("Error accessing webcam with constraints:", error)
-        try {
-          const stream = await navigator.mediaDevices.getUserMedia({ video: true })
-          streamRef.current = stream
-          if (videoRef.current) {
-            videoRef.current.srcObject = stream
-            await videoRef.current.play()
-          }
-        } catch (fbError) {
-          console.error("Webcam fallback error:", fbError)
-          toast.error("Unable to access camera. Please check permissions.")
-          setIsWebcamOpen(false)
-        }
-      }
-    }
-
-    void startWebcam()
-
-    return () => {
-      stopWebcamStream()
-    }
-  }, [isWebcamOpen, facingMode])
-
-  const handleCaptureFromWebcam = () => {
-    const video = videoRef.current
-    if (!video) return
-
-    const canvas = document.createElement("canvas")
-    const width = video.videoWidth || 480
-    const height = video.videoHeight || 640
-    canvas.width = width
-    canvas.height = height
-
-    const ctx = canvas.getContext("2d")
-    if (!ctx) return
-
-    ctx.drawImage(video, 0, 0, width, height)
-
-    canvas.toBlob(
-      (blob) => {
-        if (!blob) return
-        compressAndCropImage(blob, (compressedFile) => {
-          setValue("photo", compressedFile)
-          const previewUrl = URL.createObjectURL(compressedFile)
-          setValue("photo_url", previewUrl)
-          setIsWebcamOpen(false)
-          stopWebcamStream()
-        })
-      },
-      "image/jpeg",
-      0.9
-    )
-  }
-
   // Load courses
   const { data: coursesData } = useCourses({ limit: 1000, status: "active" })
   const courses = useMemo(() => coursesData?.data || [], [coursesData])
@@ -388,6 +229,7 @@ export const StudentForm = ({
     const batchId = batch.id
     if (checked) {
       if (selectedBatchIds.includes(batchId)) return
+      const nextBatchIds = [...selectedBatchIds, batchId]
       setSelectedBatches((prev) => [...prev, {
         ...batch,
         batch_id: batchId,
@@ -395,17 +237,22 @@ export const StudentForm = ({
         course_base_fees: batch.course_fees,
         is_removable: true
       } as any])
-      setValue("batch_ids", [...selectedBatchIds, batchId])
+      setValue("batch_ids", nextBatchIds, { shouldValidate: true, shouldDirty: true })
+      clearErrors("batch_ids")
     } else {
       const batchItem = selectedBatches.find(b => b.id === batchId)
       if (batchItem?.is_removable === false) {
         toast.error("This batch cannot be removed as payment has already started.")
         return
       }
+      const nextBatchIds = selectedBatchIds.filter((id) => id !== batchId)
       setSelectedBatches((prev) => prev.filter((b) => b.id !== batchId))
-      setValue("batch_ids", selectedBatchIds.filter((id) => id !== batchId))
+      setValue("batch_ids", nextBatchIds, { shouldValidate: true, shouldDirty: true })
+      if (nextBatchIds.length > 0) {
+        clearErrors("batch_ids")
+      }
     }
-  }, [selectedBatchIds, selectedBatches, setValue])
+  }, [selectedBatchIds, selectedBatches, setValue, clearErrors])
 
   // Fee calculation logic
   const { data: feeSettings } = useFeeSettings()
@@ -892,44 +739,16 @@ export const StudentForm = ({
                   </div>
 
                   <aside className="xl:sticky xl:top-6 xl:self-start">
-                    <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50/70 p-3 shadow-inner dark:border-slate-800 dark:bg-slate-950/50">
-                      <div className="flex items-center justify-between gap-2">
-                        <Label className="text-[13px] font-semibold text-slate-700 dark:text-slate-300">
-                          Photo
-                        </Label>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          className="h-8 w-8 rounded-lg p-0"
-                          onClick={() => setIsWebcamOpen(true)}
-                          disabled={isLoading}
-                          title="Capture from webcam"
-                        >
-                          <Camera className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
-                      <Upload
-                        key={watch("photo_url") || "photo-upload"}
-                        className="w-full"
-                        variant="photo-square"
-                        accept="image/*"
-                        imagePreview={watch("photo_url")}
-                        disabled={isLoading}
-                        onRemove={() => {
-                          setValue("photo_url", "")
-                          setValue("photo", undefined)
-                        }}
-                        onFilesSelected={(files) => {
-                          if (files.length > 0) {
-                            compressAndCropImage(files[0], (compressedFile) => {
-                              setValue("photo", compressedFile)
-                              setValue("photo_url", URL.createObjectURL(compressedFile))
-                            })
-                          }
-                        }}
-                      />
-                    </div>
+                    <PassportPhotoUpload
+                      value={watch("photo") as File | null}
+                      previewUrl={watch("photo_url")}
+                      onChange={(file, url) => {
+                        setValue("photo", file, { shouldDirty: true })
+                        setValue("photo_url", url || "", { shouldDirty: true })
+                      }}
+                      disabled={isLoading}
+                      entityName="student"
+                    />
                   </aside>
                 </div>
               </div>
@@ -1170,7 +989,7 @@ export const StudentForm = ({
                                 setValue("course_ids", courses.map(c => c.id), { shouldValidate: true })
                               } else {
                                 setValue("course_ids", [], { shouldValidate: true })
-                                setValue("batch_ids", [])
+                                setValue("batch_ids", [], { shouldValidate: true })
                                 setSelectedBatches([])
                               }
                             }}
@@ -1204,7 +1023,11 @@ export const StudentForm = ({
                                         return batchCourseIds.some((id: number) => nextIds.includes(id))
                                       })
                                       setSelectedBatches(nextSelectedBatches)
-                                      setValue("batch_ids", nextSelectedBatches.map(b => b.id), { shouldValidate: true })
+                                      const remainingBatchIds = nextSelectedBatches.map(b => b.id)
+                                      setValue("batch_ids", remainingBatchIds, { shouldValidate: true })
+                                      if (remainingBatchIds.length > 0) {
+                                        clearErrors("batch_ids")
+                                      }
                                     }
                                     setValue("course_ids", nextIds, { shouldValidate: true })
                                   }}
@@ -1554,63 +1377,6 @@ export const StudentForm = ({
               </div>
             </div>
           </div>
-          <Dialog open={isWebcamOpen} onOpenChange={setIsWebcamOpen}>
-            <DialogContent className="max-w-md">
-              <DialogHeader>
-                <DialogTitle>Capture Photo from Webcam</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-3">
-                <div className="relative w-full rounded-lg overflow-hidden bg-black aspect-[3/4] max-w-[280px] mx-auto border border-slate-200 dark:border-slate-800 shadow-md">
-                  <video
-                    ref={videoRef}
-                    className="w-full h-full object-cover"
-                    autoPlay
-                    playsInline
-                    muted
-                  />
-                  {/* Passport overlay guide */}
-                  <div className="absolute inset-4 border-2 border-dashed border-white/60 rounded-md pointer-events-none flex flex-col items-center justify-center">
-                    <div className="w-28 h-36 rounded-full border-2 border-white/30 bg-white/5 flex items-center justify-center">
-                      <span className="text-[9px] text-white/50 font-bold uppercase tracking-wider">Face Guide</span>
-                    </div>
-                  </div>
-                </div>
-                <p className="text-[11px] text-center text-muted-foreground mt-2">
-                  Align the face within the guides. The photo will be automatically cropped and compressed under 200KB.
-                </p>
-              </div>
-              <DialogFooter className="mt-3 flex flex-wrap justify-between items-center gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={toggleFacingMode}
-                  className="gap-1.5 h-9"
-                >
-                  <RefreshCw className="h-3.5 w-3.5" />
-                  <span>Switch Camera</span>
-                </Button>
-                <div className="flex gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="h-9"
-                    onClick={() => {
-                      setIsWebcamOpen(false)
-                      stopWebcamStream()
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                  <Button type="button" size="sm" className="h-9 gap-1.5" onClick={handleCaptureFromWebcam}>
-                    <Camera className="h-3.5 w-3.5" />
-                    <span>Capture</span>
-                  </Button>
-                </div>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
 
           {/* Sticky Footer */}
           <div className="sticky -bottom-6 left-0 right-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 px-4 sm:px-6 md:px-8 pt-4 pb-10 flex items-center justify-end z-40 rounded-b-xl">
